@@ -48,6 +48,7 @@ class prototype_dist_estimator(nn.Module):
             # refer to SDCA for fast implementation
             features = features.view(N, 1, A).expand(N, C, A)
             onehot = torch.zeros(N, C)
+            onehot = onehot.to(self.Proto.device)
             onehot.scatter_(1, labels.view(-1, 1), 1)
             NxCxA_onehot = onehot.view(N, C, 1).expand(N, C, A)
             features_by_sort = features.mul(NxCxA_onehot)
