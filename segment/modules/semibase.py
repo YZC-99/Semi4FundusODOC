@@ -98,10 +98,6 @@ class Base(pl.LightningModule):
         ce_criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
         pcl_criterion = PrototypeContrastiveLoss(self.cfg)
 
-        if self.cfg.MODEL.uda:
-            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
-            if self.cfg.SOLVER.MULTI_LEVEL:
-                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
 
 
         # 源域图片的大小
@@ -184,10 +180,11 @@ class Base(pl.LightningModule):
         return loss
 
     def on_train_start(self) -> None:
-        # if self.cfg.MODEL.uda:
-        #     if len(os.listdir(self.cfg.prototype_path)) == 0:
-        #         self.print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
-        #         prototype_dist_init(self.cfg, src_train_loader=self.trainer.train_dataloader)
+        if self.cfg.MODEL.uda:
+            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
+            if self.cfg.SOLVER.MULTI_LEVEL:
+                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
+
         self.print(len(self.trainer.train_dataloader))
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
