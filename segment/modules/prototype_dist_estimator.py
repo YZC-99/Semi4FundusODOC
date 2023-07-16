@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.utils.data
 import pytorch_lightning as pl
 
-class prototype_dist_estimator(nn.Module):
+class prototype_dist_estimator():
     def __init__(self, feature_num, cfg):
         super(prototype_dist_estimator, self).__init__()
 
@@ -31,11 +31,11 @@ class prototype_dist_estimator(nn.Module):
             else:
                 raise RuntimeError("Feature_num not available: {}".format(feature_num))
             checkpoint = torch.load(resume, map_location=torch.device('cpu'))
-            self.Proto = checkpoint['Proto']
-            self.Amount = checkpoint['Amount']
+            self.Proto = checkpoint['Proto'].cuda(non_blocking=True)
+            self.Amount = checkpoint['Amount'].cuda(non_blocking=True)
         else:
-            self.Proto = torch.zeros(self.class_num, feature_num)
-            self.Amount = torch.zeros(self.class_num)
+            self.Proto = torch.zeros(self.class_num, feature_num).cuda(non_blocking=True)
+            self.Amount = torch.zeros(self.class_num).cuda(non_blocking=True)
 
     def update(self, features, labels):
         mask = (labels != self.cfg.INPUT.IGNORE_LABEL)
@@ -47,8 +47,7 @@ class prototype_dist_estimator(nn.Module):
             C = self.class_num
             # refer to SDCA for fast implementation
             features = features.view(N, 1, A).expand(N, C, A)
-            onehot = torch.zeros(N, C)
-            onehot = onehot.to(self.Proto.device)
+            onehot = torch.zeros(N, C).cuda()
             onehot.scatter_(1, labels.view(-1, 1), 1)
             NxCxA_onehot = onehot.view(N, C, 1).expand(N, C, A)
             features_by_sort = features.mul(NxCxA_onehot)

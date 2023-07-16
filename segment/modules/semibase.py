@@ -48,9 +48,9 @@ class Base(pl.LightningModule):
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
         if self.cfg.MODEL.uda:
-            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg).to(self.device)
+            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
             if self.cfg.SOLVER.MULTI_LEVEL:
-                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg).to(self.device)
+                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
 
 
         if cfg.MODEL.stage1_ckpt_path is not None:
