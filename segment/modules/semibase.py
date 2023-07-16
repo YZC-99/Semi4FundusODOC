@@ -8,18 +8,9 @@ from segment.util import meanIOU
 from segment.losses.loss import PrototypeContrastiveLoss
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
-from segment.prototype_dist_init import prototype_dist_init
-import os
-from torch.optim.lr_scheduler import StepLR
-from torchcam.methods import SmoothGradCAMpp
-from torchcam.utils import overlay_mask
 from typing import List,Tuple, Dict, Any, Optional
-from omegaconf import OmegaConf
-from utils.general import initialize_from_config
 import pytorch_lightning as pl
-from torchvision.transforms.functional import to_pil_image
 from torchmetrics import JaccardIndex,Dice
-from sklearn.metrics import precision_recall_curve, auc, roc_auc_score, average_precision_score,confusion_matrix,classification_report
 
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 

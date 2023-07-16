@@ -1,4 +1,5 @@
 /experiments
+/pretrained
 /data
 /ckpt
 *.pyc
