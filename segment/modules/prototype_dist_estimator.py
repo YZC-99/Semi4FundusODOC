@@ -1,7 +1,6 @@
 import os
-import torch.nn as nn
+import torch
 import torch.utils.data
-import pytorch_lightning as pl
 
 class prototype_dist_estimator():
     def __init__(self, feature_num, cfg):
