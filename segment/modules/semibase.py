@@ -52,7 +52,6 @@ class Base(pl.LightningModule):
         #     self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
         #     if self.cfg.SOLVER.MULTI_LEVEL:
         #         self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
-        self.dice_score = torchmetrics.Dice()
 
         if cfg.MODEL.stage1_ckpt_path is not None:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -204,9 +203,9 @@ class Base(pl.LightningModule):
 
 
 
-    # def on_validation_start(self) -> None:
-    #     self.iou = meanIOU(num_classes=self.num_classes)
-    #     self.dice = Dice(num_classes=self.num_classes, average='macro').to(self.device)
+    def on_validation_start(self) -> None:
+        self.dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro')
+        self.jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass')
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
@@ -215,11 +214,12 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
-        # self.dice.update(preds, y)
-        # self.iou.add_batch(preds.cpu().numpy(), y.cpu().numpy())
+        self.dice_score(preds, y)
+        self.jaccard(preds, y)
 
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
+        self.log("val/mIoU", self.jaccard, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/dice_score", self.dice_score, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
         return loss
 
 
