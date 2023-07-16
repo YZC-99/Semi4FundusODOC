@@ -46,6 +46,8 @@ class Base(pl.LightningModule):
         self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
+        self.val_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+        self.val_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
         if cfg.MODEL.stage1_ckpt_path is not None:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -197,9 +199,9 @@ class Base(pl.LightningModule):
         return loss
 
 
-    def on_validation_start(self) -> None:
-        self.val_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
-        self.val_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
+    # def on_validation_start(self) -> None:
+    #     self.val_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+    #     self.val_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
@@ -208,17 +210,18 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
+        self.val_dice_score.update(preds, y)
 
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/mIoU", self.val_jaccard(preds,y), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
-        self.log("val/dice_score", self.val_dice_score.update(preds,y), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
+        self.log("val_mIoU", self.val_jaccard(preds,y), prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
         return loss
 
 
     def on_validation_epoch_end(self) -> None:
-        self.log("val/mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
+        self.log("val_mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
                  sync_dist=True,rank_zero_only=True)
-        self.log(f"val/dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
+        self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
                  sync_dist=True,rank_zero_only=True)
 
 
