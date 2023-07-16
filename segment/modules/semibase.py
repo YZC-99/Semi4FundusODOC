@@ -12,7 +12,6 @@ from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
-from utils.metrcis import IoU
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 
 import numpy as np
@@ -200,8 +199,7 @@ class Base(pl.LightningModule):
 
     def on_validation_start(self) -> None:
         self.val_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
-        # self.val_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
-        self.val_iou = IoU().to(self.device)
+        self.val_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
@@ -212,13 +210,13 @@ class Base(pl.LightningModule):
         loss = self.loss(logits, y)
 
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/mIoU", self.val_iou.update(preds,y), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
+        self.log("val/mIoU", self.val_jaccard(preds,y), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
         self.log("val/dice_score", self.val_dice_score.update(preds,y), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
         return loss
 
 
     def on_validation_epoch_end(self) -> None:
-        self.log("val/mIoU", self.val_iou.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
+        self.log("val/mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
                  sync_dist=True,rank_zero_only=True)
         self.log(f"val/dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
                  sync_dist=True,rank_zero_only=True)
