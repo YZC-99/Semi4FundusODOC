@@ -99,7 +99,6 @@ if __name__ == '__main__':
                          strategy="ddp" if args.num_nodes > 1 or args.num_gpus > 1 else None,
                          accumulate_grad_batches=exp_config.update_every,
                          logger=logger,
-                         find_unused_parameters=False
                          )
 
     # Train
