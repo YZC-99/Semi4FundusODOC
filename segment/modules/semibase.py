@@ -181,6 +181,8 @@ class Base(pl.LightningModule):
                 self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
 
         self.print(len(self.trainer.train_dataloader))
+        self.training_dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+        self.training_jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
         if self.cfg.MODEL.uda:
@@ -191,16 +193,14 @@ class Base(pl.LightningModule):
             output = self(x)
             backbone_feat,logits = output['backbone_features'],output['out']
             loss = self.loss(logits, y)
-
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
 
 
-
     def on_validation_start(self) -> None:
-        self.dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro')
-        self.jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass')
+        self.val_dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+        self.val_jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
@@ -209,19 +209,20 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
-        self.dice_score(preds, y)
-        self.jaccard(preds, y)
+        self.val_jaccard(preds, y)
+        self.val_dice_score(preds, y)
+        self.print(self.val_jaccard)
 
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/mIoU", self.jaccard, prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
-        self.log("val/dice_score", self.dice_score, prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
+        self.log("val/mIoU", self.val_jaccard, prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
+        self.log("val/dice_score", self.val_dice_score, prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
         return loss
 
 
     def on_validation_epoch_end(self) -> None:
-        self.log("val/mIoU", self.jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
+        self.log("val/mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
                  sync_dist=True,rank_zero_only=True)
-        self.log(f"val/dice_score", self.dice_score, prog_bar=True, logger=True, on_step=False, on_epoch=True,
+        self.log(f"val/dice_score", self.val_dice_score, prog_bar=True, logger=True, on_step=False, on_epoch=True,
                  sync_dist=True,rank_zero_only=True)
 
 
@@ -242,21 +243,21 @@ class Base(pl.LightningModule):
             }
         ]
         return optimizers, schedulers
-    def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
-        if self.cfg.MODEL.uda:
-            return
-        log = dict()
-        x = batch['img'].to(self.device)
-        y = batch['mask']
-        # log["originals"] = x
-        out = self(x)['out']
-        # cam,overcam = self.get_cam(x,out)
-
-        out = torch.nn.functional.softmax(out,dim=1)
-        predict = out.argmax(1)
-
-        y_color,predict_color = self.gray2rgb(y,predict)
-        log["image"] = x
-        log["label"] = y_color
-        log["predict"] = predict_color
-        return log
+    # def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
+    #     if self.cfg.MODEL.uda:
+    #         return
+    #     log = dict()
+    #     x = batch['img'].to(self.device)
+    #     y = batch['mask']
+    #     # log["originals"] = x
+    #     out = self(x)['out']
+    #     # cam,overcam = self.get_cam(x,out)
+    #
+    #     out = torch.nn.functional.softmax(out,dim=1)
+    #     predict = out.argmax(1)
+    #
+    #     y_color,predict_color = self.gray2rgb(y,predict)
+    #     log["image"] = x
+    #     log["label"] = y_color
+    #     log["predict"] = predict_color
+    #     return log
