@@ -210,25 +210,23 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
+        # self.val_dice_score.update(preds, y)
+        # self.val_jaccard(preds, y)
+        # self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        # self.log("val_mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
+        # self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
+        return {'val_loss':loss,'preds':preds,'y':y}
+
+    def validation_step_end(self, outputs):
+        loss,preds,y = outputs['val_loss'],outputs['preds'],outputs['y']
         self.val_dice_score.update(preds, y)
-
-        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_mIoU", self.val_jaccard(preds,y), prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        return loss
-
-
-    def on_validation_epoch_end(self) -> None:
-        self.log("val_mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
-                 sync_dist=True,rank_zero_only=True)
-        self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
-                 sync_dist=True,rank_zero_only=True)
+        self.val_jaccard(preds, y)
+        self.log("val_loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
 
     def configure_optimizers(self) -> Tuple[List, List]:
-        # print(self.train_dataloader)
-
-
         lr = self.cfg.MODEL.lr
         total_iters = self.trainer.max_steps
         optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
