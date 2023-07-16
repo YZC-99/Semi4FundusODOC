@@ -10,6 +10,7 @@ from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
+import torchmetrics
 from torchmetrics import JaccardIndex,Dice
 
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
@@ -51,7 +52,7 @@ class Base(pl.LightningModule):
         #     self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
         #     if self.cfg.SOLVER.MULTI_LEVEL:
         #         self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
-
+        self.dice_score = torchmetrics.Dice()
 
         if cfg.MODEL.stage1_ckpt_path is not None:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -203,9 +204,9 @@ class Base(pl.LightningModule):
 
 
 
-    def on_validation_start(self) -> None:
-        self.iou = meanIOU(num_classes=self.num_classes)
-        self.dice = Dice(num_classes=self.num_classes, average='macro').to(self.device)
+    # def on_validation_start(self) -> None:
+    #     self.iou = meanIOU(num_classes=self.num_classes)
+    #     self.dice = Dice(num_classes=self.num_classes, average='macro').to(self.device)
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
@@ -214,20 +215,20 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
-        self.dice.update(preds, y)
-        self.iou.add_batch(preds.cpu().numpy(), y.cpu().numpy())
+        # self.dice.update(preds, y)
+        # self.iou.add_batch(preds.cpu().numpy(), y.cpu().numpy())
 
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
         return loss
 
 
-    def on_validation_epoch_end(self) -> None:
-        self.log("val/mIoU", self.iou.evaluate()[-1], prog_bar=True, logger=True, on_step=False, on_epoch=True,
-                 sync_dist=True,rank_zero_only=True)
-        dice_score = self.dice.compute().item()
-        self.log(f"val/dice_score", dice_score, prog_bar=True, logger=True, on_step=False, on_epoch=True,
-                 sync_dist=True,rank_zero_only=True)
+    # def on_validation_epoch_end(self) -> None:
+    #     self.log("val/mIoU", self.iou.evaluate()[-1], prog_bar=True, logger=True, on_step=False, on_epoch=True,
+    #              sync_dist=True,rank_zero_only=True)
+    #     dice_score = self.dice.compute().item()
+    #     self.log(f"val/dice_score", dice_score, prog_bar=True, logger=True, on_step=False, on_epoch=True,
+    #              sync_dist=True,rank_zero_only=True)
 
 
     def configure_optimizers(self) -> Tuple[List, List]:
@@ -247,19 +248,21 @@ class Base(pl.LightningModule):
             }
         ]
         return optimizers, schedulers
-    # def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
-    #     log = dict()
-    #     x = batch['img'].to(self.device)
-    #     y = batch['mask']
-    #     # log["originals"] = x
-    #     out = self(x)['out']
-    #     # cam,overcam = self.get_cam(x,out)
-    #
-    #     out = torch.nn.functional.softmax(out,dim=1)
-    #     predict = out.argmax(1)
-    #
-    #     y_color,predict_color = self.gray2rgb(y,predict)
-    #     log["image"] = x
-    #     log["label"] = y_color
-    #     log["predict"] = predict_color
-    #     return log
+    def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
+        if self.cfg.MODEL.uda:
+            return
+        log = dict()
+        x = batch['img'].to(self.device)
+        y = batch['mask']
+        # log["originals"] = x
+        out = self(x)['out']
+        # cam,overcam = self.get_cam(x,out)
+
+        out = torch.nn.functional.softmax(out,dim=1)
+        predict = out.argmax(1)
+
+        y_color,predict_color = self.gray2rgb(y,predict)
+        log["image"] = x
+        log["label"] = y_color
+        log["predict"] = predict_color
+        return log
