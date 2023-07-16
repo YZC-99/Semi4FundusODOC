@@ -47,10 +47,10 @@ class Base(pl.LightningModule):
         self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
-        if self.cfg.MODEL.uda:
-            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
-            if self.cfg.SOLVER.MULTI_LEVEL:
-                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
+        # if self.cfg.MODEL.uda:
+        #     self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
+        #     if self.cfg.SOLVER.MULTI_LEVEL:
+        #         self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
 
 
         if cfg.MODEL.stage1_ckpt_path is not None:
@@ -98,6 +98,10 @@ class Base(pl.LightningModule):
         ce_criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
         pcl_criterion = PrototypeContrastiveLoss(self.cfg)
 
+        if self.cfg.MODEL.uda:
+            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
+            if self.cfg.SOLVER.MULTI_LEVEL:
+                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
 
 
         # 源域图片的大小
