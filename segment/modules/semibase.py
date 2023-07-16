@@ -47,6 +47,12 @@ class Base(pl.LightningModule):
         self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
+        if self.cfg.MODEL.uda:
+            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
+            if self.cfg.SOLVER.MULTI_LEVEL:
+                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
+
+
         if cfg.MODEL.stage1_ckpt_path is not None:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
 
@@ -92,9 +98,7 @@ class Base(pl.LightningModule):
         ce_criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
         pcl_criterion = PrototypeContrastiveLoss(self.cfg)
 
-        feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
-        if self.cfg.SOLVER.MULTI_LEVEL:
-            out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
+
 
         # 源域图片的大小
         src_size = src_input.shape[-2:]
@@ -134,14 +138,14 @@ class Base(pl.LightningModule):
         src_feat = src_feat.permute(0, 2, 3, 1).contiguous().view(B * Hs_feat * Ws_feat, A)
         tgt_feat = tgt_feat.permute(0, 2, 3, 1).contiguous().view(B * Ht_feat * Wt_feat, A)
         # update feature-level statistics
-        feat_estimator.update(features=tgt_feat.detach(), labels=tgt_feat_mask)
-        feat_estimator.update(features=src_feat.detach(), labels=src_feat_mask)
+        self.feat_estimator.update(features=tgt_feat.detach(), labels=tgt_feat_mask)
+        self.feat_estimator.update(features=src_feat.detach(), labels=src_feat_mask)
 
         # contrastive loss on both domains
-        loss_feat = pcl_criterion(Proto=feat_estimator.Proto.detach(),
+        loss_feat = pcl_criterion(Proto=self.feat_estimator.Proto.detach(),
                                   feat=src_feat,
                                   labels=src_feat_mask) \
-                    + pcl_criterion(Proto=feat_estimator.Proto.detach(),
+                    + pcl_criterion(Proto=self.feat_estimator.Proto.detach(),
                                     feat=tgt_feat,
                                     labels=tgt_feat_mask)
         if self.cfg.SOLVER.MULTI_LEVEL:
@@ -156,14 +160,14 @@ class Base(pl.LightningModule):
             tgt_out_mask = tgt_pseudo_label.contiguous().view(B * Ht_out * Wt_out, )
 
             # update output-level statistics
-            out_estimator.update(features=tgt_out.detach(), labels=src_out_mask)
-            out_estimator.update(features=src_out.detach(), labels=tgt_out_mask)
+            self.out_estimator.update(features=tgt_out.detach(), labels=src_out_mask)
+            self.out_estimator.update(features=src_out.detach(), labels=tgt_out_mask)
 
             # the proposed contrastive loss on prediction map
-            loss_out = pcl_criterion(Proto=out_estimator.Proto.detach(),
+            loss_out = pcl_criterion(Proto=self.out_estimator.Proto.detach(),
                                      feat=src_out,
                                      labels=src_out_mask) \
-                       + pcl_criterion(Proto=out_estimator.Proto.detach(),
+                       + pcl_criterion(Proto=self.out_estimator.Proto.detach(),
                                        feat=tgt_out,
                                        labels=tgt_out_mask)
 

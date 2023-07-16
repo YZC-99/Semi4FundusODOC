@@ -1,11 +1,9 @@
 import os
 import torch
 import torch.utils.data
-import torch.distributed
-import torch.backends.cudnn
+import pytorch_lightning as pl
 
-
-class prototype_dist_estimator():
+class prototype_dist_estimator(pl.LightningModule):
     def __init__(self, feature_num, cfg):
         super(prototype_dist_estimator, self).__init__()
 
@@ -61,9 +59,6 @@ class prototype_dist_estimator():
                 sum_weight + self.Amount.view(C, 1).expand(C, A)
             )
             weight[sum_weight == 0] = 0
-            # print((1 - weight).shape)
-            # print((torch.mul((1 - weight),self.Proto)).shape)
-            # print(weight.shape)
 
             self.Proto = (self.Proto.mul(1 - weight) + mean.mul(weight)).detach()
 
@@ -86,3 +81,6 @@ class prototype_dist_estimator():
                     'Amount': self.Amount.cpu()
                     },
                    os.path.join(self.cfg.prototype_path, name))
+
+    def forward(self):
+        pass
