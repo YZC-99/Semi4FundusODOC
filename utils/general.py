@@ -49,7 +49,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     setup_callback = SetupCallback(config, exp_config, basedir)
     on_best_mIoU = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename=exp_config.name+"-{val/mIoU:.6f}-{val/dice_score:.6f}".replace('/','_'),
+        filename=exp_config.name+"-{val/mIoU:.6f}-{val/dice_score:.6f}",
         monitor="val/mIoU",
         mode="max",
         save_top_k=1,
@@ -58,7 +58,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     )
     on_best_dice = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename=exp_config.name+"-{val/mIoU:.6f}-{val/dice_score:.6f}".replace('/','_'),
+        filename=exp_config.name+"-{val/dice_score:.6f}-{val/mIoU:.6f}",
         monitor="val/dice_score",
         mode="max",
         save_top_k=1,
