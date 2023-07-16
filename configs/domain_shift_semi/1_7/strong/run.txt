@@ -1,1 +1,0 @@
-CUDA_VISIBLE_DEVICES=0 python -W ignore main_cfg.py --config-file configs/domian_shift_semi/G1R7R4_semi.yaml

@@ -8,6 +8,8 @@ from segment.util import meanIOU
 from segment.losses.loss import PrototypeContrastiveLoss
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
+from segment.prototype_dist_init import prototype_dist_init
+import os
 from torch.optim.lr_scheduler import StepLR
 from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
@@ -183,8 +185,10 @@ class Base(pl.LightningModule):
         return loss
 
     def on_train_start(self) -> None:
-        if self.cfg.MODEL.uda:
-            self.print('>>>>>>>>>>>>>>>> prototypes >>>>>>>>>>>>>>>>')
+        # if self.cfg.MODEL.uda:
+        #     if len(os.listdir(self.cfg.prototype_path)) == 0:
+        #         self.print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
+        #         prototype_dist_init(self.cfg, src_train_loader=self.trainer.train_dataloader)
         self.print(len(self.trainer.train_dataloader))
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
@@ -197,8 +201,8 @@ class Base(pl.LightningModule):
             backbone_feat,logits = output['backbone_features'],output['out']
             loss = self.loss(logits, y)
 
-        self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True)
-        self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
+        self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
 
 
@@ -217,16 +221,17 @@ class Base(pl.LightningModule):
         self.dice.update(preds, y)
         self.iou.add_batch(preds.cpu().numpy(), y.cpu().numpy())
 
-        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True)
+        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
+
         return loss
 
 
     def on_validation_epoch_end(self) -> None:
         self.log("val/mIoU", self.iou.evaluate()[-1], prog_bar=True, logger=True, on_step=False, on_epoch=True,
-                 sync_dist=True)
+                 sync_dist=True,rank_zero_only=True)
         dice_score = self.dice.compute().item()
         self.log(f"val/dice_score", dice_score, prog_bar=True, logger=True, on_step=False, on_epoch=True,
-                 sync_dist=True)
+                 sync_dist=True,rank_zero_only=True)
 
 
     def configure_optimizers(self) -> Tuple[List, List]:

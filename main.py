@@ -9,8 +9,10 @@ import os
 import sys
 from yacs.config import CfgNode as CN
 import yaml
+from torch.utils.data import DataLoader
 from segment.configs import cfg
 from segment.modules.semibase import Base
+from segment.prototype_dist_init import prototype_dist_init
 from segment.dataloader.od_oc_dataset import SemiDataset
 import argparse, os, sys, datetime, glob, importlib
 from pathlib import Path
@@ -54,6 +56,12 @@ if __name__ == '__main__':
     now_ex_prototypes_path = os.path.join(now_experiment_path,'prototypes')
     now_ex_logs_path = os.path.join(now_experiment_path,'logs')
     now_ex_models_path = os.path.join(now_experiment_path,'models')
+
+    if not os.path.exists(now_experiment_path):
+        os.makedirs(now_experiment_path)
+    if not os.path.exists(now_ex_prototypes_path):
+        os.makedirs(now_ex_prototypes_path)
+
     cfg.MODEL.logs_path = now_ex_logs_path
     cfg.MODEL.save_path = now_ex_models_path
     cfg.prototype_path = now_ex_prototypes_path
@@ -74,6 +82,13 @@ if __name__ == '__main__':
     data = initialize_from_config(config.dataset)
     data.prepare_data()
 
+    src_dataset = initialize_from_config(config.dataset.params['train'])
+    src_dataloader = DataLoader(src_dataset, batch_size=cfg.MODEL.batch_size,
+                          num_workers=8, shuffle=True,drop_last=True)
+
+    if len(os.listdir(cfg.prototype_path)) < 2:
+        print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
+        prototype_dist_init(cfg, src_train_loader= src_dataloader)
 
     # Build trainer
     trainer = pl.Trainer(max_epochs=exp_config.epochs,

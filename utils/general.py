@@ -47,12 +47,22 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         os.makedirs(basedir, exist_ok=True)
 
     setup_callback = SetupCallback(config, exp_config, basedir)
-    checkpoint_callback = ModelCheckpoint(
+    on_best_mIoU = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename=exp_config.name+"-{epoch:02d}",
+        filename=exp_config.name+"-{val/mIoU:.6f}-{val/dice_score:.6f}",
         monitor="val/mIoU",
+        mode="max",
         save_top_k=1,
-        save_last=True,
+        save_last=False,
+        verbose=False,
+    )
+    on_best_dice = ModelCheckpoint(
+        dirpath=setup_callback.ckptdir,
+        filename=exp_config.name+"-{val/mIoU:.6f}-{val/dice_score:.6f}",
+        monitor="val/dice_score",
+        mode="max",
+        save_top_k=1,
+        save_last=False,
         verbose=False,
     )
     if dist.is_initialized() and dist.get_rank() == 0:
@@ -62,7 +72,8 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     logger_img_callback = ImageLogger(exp_config.batch_frequency, exp_config.max_images)
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
-    return [setup_callback, checkpoint_callback, logger_img_callback], logger
+    # return [setup_callback, checkpoint_callback, logger_img_callback], logger
+    return [setup_callback, on_best_mIoU,on_best_dice, logger_img_callback], logger
 
 
 def get_config_from_file(config_file: str) -> Dict:

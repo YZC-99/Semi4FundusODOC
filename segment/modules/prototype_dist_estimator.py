@@ -32,7 +32,6 @@ class prototype_dist_estimator():
                 resume = os.path.join(resume, 'prototype_feat_dist.pth')
             else:
                 raise RuntimeError("Feature_num not available: {}".format(feature_num))
-            print("Loading checkpoint from {}".format(resume))
             checkpoint = torch.load(resume, map_location=torch.device('cpu'))
             self.Proto = checkpoint['Proto'].cuda(non_blocking=True)
             self.Amount = checkpoint['Amount'].cuda(non_blocking=True)

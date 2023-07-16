@@ -14,14 +14,13 @@ MODEL:
   backbone: 'resnet50'
   model: 'deeplabv3plus'
   labeled_id_path: 'dataset/splits/sup/ORIGA100REFUGE700_labeled.txt'
-  stage1_ckpt_path: 'experiments/sup/ORIGA100_sup/ckpt/train_mIoUTdeeplabv3plus_resnet50_90.10.pth'
+  stage1_ckpt_path: 'experiments/sup/ORIGA100_sup/models/train_mIoUTdeeplabv3plus_resnet50_90.10.pth'
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
         batch_size: 8
         num_workers: 8
-
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:

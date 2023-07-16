@@ -13,8 +13,7 @@ MODEL:
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  labeled_id_path: 'dataset/splits/sup/ORIGA100REFUGE700_labeled.txt'
-  stage1_ckpt_path: 'experiments/sup/ORIGA100_sup/ckpt/train_mIoUTdeeplabv3plus_resnet50_90.10.pth'
+  stage1_ckpt_path: 'experiments/sup/GAMMA100_sup/models/train_mIoUTdeeplabv3plus_resnet50_90.10.pth'
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
