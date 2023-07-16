@@ -44,14 +44,9 @@ class Base(pl.LightningModule):
         self.backbone = backbone
         self.num_classes = num_classes
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
-
         self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
-        # if self.cfg.MODEL.uda:
-        #     self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
-        #     if self.cfg.SOLVER.MULTI_LEVEL:
-        #         self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
 
         if cfg.MODEL.stage1_ckpt_path is not None:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -218,17 +213,16 @@ class Base(pl.LightningModule):
         self.jaccard(preds, y)
 
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/mIoU", self.jaccard, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/dice_score", self.dice_score, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/mIoU", self.jaccard, prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
+        self.log("val/dice_score", self.dice_score, prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
         return loss
 
 
-    # def on_validation_epoch_end(self) -> None:
-    #     self.log("val/mIoU", self.iou.evaluate()[-1], prog_bar=True, logger=True, on_step=False, on_epoch=True,
-    #              sync_dist=True,rank_zero_only=True)
-    #     dice_score = self.dice.compute().item()
-    #     self.log(f"val/dice_score", dice_score, prog_bar=True, logger=True, on_step=False, on_epoch=True,
-    #              sync_dist=True,rank_zero_only=True)
+    def on_validation_epoch_end(self) -> None:
+        self.log("val/mIoU", self.jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True,
+                 sync_dist=True,rank_zero_only=True)
+        self.log(f"val/dice_score", self.dice_score, prog_bar=True, logger=True, on_step=False, on_epoch=True,
+                 sync_dist=True,rank_zero_only=True)
 
 
     def configure_optimizers(self) -> Tuple[List, List]:
