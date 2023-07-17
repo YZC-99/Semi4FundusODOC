@@ -7,7 +7,7 @@ MODEL:
   NUM_CLASSES: 2
   batch_size: 8
   epochs: 100
-  lr: 0.002 # 0.004/16*batch_size
+  lr: 0.004 # 0.004/16*batch_size
   crop_size: 512
   dataset: 'semi'
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
@@ -20,7 +20,7 @@ MODEL:
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
-        batch_size: 8
+        batch_size: 16
         num_workers: 8
 
         train:

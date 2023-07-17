@@ -46,8 +46,8 @@ class Base(pl.LightningModule):
         self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
-        self.val_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
-        self.val_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
+        self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+        self.val_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
 
         if cfg.MODEL.stage1_ckpt_path is not None:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -199,10 +199,6 @@ class Base(pl.LightningModule):
         return loss
 
 
-    # def on_validation_start(self) -> None:
-    #     self.val_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
-    #     self.val_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
-
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
         y = batch['mask']
@@ -210,20 +206,15 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
-        # self.val_dice_score.update(preds, y)
-        # self.val_jaccard(preds, y)
-        # self.log("val/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        # self.log("val_mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
-        # self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=True, on_epoch=False, sync_dist=True,rank_zero_only=True)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
         loss,preds,y = outputs['val_loss'],outputs['preds'],outputs['y']
         self.val_dice_score.update(preds, y)
-        self.val_jaccard(preds, y)
+        self.val_jaccard.update(preds, y)
         self.log("val_loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_mIoU", self.val_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_dice_score", self.val_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_mIoU", self.val_mean_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_dice_score", self.val_mean_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
 
     def configure_optimizers(self) -> Tuple[List, List]:
