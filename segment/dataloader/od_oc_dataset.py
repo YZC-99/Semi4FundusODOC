@@ -118,23 +118,23 @@ class SemiDataset(Dataset):
 
         # strong augmentation on unlabeled images
         if self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids:
-            if self.aug.aug.strong.Not:
+            if self.aug.strong.Not:
                 img, mask = normalize(img, mask)
                 return {'img':img, 'mask':mask}
 
-            if self.aug == None or self.aug.aug.strong.default:
+            if self.aug == None or self.aug.strong.default:
                 if random.random() < 0.8:
                     img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
                 img = transforms.RandomGrayscale(p=0.2)(img)
                 img = blur(img, p=0.5)
                 img, mask = cutout(img, mask, p=0.5)
-            if self.aug.aug.strong.ColorJitter:
+            if self.aug.strong.ColorJitter:
                 img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
-            if self.aug.aug.strong.RandomGrayscale:
+            if self.aug.strong.RandomGrayscale:
                 img = transforms.RandomGrayscale(p=1.0)(img)
-            if self.aug.aug.strong.blur:
+            if self.aug.strong.blur:
                 img = blur(img, p=1.0)
-            if self.aug.aug.strong.cutout:
+            if self.aug.strong.cutout:
                 img, mask = cutout(img, mask, p=1.0)
 
             img, mask = normalize(img, mask)
