@@ -50,7 +50,7 @@ def label(dataloader, cfg):
             for batch in tbar:
                 img,mask,id = batch['img'],batch['mask'],batch['id']
                 img = img.cuda()
-                pred = model(img, True)
+                pred = model(img, True)['out']
                 pred = torch.argmax(pred, dim=1).cpu()
 
                 metric.add_batch(pred.numpy(), mask.numpy())
