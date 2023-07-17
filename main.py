@@ -67,7 +67,7 @@ if __name__ == '__main__':
     cfg.MODEL.logs_path = now_ex_logs_path
     cfg.MODEL.save_path = now_ex_models_path
     cfg.prototype_path = now_ex_prototypes_path
-    cfg.pseudo_mask_path = now_ex_pseudo_masks_path
+    cfg.MODEL.pseudo_mask_path = now_ex_pseudo_masks_path
 
     exp_config = OmegaConf.create({"name": args.config, "epochs": cfg.MODEL.epochs, "update_every": args.update_every,
                                     "use_amp": args.use_amp, "batch_frequency": args.batch_frequency,
