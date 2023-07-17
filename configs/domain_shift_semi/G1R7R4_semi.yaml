@@ -33,6 +33,14 @@ dataset:
                 unlabeled_id_path: 'dataset/semi/REFUGE700_unlabeled.txt'
                 size: 512
                 mode: 'semi_train'
+                aug:
+                  strong:
+                    Not: False
+                    default: True
+                    ColorJitter: False
+                    RandomGrayscale: False
+                    blur: False
+                    cutout: False
 
 
         validation:

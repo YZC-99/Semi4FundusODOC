@@ -7,14 +7,6 @@ _C.info = CN()
 _C.info.setting='od_val_refuge/1_7/100gamma'
 _C.info.description=''
 
-_C.aug = CN()
-_C.aug.strong = CN()
-_C.aug.strong.Not = False
-_C.aug.strong.default = True
-_C.aug.strong.ColorJitter = False
-_C.aug.strong.RandomGrayscale = False
-_C.aug.strong.blur = False
-_C.aug.strong.cutout = False
 # _C.aug.weak.hflip =
 
 # _C = CN()
@@ -84,6 +76,16 @@ _C.dataset.params.train.params.labeled_id_path = ''
 _C.dataset.params.train.params.unlabeled_id_path = ''
 _C.dataset.params.train.params.pseudo_mask_path = ''
 _C.dataset.params.train.params.cfg = CN()
+
+_C.dataset.params.train.params.aug = CN()
+_C.dataset.params.train.params.aug.strong = CN()
+_C.dataset.params.train.params.aug.strong.Not = False
+_C.dataset.params.train.params.aug.strong.default = True
+_C.dataset.params.train.params.aug.strong.ColorJitter = False
+_C.dataset.params.train.params.aug.strong.RandomGrayscale = False
+_C.dataset.params.train.params.aug.strong.blur = False
+_C.dataset.params.train.params.aug.strong.cutout = False
+
 #
 _C.dataset.params.train2 = CN()
 _C.dataset.params.train2.target =''

@@ -45,7 +45,7 @@ def get_labels(task,mask_path):
 
 
 class SemiDataset(Dataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,cfg=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         """
         :param name: dataset name, pascal or cityscapes
         :param root: root path of the dataset.
@@ -59,7 +59,7 @@ class SemiDataset(Dataset):
         :param unlabeled_id_path: path of unlabeled image ids, needed in semi_train or label mode.
         :param pseudo_mask_path: path of generated pseudo masks, needed in semi_train mode.
         """
-        self.cfg = cfg
+        self.cfg = aug
         self.task = task
         self.name = name
         self.root = root
