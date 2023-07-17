@@ -233,7 +233,7 @@ class Base(pl.LightningModule):
         '''
         self.val_od_dice_score.update(od_preds, od_y)
         self.val_od_jaccard.update(od_preds, od_y)
-        self.log("val_OD_IoU", self.val_od_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_OD_IoU", self.val_od_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val_OD_dice_score", self.val_od_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
         self.val_mean_dice_score.update(preds, y)
