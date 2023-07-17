@@ -15,10 +15,6 @@ MODEL:
   model: 'deeplabv3plus'
   stage1: False
   stage1_ckpt_path: 'experiments/sup/GAMMA100_sup/models/train_mIoUTdeeplabv3plus_resnet50_90.10.pth'
-  stage2: False
-  stage3: True
-  stage4: True
-  stage5: False
 
 
 dataset:
