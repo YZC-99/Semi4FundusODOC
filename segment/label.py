@@ -47,7 +47,8 @@ def label(dataloader, cfg):
         writer = csv.writer(file)
         writer.writerow(['ID', 'IoU','Dice'])  # 写入表头
         with torch.no_grad():
-            for img, mask, id in tbar:
+            for batch in tbar:
+                img,mask,id = batch['img'],batch['mask'],batch['id']
                 img = img.cuda()
                 pred = model(img, True)
                 pred = torch.argmax(pred, dim=1).cpu()
