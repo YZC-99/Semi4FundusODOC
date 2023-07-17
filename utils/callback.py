@@ -26,7 +26,7 @@ class SetupCallback(Callback):
         self.logdir = basedir / logdir
         self.ckptdir = basedir / ckptdir
         self.prototypes = basedir / 'prototypes'
-        self.pseudo = basedir / 'pseudo'
+        self.pseudo = basedir / 'pseudo_masks'
         self.config = config
         self.exp_config = exp_config
         

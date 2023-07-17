@@ -1,19 +1,25 @@
 info:
-  setting: 'od_val_refuge/1_7/100gamma'
-  description: 'sup'
+  setting: ''
+  description: 'semi_REFUGE100+REFUGE700'
 MODEL:
-  sup: True
+  sup: False
+  label: True
   NUM_CLASSES: 2
   batch_size: 8
-  lr: 0.002 # 0.004/16*batch_size
   epochs: 100
+  lr: 0.002 # 0.004/16*batch_size
   crop_size: 512
-  dataset: 'sup'
+  dataset: 'semi'
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  labeled_id_path: 'dataset/splits/sup/ORIGA100REFUGE700_labeled.txt'
-  save_path: 'experiments/REFUGE800_sup/models'
+  stage1: False
+  stage1_ckpt_path: 'experiments/sup/GAMMA100_sup/models/train_mIoUTdeeplabv3plus_resnet50_90.10.pth'
+  stage2: False
+  stage3: True
+  stage4: True
+  stage5: False
+
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
@@ -25,17 +31,19 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od'
-                name: 'sup'
+                name: 'semi'
                 root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
                 labeled_id_path: 'dataset/sup/GAMMA100_labeled.txt'
+                unlabeled_id_path: 'dataset/sup/REFUGE700_unlabeled.txt'
                 size: 512
-                mode: 'train'
+                mode: 'semi_train'
+
 
         validation:
-            target: segment.dataloader.od_oc_dataset.Validation
+            target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od'
-                name: 'sup'
+                name: 'semi'
                 root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
                 size: 512
                 mode: 'val'

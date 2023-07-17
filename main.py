@@ -13,7 +13,9 @@ from torch.utils.data import DataLoader
 from segment.configs import cfg
 from segment.modules.semibase import Base
 from segment.prototype_dist_init import prototype_dist_init
-from segment.dataloader.od_oc_dataset import SemiDataset
+from segment.dataloader.od_oc_dataset import SemiDataset,SemiUabledTrain
+from segment.label import label
+
 import argparse, os, sys, datetime, glob, importlib
 from pathlib import Path
 from omegaconf import OmegaConf
@@ -65,6 +67,7 @@ if __name__ == '__main__':
     cfg.MODEL.logs_path = now_ex_logs_path
     cfg.MODEL.save_path = now_ex_models_path
     cfg.prototype_path = now_ex_prototypes_path
+    cfg.pseudo_mask_path = now_ex_pseudo_masks_path
 
     exp_config = OmegaConf.create({"name": args.config, "epochs": cfg.MODEL.epochs, "update_every": args.update_every,
                                     "use_amp": args.use_amp, "batch_frequency": args.batch_frequency,
@@ -77,18 +80,46 @@ if __name__ == '__main__':
     # Setup callbacks
     callbacks, logger = setup_callbacks(exp_config, config)
 
+    if len(os.listdir(cfg.prototype_path)) < 2 and cfg.MODEL.uda:
+        src_dataset = initialize_from_config(config.dataset.params['train'])
+        src_dataloader = DataLoader(src_dataset, batch_size=cfg.MODEL.batch_size,
+                                    num_workers=8, shuffle=True, drop_last=True)
+        print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
+        prototype_dist_init(cfg, src_train_loader= src_dataloader)
+    if cfg.label:
+        unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train.params.task,
+                                            name=cfg.dataset.params.train.params.name,
+                                            root=cfg.dataset.params.train.params.root,
+                                            mode='label',
+                                            size=cfg.dataset.params.train.params.size,
+                                            labeled_id_path=None,
+                                            unlabeled_id_path=cfg.dataset.params.train.params.unlabeled_id_path,
+                                            pseudo_mask_path=None,cfg=cfg)
+        unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
+                                     pin_memory=True, num_workers=8, drop_last=False)
+        # 这里model应当是重新初始化的
+        best_model = Base('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
+        sd = torch.load(cfg.MODEL.stage1_ckpt_path, map_location='cpu')
+        new_state_dict = {}
+        for key, value in sd.items():
+            if not key.startswith('module.'):  # 如果关键字没有"module."前缀，加上该前缀
+                if 'module.' + key in best_model.state_dict():
+                    # 模型在多GPU上训练并保存，加载权重时加上"module."前缀
+                    key = 'module.' + key
+            new_state_dict[key] = value
+        best_model.load_state_dict(new_state_dict)
+        label(best_model,unlabeled_dataloader,cfg)
+
+    # 如果是semi训练的话，是需要修改配置文件中的pseudo_masks_path的
+    if cfg.MODEL.dataset == 'semi':
+        cfg.dataset.params.train.params.unlabeled_id_path = now_ex_pseudo_masks_path
 
     # Build data modules
     data = initialize_from_config(config.dataset)
     data.prepare_data()
 
-    src_dataset = initialize_from_config(config.dataset.params['train'])
-    src_dataloader = DataLoader(src_dataset, batch_size=cfg.MODEL.batch_size,
-                          num_workers=8, shuffle=True,drop_last=True)
 
-    if len(os.listdir(cfg.prototype_path)) < 2:
-        print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
-        prototype_dist_init(cfg, src_train_loader= src_dataloader)
+
 
     # Build trainer
     trainer = pl.Trainer(max_epochs=exp_config.epochs,
