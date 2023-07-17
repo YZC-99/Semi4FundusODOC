@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
-
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -48,6 +48,9 @@ class Base(pl.LightningModule):
 
         self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
         self.val_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
+        self.val_od_dice_score = Dice(num_classes=2,average='macro').to(self.device)
+        self.val_od_jaccard = JaccardIndex(num_classes=2,task='binary').to(self.device)
+
 
         if cfg.MODEL.stage1_ckpt_path is not None:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -210,9 +213,31 @@ class Base(pl.LightningModule):
 
     def validation_step_end(self, outputs):
         loss,preds,y = outputs['val_loss'],outputs['preds'],outputs['y']
+        self.log("val_loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
+        # 背景的指标不必计算
+        # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
+        od_preds = copy.deepcopy(preds)
+        od_y = copy.deepcopy(y)
+        od_preds[od_preds != 1] = 0
+        od_y[od_y != 1] = 0
+
+        '''
+        视杯的情况
+        oc_preds = copy.deepcopy(preds)
+        oc_y = copy.deepcopy(y)
+        oc_preds[oc_preds != 2] = 0
+        oc_preds[oc_preds != 0] = 1
+        oc_y[oc_y != 2] = 0
+        oc_y[oc_y != 0] = 1
+        '''
+        self.val_od_dice_score.update(od_preds, od_y)
+        self.val_od_jaccard.update(od_preds, od_y)
+        self.log("val_OD_IoU", self.val_od_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_OD_dice_score", self.val_od_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+
         self.val_mean_dice_score.update(preds, y)
         self.val_mean_jaccard.update(preds, y)
-        self.log("val_loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val_mIoU", self.val_mean_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val_dice_score", self.val_mean_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
