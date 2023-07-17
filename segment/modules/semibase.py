@@ -210,8 +210,8 @@ class Base(pl.LightningModule):
 
     def validation_step_end(self, outputs):
         loss,preds,y = outputs['val_loss'],outputs['preds'],outputs['y']
-        self.val_dice_score.update(preds, y)
-        self.val_jaccard.update(preds, y)
+        self.val_mean_dice_score.update(preds, y)
+        self.val_mean_jaccard.update(preds, y)
         self.log("val_loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val_mIoU", self.val_mean_jaccard.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val_dice_score", self.val_mean_dice_score.compute(), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
