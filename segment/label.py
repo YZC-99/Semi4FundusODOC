@@ -33,7 +33,7 @@ def label(dataloader, cfg):
                 key = 'module.' + key
         new_state_dict[key] = value
     model.load_state_dict(new_state_dict)
-
+    model.cuda()
     model.eval()
     tbar = tqdm(dataloader)
     metric = meanIOU(num_classes=cfg.MODEL.NUM_CLASSES)
@@ -50,7 +50,7 @@ def label(dataloader, cfg):
             for batch in tbar:
                 img,mask,id = batch['img'],batch['mask'],batch['id']
                 img = img.cuda()
-                pred = model(img, True)['out']
+                pred = model(img)['out']
                 pred = torch.argmax(pred, dim=1).cpu()
 
                 metric.add_batch(pred.numpy(), mask.numpy())
