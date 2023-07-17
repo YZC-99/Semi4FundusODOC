@@ -257,6 +257,15 @@ class Base(pl.LightningModule):
         self.log("val/mIoU", self.val_mean_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/dice_score", self.val_mean_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
+    def on_validation_epoch_end(self) -> None:
+        # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
+        self.val_mean_dice_score.reset()
+        self.val_mean_jaccard.reset()
+        self.val_od_dice_score.reset()
+        self.val_od_jaccard.reset()
+        if self.cfg.MODEL.NUM_CLASSES == 3:
+            self.val_oc_dice_score.reset()
+            self.val_oc_jaccard.reset()
 
     def configure_optimizers(self) -> Tuple[List, List]:
         lr = self.cfg.MODEL.lr
