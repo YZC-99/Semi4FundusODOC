@@ -29,8 +29,8 @@ dataset:
                 task: 'od'
                 name: 'semi'
                 root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
-                labeled_id_path: 'dataset/sup/GAMMA100_labeled.txt'
-                unlabeled_id_path: 'dataset/sup/REFUGE700_unlabeled.txt'
+                labeled_id_path: 'dataset/semi/GAMMA100_labeled.txt'
+                unlabeled_id_path: 'dataset/semi/REFUGE700_unlabeled.txt'
                 size: 512
                 mode: 'semi_train'
 

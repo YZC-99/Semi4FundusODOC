@@ -41,6 +41,8 @@ def label(dataloader, cfg):
     cmap = color_map(cfg.MODEL.dataset)
 
     # 创建csv文件
+    if not os.path.exists(cfg.MODEL.logs_path):
+       os.makedirs(cfg.MODEL.logs_path)
     with open(os.path.join(cfg.MODEL.logs_path,'pseudo_label_metrics.csv'), 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['ID', 'IoU','Dice'])  # 写入表头
