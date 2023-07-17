@@ -110,7 +110,6 @@ class SemiDataset(Dataset):
         else:
             # mode == 'semi_train' and the id corresponds to unlabeled image
             fname = os.path.basename(id.split(' ')[1])
-            print(os.path.join(self.pseudo_mask_path, fname))
             mask = get_labels(self.task, os.path.join(self.pseudo_mask_path, fname))
         # basic augmentation on all training images
         img, mask = resize(img, mask, self.size)
