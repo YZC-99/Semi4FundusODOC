@@ -86,7 +86,7 @@ if __name__ == '__main__':
                                     num_workers=8, shuffle=True, drop_last=True)
         print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
         prototype_dist_init(cfg, src_train_loader= src_dataloader)
-    if cfg.MODEL.label and len(os.listdir(cfg.MODEL.pseudo_mask_path) > 0):
+    if cfg.MODEL.label and len(os.listdir(cfg.MODEL.pseudo_mask_path)) == 0:
         unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train.params.task,
                                             name=cfg.dataset.params.train.params.name,
                                             root=cfg.dataset.params.train.params.root,
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     # 如果是semi训练的话，是需要修改配置文件中的pseudo_masks_path的
     if cfg.MODEL.dataset == 'semi':
-        cfg.dataset.params.train.params.unlabeled_id_path = now_ex_pseudo_masks_path
+        cfg.dataset.params.train.params.pseudo_mask_path = now_ex_pseudo_masks_path
 
     # Build data modules
     data = initialize_from_config(config.dataset)
