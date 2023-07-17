@@ -5,3 +5,5 @@ git add .
 git commit -m "added"
 
 git pull --rebase
+
+git reset --hard origin/master

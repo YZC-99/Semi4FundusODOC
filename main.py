@@ -98,7 +98,6 @@ if __name__ == '__main__':
         unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
                                      pin_memory=True, num_workers=8, drop_last=False)
         # 这里model应当是重新初始化的
-
         label(unlabeled_dataloader,cfg)
 
     # 如果是semi训练的话，是需要修改配置文件中的pseudo_masks_path的
