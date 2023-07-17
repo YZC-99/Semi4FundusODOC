@@ -103,7 +103,6 @@ if __name__ == '__main__':
     # 如果是semi训练的话，是需要修改配置文件中的pseudo_masks_path的
     if cfg.MODEL.dataset == 'semi':
         config.dataset.params.train.params.pseudo_mask_path = now_ex_pseudo_masks_path
-        config.dataset.params.train.params.cfg = cfg
     # Build data modules
     data = initialize_from_config(config.dataset)
     data.prepare_data()

@@ -59,7 +59,7 @@ class SemiDataset(Dataset):
         :param unlabeled_id_path: path of unlabeled image ids, needed in semi_train or label mode.
         :param pseudo_mask_path: path of generated pseudo masks, needed in semi_train mode.
         """
-        self.cfg = aug
+        self.aug = aug
         self.task = task
         self.name = name
         self.root = root
@@ -118,23 +118,23 @@ class SemiDataset(Dataset):
 
         # strong augmentation on unlabeled images
         if self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids:
-            if self.cfg.aug.strong.Not:
+            if self.aug.aug.strong.Not:
                 img, mask = normalize(img, mask)
                 return {'img':img, 'mask':mask}
 
-            if self.cfg == None or self.cfg.aug.strong.default:
+            if self.aug == None or self.aug.aug.strong.default:
                 if random.random() < 0.8:
                     img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
                 img = transforms.RandomGrayscale(p=0.2)(img)
                 img = blur(img, p=0.5)
                 img, mask = cutout(img, mask, p=0.5)
-            if self.cfg.aug.strong.ColorJitter:
+            if self.aug.aug.strong.ColorJitter:
                 img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
-            if self.cfg.aug.strong.RandomGrayscale:
+            if self.aug.aug.strong.RandomGrayscale:
                 img = transforms.RandomGrayscale(p=1.0)(img)
-            if self.cfg.aug.strong.blur:
+            if self.aug.aug.strong.blur:
                 img = blur(img, p=1.0)
-            if self.cfg.aug.strong.cutout:
+            if self.aug.aug.strong.cutout:
                 img, mask = cutout(img, mask, p=1.0)
 
             img, mask = normalize(img, mask)
@@ -146,7 +146,7 @@ class SemiDataset(Dataset):
         return len(self.ids)
 
 class Validation(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,cfg=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -155,10 +155,10 @@ class Validation(SemiDataset):
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         cfg=cfg)
+                         aug=aug)
 
 class SupTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,cfg=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -167,10 +167,10 @@ class SupTrain(SemiDataset):
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         cfg=cfg)
+                         aug=aug)
 
 class SemiTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,cfg=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -179,10 +179,10 @@ class SemiTrain(SemiDataset):
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         cfg=cfg)
+                         aug=aug)
 
 class SemiUabledTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,cfg=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -191,4 +191,4 @@ class SemiUabledTrain(SemiDataset):
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         cfg=cfg)
+                         aug=aug)
