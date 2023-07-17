@@ -86,7 +86,7 @@ if __name__ == '__main__':
                                     num_workers=8, shuffle=True, drop_last=True)
         print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
         prototype_dist_init(cfg, src_train_loader= src_dataloader)
-    if cfg.MODEL.label:
+    if cfg.MODEL.label and len(os.listdir(cfg.MODEL.pseudo_mask_path) > 0):
         unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train.params.task,
                                             name=cfg.dataset.params.train.params.name,
                                             root=cfg.dataset.params.train.params.root,
