@@ -233,6 +233,31 @@ class Base(pl.LightningModule):
             oc_y[oc_y != 0] = 1
             self.val_oc_dice_score.update(oc_preds, oc_y)
             self.val_oc_jaccard.update(oc_preds, oc_y)
+
+        self.val_od_dice_score.update(od_preds, od_y)
+        self.val_od_jaccard.update(od_preds, od_y)
+
+        self.val_mean_dice_score.update(preds, y)
+        self.val_mean_jaccard.update(preds, y)
+
+    def on_validation_epoch_end(self) -> None:
+
+        self.log("val_OD_IoU", self.val_od_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_OD_dice_score", self.val_od_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_IoU", self.val_od_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_dice_score", self.val_od_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+
+        self.log("val_mIoU", self.val_mean_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_dice_score", self.val_mean_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/mIoU", self.val_mean_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/dice_score", self.val_mean_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+
+        # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
+        self.val_mean_dice_score.reset()
+        self.val_mean_jaccard.reset()
+        self.val_od_dice_score.reset()
+        self.val_od_jaccard.reset()
+        if self.cfg.MODEL.NUM_CLASSES == 3:
             self.log("val_OC_IoU", self.val_oc_jaccard.compute(), prog_bar=True, logger=False, on_step=False,
                      on_epoch=True, sync_dist=True, rank_zero_only=True)
             self.log("val_OC_dice_score", self.val_oc_dice_score.compute(), prog_bar=True, logger=False, on_step=False,
@@ -241,29 +266,6 @@ class Base(pl.LightningModule):
                      on_epoch=True, sync_dist=True, rank_zero_only=True)
             self.log("val/OC_dice_score", self.val_oc_dice_score.compute(), prog_bar=False, logger=True, on_step=False,
                      on_epoch=True, sync_dist=True, rank_zero_only=True)
-
-        self.val_od_dice_score.update(od_preds, od_y)
-        self.val_od_jaccard.update(od_preds, od_y)
-        self.log("val_OD_IoU", self.val_od_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_OD_dice_score", self.val_od_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_IoU", self.val_od_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_dice_score", self.val_od_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-
-        self.val_mean_dice_score.update(preds, y)
-        self.val_mean_jaccard.update(preds, y)
-        self.log("val_mIoU", self.val_mean_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_dice_score", self.val_mean_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/mIoU", self.val_mean_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/dice_score", self.val_mean_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-    def on_validation_epoch_end(self) -> None:
-        # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
-        self.val_mean_dice_score.reset()
-        self.val_mean_jaccard.reset()
-        self.val_od_dice_score.reset()
-        self.val_od_jaccard.reset()
-        if self.cfg.MODEL.NUM_CLASSES == 3:
             self.val_oc_dice_score.reset()
             self.val_oc_jaccard.reset()
 
