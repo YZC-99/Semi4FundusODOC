@@ -98,17 +98,8 @@ if __name__ == '__main__':
         unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
                                      pin_memory=True, num_workers=8, drop_last=False)
         # 这里model应当是重新初始化的
-        best_model = Base('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
-        sd = torch.load(cfg.MODEL.stage1_ckpt_path, map_location='cpu')
-        new_state_dict = {}
-        for key, value in sd.items():
-            if not key.startswith('module.'):  # 如果关键字没有"module."前缀，加上该前缀
-                if 'module.' + key in best_model.state_dict():
-                    # 模型在多GPU上训练并保存，加载权重时加上"module."前缀
-                    key = 'module.' + key
-            new_state_dict[key] = value
-        best_model.load_state_dict(new_state_dict)
-        label(best_model,unlabeled_dataloader,cfg)
+
+        label(unlabeled_dataloader,cfg)
 
     # 如果是semi训练的话，是需要修改配置文件中的pseudo_masks_path的
     if cfg.MODEL.dataset == 'semi':

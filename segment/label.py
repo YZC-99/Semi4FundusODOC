@@ -11,9 +11,29 @@ from segment.util import count_params, meanIOU, color_map
 from PIL import Image
 from skimage import measure,draw
 import numpy as np
+from segment.modules.semseg.deeplabv2 import DeepLabV2
+from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
+from segment.modules.semseg.pspnet import PSPNet
 
 
-def label(model, dataloader, cfg):
+def label(dataloader, cfg):
+    print(">>>>>>>>>>>>>正在推理伪标签<<<<<<<<<<<<<<<")
+    num_classes = 2
+    ckpt_path = cfg.MODEL.stage1_ckpt_path
+
+    model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
+    model = model_zoo['deeplabv3plus']('resnet50',num_classes)
+
+    sd = torch.load(ckpt_path,map_location='cpu')
+    new_state_dict = {}
+    for key, value in sd.items():
+        if not key.startswith('module.'):  # 如果关键字没有"module."前缀，加上该前缀
+            if 'module.' + key in model.state_dict():
+                # 模型在多GPU上训练并保存，加载权重时加上"module."前缀
+                key = 'module.' + key
+        new_state_dict[key] = value
+    model.load_state_dict(new_state_dict)
+
     model.eval()
     tbar = tqdm(dataloader)
     metric = meanIOU(num_classes=cfg.MODEL.NUM_CLASSES)
