@@ -49,17 +49,57 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     setup_callback = SetupCallback(config, exp_config, basedir)
     on_best_mIoU = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename="{val_mIoU:.6f}-{val_dice_score:.6f}",
+        filename="{val_mIoU:.6f}-{val_mDice:.6f}-{val_OD_dice_score:.6f}-{val_OD_IoU:.6f}-{val_OC_dice_score:.6f}-{val_OC_IoU:.6f}",
         monitor="val_mIoU",
         mode="max",
         save_top_k=1,
         save_last=False,
         verbose=False,
     )
-    on_best_dice = ModelCheckpoint(
+    on_best_mDice = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename="{val_dice_score:.6f}-{val_mIoU:.6f}",
-        monitor="val_dice_score",
+        filename="{val_mDice:.6f}-{val_mIoU:.6f}-{val_OD_dice_score:.6f}-{val_OD_IoU:.6f}-{val_OC_dice_score:.6f}-{val_OC_IoU:.6f}",
+        monitor="val_mDice",
+        mode="max",
+        save_top_k=1,
+        save_last=False,
+        verbose=False,
+    )
+
+    on_best_OD_Dice = ModelCheckpoint(
+        dirpath=setup_callback.ckptdir,
+        filename="{val_OD_dice_score:.6f}-{val_mIoU:.6f}-{val_mDice:.6f}-{val_OD_IoU:.6f}-{val_OC_dice_score:.6f}-{val_OC_IoU:.6f}",
+        monitor="val_OD_dice_score",
+        mode="max",
+        save_top_k=1,
+        save_last=False,
+        verbose=False,
+    )
+
+    on_best_OD_IoU = ModelCheckpoint(
+        dirpath=setup_callback.ckptdir,
+        filename="{val_OD_IoU:.6f}-{val_mIoU:.6f}-{val_OD_dice_score:.6f}-{val_mDice:.6f}-{val_OC_dice_score:.6f}-{val_OC_IoU:.6f}",
+        monitor="val_OD_IoU",
+        mode="max",
+        save_top_k=1,
+        save_last=False,
+        verbose=False,
+    )
+
+    on_best_OC_Dice = ModelCheckpoint(
+        dirpath=setup_callback.ckptdir,
+        filename="{val_OC_dice_score:.6f}-{val_mIoU:.6f}-{val_OD_dice_score:.6f}-{val_OD_IoU:.6f}-{val_mDice:.6f}-{val_OC_IoU:.6f}",
+        monitor="val_OC_dice_score",
+        mode="max",
+        save_top_k=1,
+        save_last=False,
+        verbose=False,
+    )
+
+    on_best_OC_IoU = ModelCheckpoint(
+        dirpath=setup_callback.ckptdir,
+        filename="{val_OC_IoU:.6f}-{val_mIoU:.6f}-{val_OD_dice_score:.6f}-{val_OD_IoU:.6f}-{val_mDice:.6f}-{val_OC_dice_score:.6f}",
+        monitor="val_OC_IoU",
         mode="max",
         save_top_k=1,
         save_last=False,
@@ -72,8 +112,9 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     logger_img_callback = ImageLogger(exp_config.batch_frequency, exp_config.max_images)
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
-    # return [setup_callback, checkpoint_callback, logger_img_callback], logger
-    return [setup_callback, on_best_mIoU,on_best_dice, logger_img_callback], logger
+    if config.MODEL.NUM_CLASSES == 3:
+        return [setup_callback, on_best_mIoU,on_best_mDice,on_best_OD_Dice,on_best_OD_IoU,on_best_OC_Dice,on_best_OC_IoU,logger_img_callback], logger
+    return [setup_callback, on_best_mIoU,on_best_mDice,on_best_OD_Dice,on_best_OD_IoU,logger_img_callback], logger
 
 
 def get_config_from_file(config_file: str) -> Dict:
