@@ -33,6 +33,7 @@ _C.MODEL.save_path = ''
 _C.MODEL.uda = False
 _C.MODEL.sup_uda = False
 _C.MODEL.label = False
+_C.MODEL.uda_tgt_label = False
 _C.MODEL.stage1 = False #训练教师网络
 _C.MODEL.stage1_ckpt_path = None
 _C.MODEL.stage2 = False # 计算prototype或者进行全监督域适应训练

@@ -131,6 +131,10 @@ class Base(pl.LightningModule):
         for j in range(self.cfg.MODEL.NUM_CLASSES):
             tgt_mask[(tgt_out_maxvalue < self.cfg.SOLVER.DELTA) * (tgt_mask == j)] = 255
 
+        # 此时使用伪标签作为监督信息
+        if self.cfg.MODEL.uda_tgt_label:
+            tgt_mask = tgt_label
+
         tgt_feat_mask = F.interpolate(tgt_mask.unsqueeze(0).float(), size=(Ht_feat, Wt_feat), mode='nearest').squeeze(
             0).long()
         tgt_feat_mask = tgt_feat_mask.contiguous().view(B * Ht_feat * Wt_feat, )
