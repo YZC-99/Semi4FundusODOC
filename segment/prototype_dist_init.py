@@ -38,7 +38,7 @@ def strip_prefix_if_present(state_dict, prefix):
 
 def prototype_dist_init(cfg,src_train_loader):
     #初始化模型
-    num_classes = 2
+    num_classes = cfg.MODEL.NUM_CLASSES
     ckpt_path = cfg.MODEL.stage1_ckpt_path
     print("计算prototype加载的模型是：{}".format(ckpt_path))
 

@@ -14,7 +14,7 @@ class prototype_dist_estimator():
         self.use_momentum = cfg.MODEL.CONTRAST.USE_MOMENTUM
         self.momentum = cfg.MODEL.CONTRAST.MOMENTUM
 
-        resume = ''
+        resume = None
         # init prototype
         if len(os.listdir(self.cfg.prototype_path)) > 0:
             resume = self.cfg.prototype_path
