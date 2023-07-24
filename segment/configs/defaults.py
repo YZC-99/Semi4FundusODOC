@@ -73,9 +73,9 @@ _C.dataset.params.train.params.name = ''
 _C.dataset.params.train.params.root = ''
 _C.dataset.params.train.params.mode = ''
 _C.dataset.params.train.params.size = 512
-_C.dataset.params.train.params.labeled_id_path = ''
-_C.dataset.params.train.params.unlabeled_id_path = ''
-_C.dataset.params.train.params.pseudo_mask_path = ''
+_C.dataset.params.train.params.labeled_id_path = None
+_C.dataset.params.train.params.unlabeled_id_path = None
+_C.dataset.params.train.params.pseudo_mask_path = None
 _C.dataset.params.train.params.cfg = CN()
 
 _C.dataset.params.train.params.aug = CN()
@@ -96,9 +96,9 @@ _C.dataset.params.train2.params.name = ''
 _C.dataset.params.train2.params.root = ''
 _C.dataset.params.train2.params.mode = ''
 _C.dataset.params.train2.params.size = 512
-_C.dataset.params.train2.params.labeled_id_path = ''
-_C.dataset.params.train2.params.unlabeled_id_path = ''
-_C.dataset.params.train2.params.pseudo_mask_path = ''
+_C.dataset.params.train2.params.labeled_id_path = None
+_C.dataset.params.train2.params.unlabeled_id_path = None
+_C.dataset.params.train2.params.pseudo_mask_path = None
 _C.dataset.params.train2.params.cfg = CN()
 
 _C.dataset.params.train2.params.aug = CN()

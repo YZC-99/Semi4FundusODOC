@@ -71,12 +71,15 @@ class SemiDataset(Dataset):
         细节，如果标记数据少于未标记数据，那么在此过程中，会自动复制样本，直到与未标记数量相当，因此100-700，会变成700-700
         '''
         if mode == 'semi_train':
-            with open(labeled_id_path, 'r') as f:
-                self.labeled_ids = f.read().splitlines()
-            with open(unlabeled_id_path, 'r') as f:
-                self.unlabeled_ids = f.read().splitlines()
-            self.ids = \
-                self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
+            if labeled_id_path is not None:
+                with open(labeled_id_path, 'r') as f:
+                    self.labeled_ids = f.read().splitlines()
+            if unlabeled_id_path is not None:
+                with open(unlabeled_id_path, 'r') as f:
+                    self.unlabeled_ids = f.read().splitlines()
+            if labeled_id_path is not None and unlabeled_id_path is not None:
+                self.ids = \
+                    self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
 
         elif mode == 'src_tgt_train':
             with open(unlabeled_id_path, 'r') as f:
