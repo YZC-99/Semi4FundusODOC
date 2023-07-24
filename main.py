@@ -91,13 +91,13 @@ if __name__ == '__main__':
         print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
         prototype_dist_init(cfg, src_train_loader= src_dataloader)
     if cfg.MODEL.label and len(os.listdir(cfg.MODEL.pseudo_mask_path)) == 0:
-        unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train.params.task,
-                                            name=cfg.dataset.params.train.params.name,
-                                            root=cfg.dataset.params.train.params.root,
+        unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train2.params.task,
+                                            name=cfg.dataset.params.train2.params.name,
+                                            root=cfg.dataset.params.train2.params.root,
                                             mode='label',
-                                            size=cfg.dataset.params.train.params.size,
+                                            size=cfg.dataset.params.train2.params.size,
                                             labeled_id_path=None,
-                                            unlabeled_id_path=cfg.dataset.params.train.params.unlabeled_id_path,
+                                            unlabeled_id_path=cfg.dataset.params.train2.params.unlabeled_id_path,
                                             pseudo_mask_path=None,cfg=cfg)
         unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
                                      pin_memory=True, num_workers=8, drop_last=False)
