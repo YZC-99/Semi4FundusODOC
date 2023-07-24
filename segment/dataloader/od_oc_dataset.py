@@ -59,7 +59,7 @@ class SemiDataset(Dataset):
         :param unlabeled_id_path: path of unlabeled image ids, needed in semi_train or label mode.
         :param pseudo_mask_path: path of generated pseudo masks, needed in semi_train mode.
         """
-        self.aug = aug
+        self.dataset.params.train2.params.aug = aug
         self.task = task
         self.name = name
         self.root = root
@@ -123,23 +123,23 @@ class SemiDataset(Dataset):
 
         # strong augmentation on unlabeled images
         if self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids:
-            if self.aug.strong.Not:
+            if self.dataset.params.train2.params.aug.strong.Not:
                 img, mask = normalize(img, mask)
                 return {'img':img, 'mask':mask}
 
-            if self.aug == None or self.aug.strong.default:
+            if self.dataset.params.train2.params.aug == None or self.dataset.params.train2.params.aug.strong.default:
                 if random.random() < 0.8:
                     img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
                 img = transforms.RandomGrayscale(p=0.2)(img)
                 img = blur(img, p=0.5)
                 img, mask = cutout(img, mask, p=0.5)
-            if self.aug.strong.ColorJitter:
+            if self.dataset.params.train2.params.aug.strong.ColorJitter:
                 img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
-            if self.aug.strong.RandomGrayscale:
+            if self.dataset.params.train2.params.aug.strong.RandomGrayscale:
                 img = transforms.RandomGrayscale(p=1.0)(img)
-            if self.aug.strong.blur:
+            if self.dataset.params.train2.params.aug.strong.blur:
                 img = blur(img, p=1.0)
-            if self.aug.strong.cutout:
+            if self.dataset.params.train2.params.aug.strong.cutout:
                 img, mask = cutout(img, mask, p=1.0)
 
             img, mask = normalize(img, mask)

@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     if len(os.listdir(cfg.prototype_path)) < 2 and cfg.MODEL.uda:
         src_dataset = initialize_from_config(config.dataset.params['train'])
-        src_dataloader = DataLoader(src_dataset, batch_size=cfg.MODEL.batch_size,
+        src_dataloader = DataLoader(src_dataset, batch_size=1,
                                     num_workers=8, shuffle=True, drop_last=True)
         print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
         prototype_dist_init(cfg, src_train_loader= src_dataloader)
