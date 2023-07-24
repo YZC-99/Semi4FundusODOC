@@ -98,7 +98,7 @@ if __name__ == '__main__':
                                             size=cfg.dataset.params.train2.params.size,
                                             labeled_id_path=None,
                                             unlabeled_id_path=cfg.dataset.params.train2.params.unlabeled_id_path,
-                                            pseudo_mask_path=None,cfg=cfg)
+                                            pseudo_mask_path=None)
         unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
                                      pin_memory=True, num_workers=8, drop_last=False)
         # 这里model应当是重新初始化的
