@@ -33,7 +33,7 @@ dataset:
                 root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
                 labeled_id_path: 'dataset/semi/GAMMA100_labeled.txt'
                 size: 512
-                mode: 'semi_train'
+                mode: 'train'
 
         train2:
           target: segment.dataloader.od_oc_dataset.SupTrain
