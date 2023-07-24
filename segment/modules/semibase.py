@@ -54,7 +54,7 @@ class Base(pl.LightningModule):
             self.val_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
             self.val_oc_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
 
-        if cfg.MODEL.stage1_ckpt_path is not None:
+        if cfg.MODEL.stage1_ckpt_path is not None and cfg.MODEL.uda_pretrained:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
