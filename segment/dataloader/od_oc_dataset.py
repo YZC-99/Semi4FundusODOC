@@ -74,9 +74,11 @@ class SemiDataset(Dataset):
             if labeled_id_path is not None:
                 with open(labeled_id_path, 'r') as f:
                     self.labeled_ids = f.read().splitlines()
+                self.ids = self.labeled_ids
             if unlabeled_id_path is not None:
                 with open(unlabeled_id_path, 'r') as f:
                     self.unlabeled_ids = f.read().splitlines()
+                self.ids = self.unlabeled_ids
             if labeled_id_path is not None and unlabeled_id_path is not None:
                 self.ids = \
                     self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
