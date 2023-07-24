@@ -100,6 +100,15 @@ _C.dataset.params.train2.params.labeled_id_path = ''
 _C.dataset.params.train2.params.unlabeled_id_path = ''
 _C.dataset.params.train2.params.pseudo_mask_path = ''
 _C.dataset.params.train2.params.cfg = CN()
+
+_C.dataset.params.train2.params.aug = CN()
+_C.dataset.params.train2.params.aug.strong = CN()
+_C.dataset.params.train2.params.aug.strong.Not = False
+_C.dataset.params.train2.params.aug.strong.default = True
+_C.dataset.params.train2.params.aug.strong.ColorJitter = False
+_C.dataset.params.train2.params.aug.strong.RandomGrayscale = False
+_C.dataset.params.train2.params.aug.strong.blur = False
+_C.dataset.params.train2.params.aug.strong.cutout = False
 #val
 _C.dataset.params.validation = CN()
 _C.dataset.params.validation.target =''
