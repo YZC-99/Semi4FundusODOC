@@ -131,7 +131,7 @@ class Base(pl.LightningModule):
         for j in range(self.cfg.MODEL.NUM_CLASSES):
             tgt_mask[(tgt_out_maxvalue < self.cfg.SOLVER.DELTA) * (tgt_mask == j)] = 255
 
-        # 此时使用伪标签作为监督信息
+        # 使用真实标签作为监督
         if self.cfg.MODEL.uda_tgt_label:
             tgt_mask = tgt_label
 
