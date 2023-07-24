@@ -16,7 +16,9 @@ class prototype_dist_estimator():
 
         resume = None
         # init prototype
-        if len(os.listdir(self.cfg.prototype_path)) < 2:
+        import os
+
+        if len(list(filter(lambda x: x.endswith('.pth'), os.listdir(self.cfg.prototype_path)))) > 2:
             resume = self.cfg.prototype_path
 
         self.init(feature_num=feature_num, resume=resume)

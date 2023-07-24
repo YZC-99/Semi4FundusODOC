@@ -80,7 +80,9 @@ if __name__ == '__main__':
     # Setup callbacks
     callbacks, logger = setup_callbacks(exp_config, config)
 
-    if len(os.listdir(cfg.prototype_path)) < 2 and cfg.MODEL.uda:
+
+
+    if len(list(filter(lambda x: x.endswith('.pth'), os.listdir(cfg.prototype_path)))) < 2 and cfg.MODEL.uda:
         src_dataset = initialize_from_config(config.dataset.params['train'])
         src_dataloader = DataLoader(src_dataset, batch_size=1,
                                     num_workers=8, shuffle=True, drop_last=True)
