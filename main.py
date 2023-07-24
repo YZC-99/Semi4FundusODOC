@@ -63,6 +63,8 @@ if __name__ == '__main__':
         os.makedirs(now_experiment_path)
     if not os.path.exists(now_ex_prototypes_path):
         os.makedirs(now_ex_prototypes_path)
+    if not os.path.exists(now_ex_pseudo_masks_path):
+        os.makedirs(now_ex_pseudo_masks_path)
 
     cfg.MODEL.logs_path = now_ex_logs_path
     cfg.MODEL.save_path = now_ex_models_path
