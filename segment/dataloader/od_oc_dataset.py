@@ -122,7 +122,7 @@ class SemiDataset(Dataset):
         img, mask = hflip(img, mask, p=0.5)
 
         # strong augmentation on unlabeled images
-        if self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids:
+        if (self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids) and self.aug :
             if self.aug.strong.Not:
                 img, mask = normalize(img, mask)
                 return {'img':img, 'mask':mask}

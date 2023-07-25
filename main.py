@@ -34,7 +34,7 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='sup/G1R7R4_sup')
+    parser.add_argument('-c', '--config', type=str, default='domain_shift_sup/G1R7R4_sup_uda_retraining')
     parser.add_argument('-s', '--seed', type=int, default=0)
 
     parser.add_argument('-nn', '--num_nodes', type=int, default=1)
@@ -101,15 +101,34 @@ if __name__ == '__main__':
                                             pseudo_mask_path=None)
         unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
                                      pin_memory=True, num_workers=8, drop_last=False)
-        # 这里model应当是重新初始化的
-        label(unlabeled_dataloader,cfg)
+
+        ckpt_path = cfg.MODEL.stage1_ckpt_path
+
+        label(unlabeled_dataloader,ckpt_path,cfg)
+
+    # 二次训练
+    if cfg.MODEL.retraining:
+        unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train.params.task,
+                                            name=cfg.dataset.params.train.params.name,
+                                            root=cfg.dataset.params.train.params.root,
+                                            mode='label',
+                                            size=cfg.dataset.params.train.params.size,
+                                            labeled_id_path=None,
+                                            unlabeled_id_path=cfg.dataset.params.train.params.unlabeled_id_path,
+                                            pseudo_mask_path=None)
+        unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
+                                     pin_memory=True, num_workers=8, drop_last=False)
+        ckpt_path = cfg.MODEL.stage2_ckpt_path
+        label(unlabeled_dataloader, ckpt_path, cfg)
 
     # 如果是semi训练的话，是需要修改配置文件中的pseudo_masks_path的
-    if cfg.dataset.params.train2.target is not '':
+    if cfg.dataset.params.train2.target != '':
         config.dataset.params.train2.params.pseudo_mask_path = now_ex_pseudo_masks_path
         config.dataset.params.train2.params.labeled_id_path = config.dataset.params.train.params.labeled_id_path
     else:
         config.dataset.params.train.params.pseudo_mask_path = now_ex_pseudo_masks_path
+
+
     # Build data modules
     data = initialize_from_config(config.dataset)
     data.prepare_data()

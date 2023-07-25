@@ -16,10 +16,9 @@ from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 from segment.modules.semseg.pspnet import PSPNet
 
 
-def label(dataloader, cfg):
+def label(dataloader, ckpt_path,cfg):
     print(">>>>>>>>>>>>>正在推理伪标签<<<<<<<<<<<<<<<")
-    num_classes = 2
-    ckpt_path = cfg.MODEL.stage1_ckpt_path
+    num_classes = cfg.MODEL.NUM_CLASSES
 
     model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
     model = model_zoo['deeplabv3plus']('resnet50',num_classes)

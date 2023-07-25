@@ -1,0 +1,42 @@
+info:
+  setting: 'od_val_refuge/1_7/100gamma'
+  description: 'sup_100GAMMA'
+MODEL:
+  sup: True
+  retraining: True
+  NUM_CLASSES: 2
+  epochs: 100
+  lr: 0.004 # 0.004/16*batch_size
+  crop_size: 512
+  task: 'od'
+  dataset: 'sup'
+  data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+  backbone: 'resnet50'
+  model: 'deeplabv3plus'
+  labeled_id_path: 'dataset/splits/sup/GAMMA100_labeled.txt'
+  save_path: 'experiments/sup/GAMMA100_sup/models'
+  stage2_ckpt_path: 'experiments/sup/G1R7R4_sup/ckpt/val_mDice=0.975544-val_mIoU=0.908156-val_OD_dice_score=0.975544-val_OD_IoU=0.908156-val_OC_dice_score=0.000000-val_OC_IoU=0.000000.ckpt'
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 16
+        num_workers: 8
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od'
+                name: 'sup'
+                root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+                unlabeled_id_path: 'dataset/sup/REFUGE700_labeled.txt'
+                size: 512
+                mode: 'src_tgt_train'
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od'
+                name: 'sup'
+                root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+                size: 512
+                mode: 'val'
