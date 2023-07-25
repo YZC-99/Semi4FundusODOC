@@ -34,7 +34,7 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='domain_shift_sup/G1R7R4_sup_uda_retraining')
+    parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/G1R7R4_semi_retraining')
     parser.add_argument('-s', '--seed', type=int, default=0)
 
     parser.add_argument('-nn', '--num_nodes', type=int, default=1)
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         label(unlabeled_dataloader,ckpt_path,cfg)
 
     # 二次训练
-    if cfg.MODEL.retraining:
+    if cfg.MODEL.retraining and len(os.listdir(cfg.MODEL.pseudo_mask_path)) == 0:
         print('>>>>>>>>>>>>>>>>二次训练 >>>>>>>>>>>>>>>>')
         unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train.params.task,
                                             name=cfg.dataset.params.train.params.name,
