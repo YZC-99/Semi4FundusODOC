@@ -105,7 +105,7 @@ if __name__ == '__main__':
         label(unlabeled_dataloader,cfg)
 
     # 如果是semi训练的话，是需要修改配置文件中的pseudo_masks_path的
-    if cfg.dataset.params.train2 is not None:
+    if cfg.dataset.params.train2.target is not '':
         config.dataset.params.train2.params.pseudo_mask_path = now_ex_pseudo_masks_path
         config.dataset.params.train2.params.labeled_id_path = config.dataset.params.train.params.labeled_id_path
     else:
