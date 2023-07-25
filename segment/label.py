@@ -30,10 +30,14 @@ def label(dataloader, ckpt_path,cfg):
 
     new_state_dict = {}
     for key, value in sd.items():
-        if not key.startswith('module.'):  # 如果关键字没有"module."前缀，加上该前缀
-            if 'module.' + key in model.state_dict():
+        # if not key.startswith('module.'):  # 如果关键字没有"module."前缀，加上该前缀
+        #     if 'module.' + key in model.state_dict():
+        #         # 模型在多GPU上训练并保存，加载权重时加上"module."前缀
+        #         key = 'module.' + key
+        if not key.startswith('model.'):  # 如果关键字没有"module."前缀，加上该前缀
+            if 'model.' + key in model.state_dict():
                 # 模型在多GPU上训练并保存，加载权重时加上"module."前缀
-                key = 'module.' + key
+                key = 'model.' + key
         new_state_dict[key] = value
     model.load_state_dict(new_state_dict)
     model.cuda()
