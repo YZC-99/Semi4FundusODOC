@@ -34,7 +34,7 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/uda1/G1R7R4_semi_scratch_tgt_label_retraining')
+    parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/strong1/G1R7R4_B_CJ_semi')
     parser.add_argument('-s', '--seed', type=int, default=0)
 
     parser.add_argument('-nn', '--num_nodes', type=int, default=1)

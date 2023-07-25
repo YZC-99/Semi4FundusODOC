@@ -1,13 +1,9 @@
 info:
   setting: ''
   description: 'semi_GAMMA100+REFUGE700'
-aug:
-  strong:
-    default: False
-    blur: True
-    ColorJitter: True
 MODEL:
   sup: False
+  label: True
   uda: True
   NUM_CLASSES: 2
   batch_size: 8
