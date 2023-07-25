@@ -1,9 +1,11 @@
 info:
   setting: ''
-  description: 'semi_GAMMA100+REFUGE700'
+  description: 'semi_REFUGE100+REFUGE700'
 MODEL:
   sup: False
   label: True
+  uda: True
+  uda_tgt_label: True
   NUM_CLASSES: 2
   batch_size: 8
   epochs: 100
@@ -20,7 +22,7 @@ MODEL:
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
-        batch_size: 16
+        batch_size: 8
         num_workers: 8
 
         train:
@@ -30,26 +32,26 @@ dataset:
                 name: 'semi'
                 root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
                 labeled_id_path: 'dataset/semi/GAMMA100_labeled.txt'
-                unlabeled_id_path: 'dataset/semi/REFUGE700_unlabeled.txt'
                 size: 512
-                mode: 'semi_train'
-                aug:
-                  strong:
-                    Not: False
-                    default: False
-                    ColorJitter: True
-                    RandomGrayscale: True
-                    blur: True
-                    cutout: True
+                mode: 'train'
+
         train2:
-            target: segment.dataloader.od_oc_dataset.SupTrain
-            params:
-                task: 'od'
-                name: 'semi'
-                root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
-                unlabeled_id_path: 'dataset/semi/REFUGE700_unlabeled.txt'
-                size: 512
-                mode: 'label'
+          target: segment.dataloader.od_oc_dataset.SupTrain
+          params:
+            task: 'od'
+            name: 'semi'
+            root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+            unlabeled_id_path: 'dataset/semi/REFUGE700_unlabeled.txt'
+            size: 512
+            mode: 'semi_train'
+            aug:
+              strong:
+                Not: False
+                default: False
+                ColorJitter: True
+                RandomGrayscale: False
+                blur: True
+                cutout: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
