@@ -108,6 +108,7 @@ if __name__ == '__main__':
 
     # 二次训练
     if cfg.MODEL.retraining:
+        print('>>>>>>>>>>>>>>>>二次训练 >>>>>>>>>>>>>>>>')
         unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train.params.task,
                                             name=cfg.dataset.params.train.params.name,
                                             root=cfg.dataset.params.train.params.root,

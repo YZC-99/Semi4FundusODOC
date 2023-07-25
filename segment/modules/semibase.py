@@ -82,10 +82,12 @@ class Base(pl.LightningModule):
             sd = sd['state_dict']
         keys = list(sd.keys())
         for k in keys:
+            sd[k] = sd[k].replace('model.', '')
             for ik in ignore_keys:
                 if k.startswith(ik):
                     print("Deleting key {} from state_dict.".format(k))
                     del sd[k]
+
         self.model.load_state_dict(sd, strict=False)
         print(f"Restored from {path}")
 
