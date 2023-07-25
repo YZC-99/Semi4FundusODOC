@@ -56,6 +56,8 @@ class Base(pl.LightningModule):
 
         if cfg.MODEL.stage1_ckpt_path is not None and cfg.MODEL.uda_pretrained:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
+        if cfg.MODEL.retraining:
+            self.init_from_ckpt(cfg.MODEL.stage2_ckpt_path, ignore_keys='')
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         out = self.model(x)
@@ -75,6 +77,9 @@ class Base(pl.LightningModule):
 
     def init_from_ckpt(self,path: str,ignore_keys: List[str] = list()):
         sd = torch.load(path,map_location='cpu')
+        if 'state_dict' in sd:
+            # If 'state_dict' exists, use it directly
+            sd = sd['state_dict']
         keys = list(sd.keys())
         for k in keys:
             for ik in ignore_keys:
