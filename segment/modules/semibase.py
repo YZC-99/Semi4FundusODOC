@@ -80,16 +80,16 @@ class Base(pl.LightningModule):
         if 'state_dict' in sd:
             # If 'state_dict' exists, use it directly
             sd = sd['state_dict']
-        keys = list(sd.keys())
-        for key, value in sd.items():
-                    sd[key] = key.replace('model.', '')
-        for k in keys:
-            for ik in ignore_keys:
-                if k.startswith(ik):
-                    print("Deleting key {} from state_dict.".format(k))
-                    del sd[k]
+            self.load_state_dict(sd, strict=False)
+        else :
+            keys = list(sd.keys())
+            for k in keys:
+                for ik in ignore_keys:
+                    if k.startswith(ik):
+                        print("Deleting key {} from state_dict.".format(k))
+                        del sd[k]
 
-        self.model.load_state_dict(sd, strict=False)
+            self.model.load_state_dict(sd, strict=False)
         print(f"Restored from {path}")
 
     def get_input(self, batch: Tuple[Any, Any], key: str = 'image') -> Any:
