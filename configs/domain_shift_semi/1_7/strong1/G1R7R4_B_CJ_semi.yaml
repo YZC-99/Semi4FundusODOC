@@ -42,14 +42,14 @@ dataset:
                     blur: True
                     cutout: False
         train2:
-          target: segment.dataloader.od_oc_dataset.SupTrain
-          params:
-            task: 'od'
-            name: 'semi'
-            root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
-            labeled_id_path: 'dataset/sup/REFUGE700_labeled.txt'
-            size: 512
-            mode: 'label'
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od'
+                name: 'semi'
+                root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+                unlabeled_id_path: 'dataset/semi/REFUGE700_unlabeled.txt'
+                size: 512
+                mode: 'label'
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
