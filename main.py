@@ -90,6 +90,7 @@ if __name__ == '__main__':
                                     num_workers=8, shuffle=True, drop_last=True)
         print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
         prototype_dist_init(cfg, src_train_loader= src_dataloader)
+
     if cfg.MODEL.label and len(os.listdir(cfg.MODEL.pseudo_mask_path)) == 0:
         unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train2.params.task,
                                             name=cfg.dataset.params.train2.params.name,
@@ -129,7 +130,9 @@ if __name__ == '__main__':
     else:
         config.dataset.params.train.params.pseudo_mask_path = now_ex_pseudo_masks_path
 
-
+    # 设置此时不进行uda
+    if not cfg.MODEL.uda:
+        config.dataset.params.train2 = None
     # Build data modules
     data = initialize_from_config(config.dataset)
     data.prepare_data()
