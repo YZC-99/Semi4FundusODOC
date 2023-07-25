@@ -81,8 +81,9 @@ class Base(pl.LightningModule):
             # If 'state_dict' exists, use it directly
             sd = sd['state_dict']
         keys = list(sd.keys())
+        for key, value in sd.items():
+                    sd[key] = key.replace('model.', '')
         for k in keys:
-            sd[k] = sd[k].replace('model.', '')
             for ik in ignore_keys:
                 if k.startswith(ik):
                     print("Deleting key {} from state_dict.".format(k))
