@@ -56,7 +56,7 @@ def color_map(dataset='pascal'):
         cmap[0] = np.array([0, 0, 0])
         cmap[1] = np.array([255,0, 0])
         cmap[2] = np.array([0, 255, 0])
-        cmap[2] = np.array([0, 0, 255])
+        cmap[3] = np.array([0, 0, 255])
 
     return cmap
 
