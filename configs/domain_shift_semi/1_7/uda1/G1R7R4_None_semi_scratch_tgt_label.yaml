@@ -1,0 +1,64 @@
+info:
+  setting: ''
+  description: 'semi_REFUGE100+REFUGE700'
+MODEL:
+  sup: False
+  label: True
+  uda: True
+  uda_tgt_label: True
+  uda_pretrained: False
+  NUM_CLASSES: 2
+  batch_size: 8
+  epochs: 100
+  lr: 0.004 # 0.004/16*batch_size
+  crop_size: 512
+  dataset: 'semi'
+  data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+  backbone: 'resnet50'
+  model: 'deeplabv3plus'
+  stage1: False
+  stage1_ckpt_path: 'experiments/sup/GAMMA100_sup/models/train_mIoUTdeeplabv3plus_resnet50_90.10.pth'
+
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 8
+        num_workers: 8
+
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od'
+                name: 'semi'
+                root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+                labeled_id_path: 'dataset/semi/GAMMA100_labeled.txt'
+                size: 512
+                mode: 'train'
+
+        train2:
+          target: segment.dataloader.od_oc_dataset.SupTrain
+          params:
+            task: 'od'
+            name: 'semi'
+            root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+            unlabeled_id_path: 'dataset/semi/REFUGE700_unlabeled.txt'
+            size: 512
+            mode: 'semi_train'
+            aug:
+              strong:
+                Not: True
+                default: False
+                ColorJitter: False
+                RandomGrayscale: False
+                blur: False
+                cutout: False
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od'
+                name: 'semi'
+                root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+                size: 512
+                mode: 'val'
