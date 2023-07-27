@@ -125,6 +125,19 @@ _C.dataset.params.validation.params.labeled_id_path = ''
 _C.dataset.params.validation.params.unlabeled_id_path = ''
 _C.dataset.params.validation.params.pseudo_mask_path = ''
 _C.dataset.params.validation.params.cfg = CN()
+# test
+_C.dataset.params.test = CN()
+_C.dataset.params.test.target =''
+_C.dataset.params.test.params = CN()
+_C.dataset.params.test.params.task = ''
+_C.dataset.params.test.params.name = ''
+_C.dataset.params.test.params.root = ''
+_C.dataset.params.test.params.mode = ''
+_C.dataset.params.test.params.size = 512
+_C.dataset.params.test.params.labeled_id_path = ''
+_C.dataset.params.test.params.unlabeled_id_path = ''
+_C.dataset.params.test.params.pseudo_mask_path = ''
+_C.dataset.params.test.params.cfg = CN()
 # _C = CN()
 _C.OUTPUT_DIR = 'experiments_pca/prototype'
 # update
