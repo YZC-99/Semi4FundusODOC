@@ -108,7 +108,7 @@ class SemiDataset(Dataset):
         img = Image.open(img_path)
         mask_path = os.path.join(self.root, id.split(' ')[1])
 
-        if self.mode == 'val' or self.mode == 'test'or self.mode == 'label':
+        if self.mode == 'val' or self.mode == 'test' or self.mode == 'label':
 
             mask = get_labels(self.task,mask_path)
             img, mask = resize(img, mask, 512)
