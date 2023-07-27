@@ -311,21 +311,23 @@ class Base(pl.LightningModule):
             }
         ]
         return optimizers, schedulers
-    # def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
-    #     if self.cfg.MODEL.uda:
-    #         return
-    #     log = dict()
-    #     x = batch['img'].to(self.device)
-    #     y = batch['mask']
-    #     # log["originals"] = x
-    #     out = self(x)['out']
-    #     # cam,overcam = self.get_cam(x,out)
-    #
-    #     out = torch.nn.functional.softmax(out,dim=1)
-    #     predict = out.argmax(1)
-    #
-    #     y_color,predict_color = self.gray2rgb(y,predict)
-    #     log["image"] = x
-    #     log["label"] = y_color
-    #     log["predict"] = predict_color
-    #     return log
+    def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
+        if self.cfg.MODEL.uda:
+            src,tgt = batch
+            src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']
+            return
+        log = dict()
+        x = batch['img'].to(self.device)
+        y = batch['mask']
+        # log["originals"] = x
+        out = self(x)['out']
+        # cam,overcam = self.get_cam(x,out)
+
+        out = torch.nn.functional.softmax(out,dim=1)
+        predict = out.argmax(1)
+
+        y_color,predict_color = self.gray2rgb(y,predict)
+        log["image"] = x
+        log["label"] = y_color
+        log["predict"] = predict_color
+        return log
