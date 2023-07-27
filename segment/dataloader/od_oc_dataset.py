@@ -29,7 +29,7 @@ def get_labels(task,mask_path):
         else:
             return Image.fromarray(org_mask)
     else:
-        org_mask = Image.open(mask_path).convert('L')
+        org_mask = Image.open(mask_path)
         org_mask = np.array(org_mask)
 
     mask = np.zeros_like(org_mask)
