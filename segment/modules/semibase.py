@@ -314,7 +314,7 @@ class Base(pl.LightningModule):
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
         log = dict()
 
-        if batch.type() == 'tuple':
+        if isinstance(batch,tuple):
             src, tgt = batch
             src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']
             src_out = self(src_input)['out']
@@ -334,7 +334,7 @@ class Base(pl.LightningModule):
             log["tgt_image"] = tgt_input
             log["tgt_label"] = tgt_y_color
             log["tgt_predict"] = tgt_predict_color
-        elif batch.type() == 'dict':
+        elif isinstance(batch,dict):
             x = batch['img'].to(self.device)
             y = batch['mask']
             out = self(x)['out']
