@@ -1,0 +1,55 @@
+info:
+  setting: 'od_val_refuge/1_7/100gamma'
+  description: 'sup_100GAMMA'
+MODEL:
+  sup: False
+  NUM_CLASSES: 3
+  epochs: 100
+  lr: 0.004 # 0.004/16*batch_size
+  crop_size: 512
+  task: 'od'
+  data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
+  backbone: 'resnet50'
+  model: 'deeplabv3plus'
+
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 16
+        num_workers: 8
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'SEG/semi/10'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                labeled_id_path: 'dataset/SEG/semi/10/random1/labeled.txt'
+                unlabeled_id_path: 'dataset/SEG/semi/10/random1/unlabeled.txt'
+                size: 512
+                mode: 'train'
+                aug:
+                  strong:
+                    Not: False
+                    default: True
+                    ColorJitter: False
+                    RandomGrayscale: False
+                    blur: False
+                    cutout: False
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'SEG/semi/10/random1'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                size: 512
+                mode: 'val'
+        test:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+              task: 'od_oc'
+              name: 'SEG/sup/random1'
+              root: './data/fundus_datasets/od_oc/SEG/'
+              size: 512
+              mode: 'test'
