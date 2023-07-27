@@ -100,10 +100,10 @@ class SemiDataset(Dataset):
     def __getitem__(self, item):
         id = self.ids[item]
         img_path = os.path.join(self.root, id.split(' ')[0])
-        if img_path.endswith('.tif'):
-            img = Image.fromarray(cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB))
-        else:
-            img = Image.open(img_path)
+        # if img_path.endswith('.tif'):
+        #     img = Image.fromarray(cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB))
+        # else:
+        img = Image.open(img_path)
         mask_path = os.path.join(self.root, id.split(' ')[1])
 
         if self.mode == 'val' or self.mode == 'label':
