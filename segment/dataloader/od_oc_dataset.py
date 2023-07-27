@@ -40,7 +40,7 @@ def get_labels(task,mask_path):
         mask[org_mask == 2] = 1
         return Image.fromarray(mask)
     else:
-        return org_mask
+        return Image.fromarray(org_mask)
 
 
 
@@ -109,7 +109,6 @@ class SemiDataset(Dataset):
         mask_path = os.path.join(self.root, id.split(' ')[1])
 
         if self.mode == 'val' or self.mode == 'test' or self.mode == 'label':
-
             mask = get_labels(self.task,mask_path)
             img, mask = resize(img, mask, 512)
             img, mask = normalize(img, mask)
