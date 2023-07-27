@@ -83,8 +83,8 @@ def Drishti_GS1():
         mask_result = Image.fromarray(mask_arr_result, mode='P')
         mask_result.putpalette(cmap)
         # mask_result.save('test.png')
-        file_name = item[0].split('/')[-1].replace('cupsegSoftmap', '').replace('ODsegSoftmap', '').replace('.png',
-                                                                                                            'gt.png')
+        file_name = item[0].split('/')[-1].replace('cupsegSoftmap', '').replace('ODsegSoftmap', '').replace('_.png',
+                                                                                                            '.png')
         mask_result.save(os.path.join(my_gts_path, file_name))
     # 最大值是255
 
@@ -135,7 +135,7 @@ def RIM_ONE():
         mask_arr_final = mask_arr_final[:, :2144 // 2]
         mask_final = Image.fromarray(mask_arr_final, mode='P')
         mask_final.putpalette(cmap)
-        gt_file_name = mask_path.split('/')[-1].replace('Cup-Avg.png', 'gt.png')
+        gt_file_name = mask_path.split('/')[-1].replace('-Cup-Avg.png', '.png')
         mask_final.save(os.path.join(my_gts_path, gt_file_name))
 
 

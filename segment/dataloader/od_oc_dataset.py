@@ -1,7 +1,7 @@
 import torch
 
 from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout
-
+import cv2
 import math
 import os
 from PIL import Image
@@ -99,7 +99,11 @@ class SemiDataset(Dataset):
                 self.ids = f.read().splitlines()
     def __getitem__(self, item):
         id = self.ids[item]
-        img = Image.open(os.path.join(self.root, id.split(' ')[0]))
+        img_path = os.path.join(self.root, id.split(' ')[0])
+        if img_path.endswith('.tif'):
+            img = Image.fromarray(cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB))
+        else:
+            img = Image.open(img_path)
         mask_path = os.path.join(self.root, id.split(' ')[1])
 
         if self.mode == 'val' or self.mode == 'label':
