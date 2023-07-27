@@ -3,6 +3,7 @@ info:
   description: 'sup_100GAMMA'
 MODEL:
   sup: False
+  label: True
   NUM_CLASSES: 3
   epochs: 100
   lr: 0.004 # 0.004/16*batch_size
@@ -11,6 +12,7 @@ MODEL:
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
   backbone: 'resnet50'
   model: 'deeplabv3plus'
+  stage1_ckpt_path: 'experiments/SEG/sup/random1_ODOC_sup10/ckpt/'
 
 
 dataset:

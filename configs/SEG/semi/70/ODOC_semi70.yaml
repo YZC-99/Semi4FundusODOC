@@ -3,18 +3,17 @@ info:
   description: 'sup_100GAMMA'
 MODEL:
   sup: False
+  label: True
   NUM_CLASSES: 3
-  epochs: 2
+  epochs: 100
   lr: 0.004 # 0.004/16*batch_size
   crop_size: 512
   task: 'od'
-  dataset: 'sup'
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  labeled_id_path: 'dataset/splits/sup/GAMMA100_labeled.txt'
+  stage1_ckpt_path: 'experiments/SEG/sup/random1_ODOC_sup10/ckpt/'
 
-  save_path: 'experiments/sup/GAMMA100_sup/models'
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
@@ -25,17 +24,26 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'sup/random1'
+                name: 'SEG/semi/70'
                 root: './data/fundus_datasets/od_oc/SEG/'
-                labeled_id_path: 'dataset/SEG/sup/random1/training.txt'
+                labeled_id_path: 'dataset/SEG/semi/70/random1/labeled.txt'
+                unlabeled_id_path: 'dataset/SEG/semi/70/random1/unlabeled.txt'
                 size: 512
                 mode: 'train'
+                aug:
+                  strong:
+                    Not: False
+                    default: True
+                    ColorJitter: False
+                    RandomGrayscale: False
+                    blur: False
+                    cutout: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'SEG/sup/random1'
+                name: 'SEG/semi/70/random1'
                 root: './data/fundus_datasets/od_oc/SEG/'
                 size: 512
                 mode: 'val'
