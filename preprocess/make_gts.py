@@ -126,7 +126,7 @@ def RIM_ONE():
         img_file_name = img_path.split('/')[-1]
         img.save(os.path.join(imgs_path, img_file_name))
 
-    for mask_path in glau_gt_list:
+    for mask_path in gt_list:
         mask_oc_arr = np.array(Image.open(mask_path))
         mask_od_arr = np.array(Image.open(mask_path.replace('Cup', 'Disc')))
         mask_oc_arr = (mask_oc_arr / 255).astype(np.uint8)
@@ -143,13 +143,28 @@ def RIGA():
     root = "/root/autodl-tmp/data/RIGA/RIGA_masks/DiscCups"
 
     MESSIDOR_root = root + "/MESSIDOR/hards"
-    MESSIDOR_path = [os.path.join(MESSIDOR_root, i) for i in os.listdir(MESSIDOR_root)]
+    MESSIDOR_path = [os.path.join(MESSIDOR_root, i) for i in os.listdir(MESSIDOR_root) if
+                     not i.startswith(".")]
 
-    Mag_root = root + "/Magrabia"
-    Mag_path = [Mag_root + '/' + i + '/hards' for i in os.listdir(Mag_root)]
+    Mag_root_1 = root + "/Magrabia/MagrabiFemale/hards"
+    Mag_root_2 = root + "/Magrabia/MagrabiaMale/hards"
+    Mag_path = [os.path.join(Mag_root_1, i) for i in os.listdir(Mag_root_1) if
+                not i.startswith(".")]
+    Mag_path.extend([os.path.join(Mag_root_2, i) for i in os.listdir(Mag_root_2) if
+                     not i.startswith(".")])
 
-    Bin_root = root + "/BinRushed"
-    Bin_path = [Bin_root + '/' + i + '/hards' for i in os.listdir(Bin_root)]
+    Bin_root1 = root + "/BinRushed/BinRushed1-Corrected/hards"
+    Bin_root2 = root + "/BinRushed/BinRushed2/hards"
+    Bin_root3 = root + "/BinRushed/BinRushed3/hards"
+    Bin_root4 = root + "/BinRushed/BinRushed4/hards"
+    Bin_path = [os.path.join(Bin_root1, i) for i in os.listdir(Bin_root1) if
+                not i.startswith(".")]
+    Mag_path.extend([os.path.join(Bin_root2, i) for i in os.listdir(Bin_root2) if
+                     not i.startswith(".")])
+    Mag_path.extend([os.path.join(Bin_root3, i) for i in os.listdir(Bin_root3) if
+                     not i.startswith(".")])
+    Mag_path.extend([os.path.join(Bin_root4, i) for i in os.listdir(Bin_root4) if
+                     not i.startswith(".")])
     MESSIDOR_path.extend(Mag_path)
     MESSIDOR_path.extend(Bin_path)
 
