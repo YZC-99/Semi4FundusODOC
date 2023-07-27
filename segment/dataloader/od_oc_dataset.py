@@ -40,7 +40,7 @@ def get_labels(task,mask_path):
         mask[org_mask == 2] = 1
         return Image.fromarray(mask)
     else:
-        return Image.fromarray(org_mask)
+        return Image.fromarray(org_mask.astype(np.uint8))
 
 
 
