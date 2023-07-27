@@ -312,22 +312,36 @@ class Base(pl.LightningModule):
         ]
         return optimizers, schedulers
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
-        if self.cfg.MODEL.uda:
-            src,tgt = batch
-            src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']
-            return
         log = dict()
-        x = batch['img'].to(self.device)
-        y = batch['mask']
-        # log["originals"] = x
-        out = self(x)['out']
-        # cam,overcam = self.get_cam(x,out)
 
-        out = torch.nn.functional.softmax(out,dim=1)
-        predict = out.argmax(1)
+        if batch.type() == 'tuple':
+            src, tgt = batch
+            src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']
+            src_out = self(src_input)['out']
+            src_out = torch.nn.functional.softmax(src_out,dim=1)
+            src_predict = src_out.argmax(1)
 
-        y_color,predict_color = self.gray2rgb(y,predict)
-        log["image"] = x
-        log["label"] = y_color
-        log["predict"] = predict_color
+            tgt_out = self(tgt_input)['out']
+            tgt_out = torch.nn.functional.softmax(tgt_out,dim=1)
+            tgt_predict = tgt_out.argmax(1)
+
+            src_predict_color, tgt_predict_color = self.gray2rgb(src_predict, tgt_predict)
+            src_y_color, tgt_y_color = self.gray2rgb(src_label, tgt_label)
+
+            log["src_image"] = src_input
+            log["src_label"] = src_y_color
+            log["src_predict"] = src_predict_color
+            log["tgt_image"] = tgt_input
+            log["tgt_label"] = tgt_y_color
+            log["tgt_predict"] = tgt_predict_color
+        elif batch.type() == 'dict':
+            x = batch['img'].to(self.device)
+            y = batch['mask']
+            out = self(x)['out']
+            out = torch.nn.functional.softmax(out,dim=1)
+            predict = out.argmax(1)
+            y_color,predict_color = self.gray2rgb(y,predict)
+            log["image"] = x
+            log["label"] = y_color
+            log["predict"] = predict_color
         return log
