@@ -186,4 +186,17 @@ def RIGA():
         mask_final.save(os.path.join(my_gts_path, file_name))
 
 
-RIGA()
+def ORIGA():
+    import scipy.io
+    path = '/root/autodl-tmp/data/ORIGA/650mask'
+    mask_list = [os.path.join(path,i) for i in os.listdir(path)]
+    for mask_path in mask_list:
+        mask_arr = scipy.io.loadmat(mask_path)['maskFull']
+        mask_arr = mask_arr.astype(np.uint8)
+        mask_result = Image.fromarray(mask_arr, mode='P')
+        mask_result.putpalette(cmap)
+
+        file_name = mask_path.replace('650mask','my_gts').replace('.mat','png')
+        mask_result.save(file_name)
+ORIGA()
+
