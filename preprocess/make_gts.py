@@ -196,7 +196,7 @@ def ORIGA():
         mask_result = Image.fromarray(mask_arr, mode='P')
         mask_result.putpalette(cmap)
 
-        file_name = mask_path.replace('650mask','my_gts').replace('.mat','png')
+        file_name = mask_path.replace('650mask','my_gts').replace('.mat','.png')
         mask_result.save(file_name)
 ORIGA()
 
