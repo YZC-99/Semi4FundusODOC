@@ -37,7 +37,24 @@ dataset:
                     RandomGrayscale: False
                     blur: False
                     cutout: False
-
+        train2:
+          target: segment.dataloader.od_oc_dataset.SupTrain
+          params:
+            task: 'od_oc'
+            name: 'SEG/semi/10'
+            root: './data/fundus_datasets/od_oc/SEG/'
+            labeled_id_path: 'dataset/SEG/semi/10/random1/labeled.txt'
+            unlabeled_id_path: 'dataset/SEG/semi/10/random1/unlabeled.txt'
+            size: 512
+            mode: 'semi_train'
+            aug:
+              strong:
+                Not: False
+                default: True
+                ColorJitter: False
+                RandomGrayscale: False
+                blur: False
+                cutout: False
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
