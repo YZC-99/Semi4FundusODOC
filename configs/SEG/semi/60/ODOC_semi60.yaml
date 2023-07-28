@@ -12,7 +12,7 @@ MODEL:
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  stage1_ckpt_path: 'experiments/SEG/sup/random1_ODOC_sup10/ckpt/'
+  stage1_ckpt_path: 'experiments/SEG/sup/random1_ODOC_sup60/ckpt/val_mIoU=0.769503-val_mDice=0.934316-val_OD_dice_score=0.934378-val_OD_IoU=0.770390-val_OC_dice_score=0.934253-val_OC_IoU=0.768616.ckpt'
 
 
 dataset:
@@ -38,7 +38,24 @@ dataset:
                     RandomGrayscale: False
                     blur: False
                     cutout: False
-
+        train2:
+          target: segment.dataloader.od_oc_dataset.SupTrain
+          params:
+            task: 'od_oc'
+            name: 'SEG/semi/60'
+            root: './data/fundus_datasets/od_oc/SEG/'
+            labeled_id_path: 'dataset/SEG/semi/60/random1/labeled.txt'
+            unlabeled_id_path: 'dataset/SEG/semi/60/random1/unlabeled.txt'
+            size: 512
+            mode: 'semi_train'
+            aug:
+              strong:
+                Not: False
+                default: True
+                ColorJitter: False
+                RandomGrayscale: False
+                blur: False
+                cutout: False
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
