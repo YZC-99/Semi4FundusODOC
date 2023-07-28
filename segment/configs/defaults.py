@@ -19,6 +19,9 @@ _C.MODEL.epochs = 150
 _C.MODEL.crop_size = 150
 _C.MODEL.lr = 0.004
 
+_C.MODEL.align_loss = 0
+_C.MODEL.class_weight = ''
+
 _C.MODEL.dataset = 'od_val_refuge'
 _C.MODEL.task = 'od'
 _C.MODEL.data_root = './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'

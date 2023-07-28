@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import LambdaLR
 from segment.util import meanIOU
 from segment.losses.loss import PrototypeContrastiveLoss
+from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCrossEntropyLoss
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -43,7 +44,10 @@ class Base(pl.LightningModule):
         self.backbone = backbone
         self.num_classes = num_classes
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
-        self.loss = CrossEntropyLoss(ignore_index=255)
+        if cfg.MODEL.align_loss > 0:
+            self.loss = GRWCrossEntropyLoss(class_weight=cfg.MODEL.class_weight,exp_scale=cfg.MODEL.align_loss)
+        else:
+            self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
         self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
