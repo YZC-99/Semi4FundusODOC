@@ -2,8 +2,7 @@
 
 # Function to check GPU utilization
 check_gpu_utilization() {
-  gpu_ids="0 1 2 3 4 5"
-  gpu_utilization=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits -i $gpu_ids | tr '\n' ' ')
+  gpu_utilization=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits -i 0,1,2,3,4,5| grep -o '[0-9]\+' | awk '{print $1}')
   echo "$gpu_utilization"
 }
 
@@ -39,16 +38,28 @@ while true; do
   for util in $utilization; do
     if [ "$util" -ne 0 ]; then
       all_idle=false
+      echo "all idle"
       break
     fi
   done
 
   if $all_idle; then
+    # check again
+    utilization=$(check_gpu_utilization)
+    # Check if all GPUs are idle
+    all_idle=true
+    for util in $utilization; do
+      if [ "$util" -ne 0 ]; then
+        all_idle=false
+        echo "all idle"
+        break
+      fi
+    done
     # Execute your task here
     execute_task
     break
   fi
 
   # Wait for some time before checking again
-  sleep 10  # You can adjust the interval as needed
+  sleep 100  # You can adjust the interval as needed
 done
