@@ -198,5 +198,16 @@ def ORIGA():
 
         file_name = mask_path.replace('650mask','my_gts').replace('.mat','.png')
         mask_result.save(file_name)
-ORIGA()
+
+def NEW_IMAGE():
+    path = '/root/autodl-tmp/data/NEW_IMAGE/'
+    train_path = os.path.join(path,'odoc_train/gt')
+    test_path = os.path.join(path,'odoc_test/gt')
+    path_list = [train_path,test_path]
+
+    for path in path_list:
+        for root,dirs,files in os.walk(path):
+            if 'tif' in root:
+                print(root)
+                print(files)
 
