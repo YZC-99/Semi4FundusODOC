@@ -11,7 +11,7 @@ python main.py --config SEG/semi/10/ODOC_semi90
 
 
 #sup align
-python main.py --config SEG/sup/random1_ODOC_sup_align3e-1
+CUDA_VISIBLE_DEVICES=4,5 python main.py --config SEG/sup/random1_ODOC_sup_align3e-1
 
 
 
