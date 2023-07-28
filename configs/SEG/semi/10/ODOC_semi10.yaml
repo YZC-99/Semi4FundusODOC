@@ -12,7 +12,7 @@ MODEL:
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  stage1_ckpt_path: 'experiments/SEG/sup/random1_ODOC_sup10/ckpt/'
+  stage1_ckpt_path: 'experiments/SEG/sup/random1_ODOC_sup10/ckpt/val_mIoU=0.610493-val_mDice=0.877921-val_OD_dice_score=0.885516-val_OD_IoU=0.631302-val_OC_dice_score=0.870326-val_OC_IoU=0.589684.ckpt'
 
 
 dataset:
