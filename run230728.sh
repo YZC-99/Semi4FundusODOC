@@ -1,5 +1,5 @@
 # SEG
-python main.py --config SEG/semi/10/random1_ODOC_sup
+python main.py --config SEG/semi/10/ODOC_semi10
 
 
 
