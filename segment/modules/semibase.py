@@ -45,7 +45,7 @@ class Base(pl.LightningModule):
         self.num_classes = num_classes
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
         if cfg.MODEL.align_loss > 0:
-            self.loss = GRWCrossEntropyLoss(class_weight=cfg.MODEL.class_weight,num_classes=self.num_classes,exp_scale=cfg.MODEL.align_loss)
+            self.loss = GRWCrossEntropyLoss(class_weight=cfg.MODEL.class_weight,num_classes=cfg.MODEL.NUM_CLASSES,exp_scale=cfg.MODEL.align_loss)
         else:
             self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
