@@ -268,9 +268,10 @@ class DualBase(pl.LightningModule):
 
 
         #计算 od_not_cover_oc
-        od_not_cover_gt = od_y - oc_y
-        od_not_cover_preds = od_preds - oc_preds
-        od_not_cover_preds[od_not_cover_preds < 0] = 0
+        od_not_cover_gt = od_y
+        od_not_cover_gt[oc_y == 1] = 0
+        od_not_cover_preds = od_preds
+        od_not_cover_preds[oc_preds == 1] = 0
         self.val_od_dice_score.update(od_not_cover_preds,od_not_cover_gt)
         self.val_od_jaccard.update(od_not_cover_preds,od_not_cover_gt)
 
