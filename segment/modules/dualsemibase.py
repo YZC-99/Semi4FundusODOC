@@ -225,6 +225,7 @@ class DualBase(pl.LightningModule):
             y1 = copy.deepcopy(y)
             y2 = copy.deepcopy(y)
             y1[y1 > 0] = 1
+            y2[y2 == 1] = 0
             y2[y2 > 1] = 1
             output = self(x)
             backbone_feat,logits1,logits2 = output['backbone_features'],output['out1'],output['out2']
