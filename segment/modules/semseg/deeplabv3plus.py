@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 class DualDeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass):
-        super(DeepLabV3Plus, self).__init__(backbone)
+        super(DualDeepLabV3Plus, self).__init__(backbone)
 
         low_level_channels = self.backbone.channels[0]
         high_level_channels = self.backbone.channels[-1]
