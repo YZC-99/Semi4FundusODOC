@@ -268,13 +268,10 @@ class DualBase(pl.LightningModule):
 
 
         #计算 od_not_cover_oc
-        od_not_cover_gt = od_y
-        od_not_cover_gt[oc_y == 1] = 0
-        od_not_cover_preds = od_preds
-        od_not_cover_preds[oc_preds == 1] = 0
-        self.val_od_dice_score.update(od_not_cover_preds,od_not_cover_gt)
-        self.val_od_jaccard.update(od_not_cover_preds,od_not_cover_gt)
-
+        od_y[oc_y == 1] = 0
+        od_preds[oc_preds == 1] = 0
+        self.val_od_dice_score.update(od_preds,od_y)
+        self.val_od_jaccard.update(od_preds,od_y)
 
 
         # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
