@@ -45,6 +45,13 @@ class Base(pl.LightningModule):
         self.num_classes = num_classes
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
         if cfg.MODEL.align_loss > 0:
+            self.confidence_layer = nn.Sequential(
+                nn.Conv2d(256, 1, kernel_size=1),
+                nn.BatchNorm2d(1),
+                nn.ReLU()
+            )
+            self.logit_scale = nn.Parameter(torch.ones(1, self.num_classes, 1, 1))
+            self.logit_bias = nn.Parameter(torch.zeros(1, self.num_classes, 1, 1))
             self.loss = GRWCrossEntropyLoss(class_weight=cfg.MODEL.class_weight,num_classes=cfg.MODEL.NUM_CLASSES,exp_scale=cfg.MODEL.align_loss)
         else:
             self.loss = CrossEntropyLoss(ignore_index=255)
@@ -78,6 +85,12 @@ class Base(pl.LightningModule):
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         out = self.model(x)
+        backbone_feat, logits = out['backbone_features'], out['out']
+        if self.cfg.MODEL.logitsTransform:
+            confidence = self.confidence_layer(logits).sigmoid()
+            scores_out_tmp = confidence * (logits * self.logit_scale + self.logit_bias)
+            output_out = scores_out_tmp + (1 - confidence) * logits
+            out['out'] = output_out
         return out
 
     def gray2rgb(self,y,predict):
@@ -109,13 +122,6 @@ class Base(pl.LightningModule):
             self.model.load_state_dict(sd, strict=False)
         print(f"Restored from {path}")
 
-    def get_input(self, batch: Tuple[Any, Any], key: str = 'image') -> Any:
-        x = batch[key]
-        if len(x.shape) == 3:
-            x = x[..., None]
-        if x.dtype == torch.double:
-            x = x.float()
-        return x.contiguous()
 
     def uda_train(self,batch):
         src, tgt = batch
