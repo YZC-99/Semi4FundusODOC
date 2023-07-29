@@ -265,10 +265,6 @@ class DualBase(pl.LightningModule):
         # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
         # 背景的指标不必计算
         # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
-        oc_preds[oc_preds != 2] = 0
-        oc_preds[oc_preds != 0] = 1
-        oc_y[oc_y != 2] = 0
-        oc_y[oc_y != 0] = 1
         self.val_oc_dice_score.update(oc_preds, oc_y)
         self.val_oc_jaccard.update(oc_preds, oc_y)
 
