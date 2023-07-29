@@ -263,23 +263,25 @@ class DualBase(pl.LightningModule):
     def validation_step_end(self, outputs):
         loss,od_preds,od_y,oc_preds,oc_y = outputs['val_loss'],outputs['preds1'],outputs['y1'],outputs['preds2'],outputs['y2']
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.val_od_coverOC_dice_score.update(od_preds, od_y)
+        self.val_od_coverOC_jaccard.update(od_preds, od_y)
+
+
+        #计算 od_not_cover_oc
+        od_not_cover_gt = od_y - oc_y
+        od_not_cover_preds = od_preds - oc_preds
+        od_not_cover_preds[od_not_cover_preds < 0] = 0
+        self.val_od_dice_score.update(od_not_cover_preds,od_not_cover_gt)
+        self.val_od_jaccard.update(od_not_cover_preds,od_not_cover_gt)
+
+
+
         # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
         # 背景的指标不必计算
         # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
         self.val_oc_dice_score.update(oc_preds, oc_y)
         self.val_oc_jaccard.update(oc_preds, oc_y)
 
-        #计算 od_not_cover_oc
-        od_not_cover_gt = od_y - oc_y
-        od_not_cover_preds = od_preds - oc_preds
-        od_not_cover_preds[od_not_cover_preds < 0] = 0
-
-        self.val_od_dice_score.update(od_not_cover_preds,od_not_cover_gt)
-        self.val_od_jaccard.update(od_not_cover_preds,od_not_cover_gt)
-
-
-        self.val_od_coverOC_dice_score.update(od_preds, od_y)
-        self.val_od_coverOC_jaccard.update(od_preds, od_y)
 
 
     def on_validation_epoch_end(self) -> None:
