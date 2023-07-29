@@ -46,7 +46,7 @@ class Base(pl.LightningModule):
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
         if cfg.MODEL.align_loss > 0:
             self.confidence_layer = nn.Sequential(
-                nn.Conv2d(256, 1, kernel_size=1),
+                nn.Conv2d(self.model.classifier.out_channels, 1, kernel_size=1),
                 nn.BatchNorm2d(1),
                 nn.ReLU()
             )
