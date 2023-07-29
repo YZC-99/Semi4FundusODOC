@@ -9,6 +9,7 @@ MODEL:
   lr: 0.004 # 0.004/16*batch_size
   crop_size: 512
   align_loss: 0.3
+  logitsTransform: True
   class_weight: 'dataset/SEG/whole_class_weight.txt'
   task: 'od'
   data_root: './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
