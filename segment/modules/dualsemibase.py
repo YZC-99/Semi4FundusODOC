@@ -243,6 +243,7 @@ class DualBase(pl.LightningModule):
         y1 = copy.deepcopy(y)
         y2 = copy.deepcopy(y)
         y1[y1 > 0] = 1
+        y2[y2 == 1] = 0
         y2[y2 > 1] = 1
         output = self(x)
         backbone_feat, logits1, logits2 = output['backbone_features'], output['out1'], output['out2']
@@ -293,6 +294,7 @@ class DualBase(pl.LightningModule):
         # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
         self.val_od_dice_score.reset()
         self.val_od_jaccard.reset()
+
         oc_iou = self.val_oc_jaccard.compute()
         oc_dice = self.val_oc_dice_score.compute()
 
