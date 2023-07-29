@@ -222,8 +222,8 @@ class DualBase(pl.LightningModule):
         else:
             x = batch['img']
             y = batch['mask']
-            y1 = copy.deecopy(y)
-            y2 = copy.deecopy(y)
+            y1 = copy.deepcopy(y)
+            y2 = copy.deepcopy(y)
             y1[y1 > 0] = 1
             y2[y2 > 1] = 1
             output = self(x)
@@ -239,8 +239,8 @@ class DualBase(pl.LightningModule):
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
         y = batch['mask']
-        y1 = copy.deecopy(y)
-        y2 = copy.deecopy(y)
+        y1 = copy.deepcopy(y)
+        y2 = copy.deepcopy(y)
         y1[y1 > 0] = 1
         y2[y2 > 1] = 1
         output = self(x)
