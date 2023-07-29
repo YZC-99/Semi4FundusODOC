@@ -11,6 +11,7 @@ _C.info.description=''
 
 # _C = CN()
 _C.MODEL = CN()
+_C.MODEL.Dual = False
 _C.MODEL.sup = False
 _C.MODEL.NUM_CLASSES = 2
 _C.MODEL.batch_size = 16

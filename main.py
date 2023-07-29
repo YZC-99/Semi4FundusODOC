@@ -12,6 +12,7 @@ import yaml
 from torch.utils.data import DataLoader
 from segment.configs import cfg
 from segment.modules.semibase import Base
+from segment.modules.dualsemibase import DualBase
 from segment.prototype_dist_init import prototype_dist_init
 from segment.dataloader.od_oc_dataset import SemiDataset,SemiUabledTrain
 from segment.label import label
@@ -76,7 +77,10 @@ if __name__ == '__main__':
                                    "max_images": args.max_images})
 
     # Build model
-    model = Base('resnet50',cfg.MODEL.NUM_CLASSES,cfg)
+    if cfg.MODEL.Dual:
+        model = DualBase('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
+    else:
+        model = Base('resnet50',cfg.MODEL.NUM_CLASSES,cfg)
     model.learning_rate = cfg.MODEL.lr
 
     # Setup callbacks

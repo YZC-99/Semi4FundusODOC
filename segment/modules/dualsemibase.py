@@ -13,7 +13,7 @@ from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
-from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
+from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus,DualDeepLabV3Plus
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,17 +33,17 @@ def color_code_labels(labels):
 
     return color_image
 
-class Base(pl.LightningModule):
+class DualBase(pl.LightningModule):
     def __init__(self,
                  backbone: str,
                  num_classes: int,
                  cfg
                  ):
-        super(Base, self).__init__()
+        super(DualBase, self).__init__()
         self.cfg = cfg
         self.backbone = backbone
         self.num_classes = num_classes
-        self.model = DeepLabV3Plus(self.backbone,self.num_classes)
+        self.model = DualDeepLabV3Plus(self.backbone,self.num_classes-1)
         if cfg.MODEL.align_loss > 0:
             self.loss = GRWCrossEntropyLoss(class_weight=cfg.MODEL.class_weight,num_classes=cfg.MODEL.NUM_CLASSES,exp_scale=cfg.MODEL.align_loss)
         else:
@@ -54,22 +54,19 @@ class Base(pl.LightningModule):
         self.val_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
         self.val_od_dice_score = Dice(num_classes=2,average='macro').to(self.device)
         self.val_od_jaccard = JaccardIndex(num_classes=2,task='binary').to(self.device)
+        self.val_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+        self.val_oc_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+        self.val_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+        self.val_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
 
         self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
         self.test_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
         self.test_od_dice_score = Dice(num_classes=2,average='macro').to(self.device)
         self.test_od_jaccard = JaccardIndex(num_classes=2,task='binary').to(self.device)
-
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            self.val_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.val_oc_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
-            self.val_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.val_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
-
-            self.test_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.test_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
-            self.test_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.test_oc_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+        self.test_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+        self.test_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+        self.test_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+        self.test_oc_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
 
         if cfg.MODEL.stage1_ckpt_path is not None and cfg.MODEL.uda_pretrained:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -225,9 +222,15 @@ class Base(pl.LightningModule):
         else:
             x = batch['img']
             y = batch['mask']
+            y1 = copy.deecopy(y)
+            y2 = copy.deecopy(y)
+            y1[y1 > 0] = 1
+            y2[y2 > 1] = 1
             output = self(x)
-            backbone_feat,logits = output['backbone_features'],output['out']
-            loss = self.loss(logits, y)
+            backbone_feat,logits1,logits2 = output['backbone_features'],output['out1'],output['out2']
+            loss1 = self.loss(logits1, y1)
+            loss2 = self.loss(logits2, y2)
+            loss = loss1+loss2
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -236,48 +239,57 @@ class Base(pl.LightningModule):
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
         y = batch['mask']
+        y1 = copy.deecopy(y)
+        y2 = copy.deecopy(y)
+        y1[y1 > 0] = 1
+        y2[y2 > 1] = 1
         output = self(x)
-        backbone_feat,logits = output['backbone_features'],output['out']
-        preds = nn.functional.softmax(logits, dim=1).argmax(1)
-        loss = self.loss(logits, y)
-        return {'val_loss':loss,'preds':preds,'y':y}
+        backbone_feat, logits1, logits2 = output['backbone_features'], output['out1'], output['out2']
+        preds1 = nn.functional.softmax(logits1, dim=1).argmax(1)
+        loss1 = self.loss(logits1, y1)
+
+        preds2 = nn.functional.softmax(logits2, dim=1).argmax(1)
+        loss2 = self.loss(logits2, y2)
+
+        loss = loss1 + loss2
+        return {'val_loss':loss,
+                'preds1':preds1,
+                'y1':y1,
+                'preds2': preds2,
+                'y2': y2,
+                }
 
     def validation_step_end(self, outputs):
-        loss,preds,y = outputs['val_loss'],outputs['preds'],outputs['y']
+        loss,preds1,y1,preds2,y2 = outputs['val_loss'],outputs['preds1'],outputs['y1'],outputs['preds2'],outputs['y2']
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
         # 背景的指标不必计算
         # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
-        od_preds = copy.deepcopy(preds)
-        od_y = copy.deepcopy(y)
+        od_preds = copy.deepcopy(preds1)
+        od_y = copy.deepcopy(y1)
         od_preds[od_preds != 1] = 0
         od_y[od_y != 1] = 0
 
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_preds = copy.deepcopy(preds)
-            oc_y = copy.deepcopy(y)
-            oc_preds[oc_preds != 2] = 0
-            oc_preds[oc_preds != 0] = 1
-            oc_y[oc_y != 2] = 0
-            oc_y[oc_y != 0] = 1
-            self.val_oc_dice_score.update(oc_preds, oc_y)
-            self.val_oc_jaccard.update(oc_preds, oc_y)
+        oc_preds = copy.deepcopy(preds2)
+        oc_y = copy.deepcopy(y2)
+        oc_preds[oc_preds != 2] = 0
+        oc_preds[oc_preds != 0] = 1
+        oc_y[oc_y != 2] = 0
+        oc_y[oc_y != 0] = 1
+        self.val_oc_dice_score.update(oc_preds, oc_y)
+        self.val_oc_jaccard.update(oc_preds, oc_y)
 
-            #计算 od_cover_oc
-            od_cover_gt = od_y + oc_y
-            od_cover_gt[od_cover_gt > 0] = 1
+        #计算 od_not_cover_oc
+        od_not_cover_gt = od_y - oc_y
+        od_not_cover_preds = od_preds - oc_preds
 
-            od_cover_preds = od_preds + oc_preds
-            od_cover_preds[od_cover_preds > 0] = 1
-            self.val_od_coverOC_dice_score.update(od_cover_preds,od_cover_gt)
-            self.val_od_coverOC_jaccard.update(od_cover_preds,od_cover_gt)
+        self.val_oc_dice_score.update(od_not_cover_preds,od_not_cover_gt)
+        self.val_od_jaccard.update(od_not_cover_preds,od_not_cover_gt)
 
 
-        self.val_od_dice_score.update(od_preds, od_y)
-        self.val_od_jaccard.update(od_preds, od_y)
+        self.val_od_coverOC_dice_score.update(od_preds, od_y)
+        self.val_od_coverOC_jaccard.update(od_preds, od_y)
 
-        self.val_mean_dice_score.update(preds, y)
-        self.val_mean_jaccard.update(preds, y)
 
     def on_validation_epoch_end(self) -> None:
         od_iou = self.val_od_jaccard.compute()
@@ -287,47 +299,38 @@ class Base(pl.LightningModule):
         self.log("val/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_dice_score", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
-        self.log("val_Mean_bg_IoU", self.val_mean_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_Mean_bg_dice_score", self.val_mean_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/Mean_bg_IoU", self.val_mean_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/Mean_bg_dice_score", self.val_mean_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        m_iou = od_iou
-        m_dice = od_dice
         # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
-        self.val_mean_dice_score.reset()
-        self.val_mean_jaccard.reset()
         self.val_od_dice_score.reset()
         self.val_od_jaccard.reset()
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_iou = self.val_oc_jaccard.compute()
-            oc_dice = self.val_oc_dice_score.compute()
+        oc_iou = self.val_oc_jaccard.compute()
+        oc_dice = self.val_oc_dice_score.compute()
 
-            self.log("val_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val_OC_dice_score", oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OC_dice_score", oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.val_oc_dice_score.reset()
-            self.val_oc_jaccard.reset()
-            m_iou = (od_iou + oc_iou)/2
-            m_dice = (od_dice + oc_dice)/2
+        self.log("val_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_OC_dice_score", oc_dice, prog_bar=True, logger=False, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OC_dice_score", oc_dice, prog_bar=False, logger=True, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.val_oc_dice_score.reset()
+        self.val_oc_jaccard.reset()
 
-            od_cover_oc_iou = self.val_od_coverOC_jaccard.compute()
-            od_cover_oc_dice = self.val_od_coverOC_dice_score.compute()
-            self.log("val_OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val_OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.val_od_coverOC_dice_score.reset()
-            self.val_od_coverOC_jaccard.reset()
+        m_iou = (od_iou + oc_iou)/2
+        m_dice = (od_dice + oc_dice)/2
+
+        od_cover_oc_iou = self.val_od_coverOC_jaccard.compute()
+        od_cover_oc_dice = self.val_od_coverOC_dice_score.compute()
+        self.log("val_OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=True, logger=False, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=True, logger=False, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=False, logger=True, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=False, logger=True, on_step=False,
+                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.val_od_coverOC_dice_score.reset()
+        self.val_od_coverOC_jaccard.reset()
 
         self.log("val_mIoU", m_iou, prog_bar=True, logger=False, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)

@@ -4,6 +4,56 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+class DualDeepLabV3Plus(BaseNet):
+    def __init__(self, backbone, nclass):
+        super(DeepLabV3Plus, self).__init__(backbone)
+
+        low_level_channels = self.backbone.channels[0]
+        high_level_channels = self.backbone.channels[-1]
+
+        self.head = ASPPModule(high_level_channels, (12, 24, 36))
+
+        self.reduce = nn.Sequential(nn.Conv2d(low_level_channels, 48, 1, bias=False),
+                                    nn.BatchNorm2d(48),
+                                    nn.ReLU(True))
+
+        self.fuse = nn.Sequential(nn.Conv2d(high_level_channels // 8 + 48, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+                                  nn.Dropout(0.1, False))
+
+        self.classifier1 = nn.Conv2d(256, nclass, 1, bias=True)
+        self.classifier2 = nn.Conv2d(256, nclass, 1, bias=True)
+
+    def base_forward(self, x):
+        h, w = x.shape[-2:]
+
+        c1, c2, c3, c4 = self.backbone.base_forward(x)
+        backbone_feats = c4
+        c4 = self.head(c4)
+        c4 = F.interpolate(c4, size=c1.shape[-2:], mode="bilinear", align_corners=True)
+
+        c1 = self.reduce(c1)
+
+        out = torch.cat([c1, c4], dim=1)
+        out = self.fuse(out)
+
+        out1 = self.classifier1(out)
+        out2 = self.classifier2(out)
+
+
+        out1 = F.interpolate(out1, size=(h, w), mode="bilinear", align_corners=True)
+        out2 = F.interpolate(out2, size=(h, w), mode="bilinear", align_corners=True)
+
+        return {'out1':out1,
+                'out2':out2,
+                'backbone_features':backbone_feats}
+
+
 
 class DeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass):
