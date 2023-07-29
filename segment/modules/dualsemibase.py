@@ -260,18 +260,11 @@ class DualBase(pl.LightningModule):
                 }
 
     def validation_step_end(self, outputs):
-        loss,preds1,y1,preds2,y2 = outputs['val_loss'],outputs['preds1'],outputs['y1'],outputs['preds2'],outputs['y2']
+        loss,od_preds,od_y,oc_preds,oc_y = outputs['val_loss'],outputs['preds1'],outputs['y1'],outputs['preds2'],outputs['y2']
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
         # 背景的指标不必计算
         # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
-        od_preds = copy.deepcopy(preds1)
-        od_y = copy.deepcopy(y1)
-        od_preds[od_preds != 1] = 0
-        od_y[od_y != 1] = 0
-
-        oc_preds = copy.deepcopy(preds2)
-        oc_y = copy.deepcopy(y2)
         oc_preds[oc_preds != 2] = 0
         oc_preds[oc_preds != 0] = 1
         oc_y[oc_y != 2] = 0
@@ -282,6 +275,7 @@ class DualBase(pl.LightningModule):
         #计算 od_not_cover_oc
         od_not_cover_gt = od_y - oc_y
         od_not_cover_preds = od_preds - oc_preds
+        od_not_cover_preds[od_not_cover_preds < 0] = 0
 
         self.val_oc_dice_score.update(od_not_cover_preds,od_not_cover_gt)
         self.val_od_jaccard.update(od_not_cover_preds,od_not_cover_gt)
@@ -484,9 +478,15 @@ class DualBase(pl.LightningModule):
         elif isinstance(batch,dict):
             x = batch['img'].to(self.device)
             y = batch['mask']
-            out = self(x)['out']
-            out = torch.nn.functional.softmax(out,dim=1)
-            predict = out.argmax(1)
+
+            output = self(x)
+            out1,out2 = output['out1'],output['out2']
+            out1 = torch.nn.functional.softmax(out1,dim=1)
+            predict1 = out1.argmax(1)
+            out2 = torch.nn.functional.softmax(out2,dim=1)
+            predict2 = out2.argmax(1)
+
+            predict = predict1+predict2
             y_color,predict_color = self.gray2rgb(y,predict)
             log["image"] = x
             log["label"] = y_color
