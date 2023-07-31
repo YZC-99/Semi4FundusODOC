@@ -19,13 +19,17 @@ test_data = data[val_end:]
 
 # 将划分结果保存到文件
 with open('cropped_sup/random1/random_SEG.txt', 'w') as f:
-    f.writelines(data)
+    for item in data:
+        f.write(item)
 
 with open('cropped_sup/random1/training.txt', 'w') as f:
-    f.writelines(train_data)
+    for item in train_data:
+        f.write(item)
 
 with open('cropped_sup/random1/val.txt', 'w') as f:
-    f.writelines(val_data)
+    for item in val_data:
+        f.write(item)
 
 with open('cropped_sup/random1/test.txt', 'w') as f:
-    f.writelines(test_data)
+    for item in test_data:
+        f.write(item)
