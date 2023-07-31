@@ -1,7 +1,7 @@
 import random
 
 # 读取txt文件内容
-with open('SEG.txt', 'r') as f:
+with open('SEG_cropped.txt', 'r') as f:
     data = f.readlines()
 
 # 随机打乱样本顺序
@@ -18,14 +18,14 @@ val_data = data[train_end:val_end]
 test_data = data[val_end:]
 
 # 将划分结果保存到文件
-with open('sup/random1/random_SEG.txt', 'w') as f:
+with open('cropped_sup/random1/random_SEG.txt', 'w') as f:
     f.writelines(data)
 
-with open('sup/random1/training.txt', 'w') as f:
+with open('cropped_sup/random1/training.txt', 'w') as f:
     f.writelines(train_data)
 
-with open('sup/random1/val.txt', 'w') as f:
+with open('cropped_sup/random1/val.txt', 'w') as f:
     f.writelines(val_data)
 
-with open('sup/random1/test.txt', 'w') as f:
+with open('cropped_sup/random1/test.txt', 'w') as f:
     f.writelines(test_data)
