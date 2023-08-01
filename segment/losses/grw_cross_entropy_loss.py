@@ -29,7 +29,7 @@ def get_class_grw_weight(class_weight, num_classes=2, exp_scale=1, dataset_type=
 
     """
     assert class_weight.endswith("txt"), class_weight
-    if dataset_type is "ddr":
+    if dataset_type == "ddr":
         txt_info = open(class_weight, "r").readlines()
         data_info = dict()
         for idx in range(num_classes):
