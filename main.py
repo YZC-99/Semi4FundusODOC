@@ -51,11 +51,13 @@ if __name__ == '__main__':
     # Set random seed
     pl.seed_everything(args.seed)
 
-    cfg.merge_from_file(Path("configs")/(args.config+".yaml"))
+    # cfg.merge_from_file(Path("configs")/(args.config+".yaml"))
     # Load configuration
     config = get_config_from_file(Path("configs")/(args.config+".yaml"))
+    config_now = CN(OmegaConf.to_container(config))
+    cfg.update(config_now)
     loss_config = config['MODEL']['loss']
-    del config['MODEL']['loss']
+
     now_experiment_path = Path("experiments")/(args.config)
     now_ex_pseudo_masks_path = os.path.join(now_experiment_path,'pseudo_masks')
     now_ex_prototypes_path = os.path.join(now_experiment_path,'prototypes')

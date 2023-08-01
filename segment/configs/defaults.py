@@ -145,42 +145,7 @@ _C.dataset.params.test.params.pseudo_mask_path = ''
 _C.dataset.params.test.params.cfg = CN()
 # _C = CN()
 _C.OUTPUT_DIR = 'experiments_pca/prototype'
-# update
-_C.INPUT = CN()
-_C.INPUT.SOURCE_INPUT_SIZE_TRAIN = (512, 512)
-_C.INPUT.TARGET_INPUT_SIZE_TRAIN = (512, 512)
-_C.INPUT.INPUT_SIZE_TEST = (512, 512)
-_C.INPUT.INPUT_SCALES_TRAIN = (1.0, 1.0)
-_C.INPUT.IGNORE_LABEL = 255
-_C.INPUT.PIXEL_MEAN = [0.485, 0.456, 0.406]
-_C.INPUT.PIXEL_STD = [0.229, 0.224, 0.225]
-# Convert image to BGR format (for Caffe2 models), in range 0-255
-_C.INPUT.TO_BGR255 = False
 
-# GaussianBlur
-_C.INPUT.GAUSSIANBLUR = False
-
-# Image ColorJitter
-_C.INPUT.BRIGHTNESS = 0.0
-_C.INPUT.CONTRAST = 0.0
-_C.INPUT.SATURATION = 0.0
-_C.INPUT.HUE = 0.0
-
-# RandomApply Transforms
-_C.INPUT.RANDOMAPPLY = 0.0
-
-# RandomGrayscale
-_C.INPUT.GRAYSCALE = 0.0
-
-# Flips
-_C.INPUT.HORIZONTAL_FLIP_PROB_TRAIN = 0.0
-
-_C.DATASETS = CN()
-# List of the dataset names for training, as present in paths_catalog.py
-_C.DATASETS.SOURCE_TRAIN = ""
-_C.DATASETS.TARGET_TRAIN = ""
-# List of the dataset names for testing, as present in paths_catalog.py
-_C.DATASETS.TEST = ""
 
 _C.SOLVER = CN()
 _C.SOLVER.NUM_WORKERS = 4
