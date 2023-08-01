@@ -25,8 +25,8 @@ def compute_class_weight():
 
     print('od_ratio:{}'.format(od_ratio / count))
     print('oc_ratio:{}'.format(oc_ratio / count))
-    print('od_counts:{}'.format(od_ratio*shape[0]*shape[1]))
-    print('oc_counts:{}'.format(oc_ratio*shape[0]*shape[1]))
+    print('od_counts:{}'.format(od_ratio*shape[0]*shape[1]) / count)
+    print('oc_counts:{}'.format(oc_ratio*shape[0]*shape[1]) / count)
 
 def test_crw():
     num_classes = 3
