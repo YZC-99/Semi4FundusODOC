@@ -21,6 +21,7 @@ class BlvLoss(nn.Module):
         frequency_list = torch.log(cls_list)
         self.frequency_list = torch.log(sum(cls_num_list)) - frequency_list
         self.sampler = normal.Normal(0, sigma)
+        self._loss_name = 'BlvLoss'
 
     def forward(self, pred, target):
         viariation = self.sampler.sample(pred.shape).clamp(-1, 1).to(pred.device)
@@ -32,4 +33,17 @@ class BlvLoss(nn.Module):
 
         return loss
 
+    @property
+    def loss_name(self):
+        """Loss Name.
+
+        This function must be implemented and will return the name of this
+        loss function. This name will be used to combine different loss items
+        by simple sum operation. In addition, if you want this loss item to be
+        included into the backward graph, `loss_` must be the prefix of the
+        name.
+        Returns:
+            str: The name of this loss item.
+        """
+        return self._loss_name
 
