@@ -15,6 +15,18 @@ from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger
 import torch.distributed as dist
 from .callback import *
 
+def merge_cfg(cfg_node, config_dict):
+    for key, value in config_dict.items():
+        if key not in cfg_node:
+            # 如果键不存在于cfg_node中，直接添加
+            cfg_node[key] = value
+        elif isinstance(value, dict) and isinstance(cfg_node[key], CfgNode):
+            # 如果值是字典，并且cfg_node中对应的值是CfgNode对象，递归融合
+            merge_cfg(cfg_node[key], value)
+        else:
+            # 否则，直接使用config_dict中的值更新cfg_node中的值
+            cfg_node[key] = value
+
 def get_obj_from_str(name: str, reload: bool = False) -> ClassVar:
     module, cls = name.rsplit(".", 1)
 

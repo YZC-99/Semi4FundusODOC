@@ -23,7 +23,7 @@ from omegaconf import OmegaConf
 import torch
 import pytorch_lightning as pl
 
-from utils.general import get_config_from_file, initialize_from_config, setup_callbacks
+from utils.general import get_config_from_file, initialize_from_config, setup_callbacks,merge_cfg
 
 def get_obj_from_str(string, reload=False):
     module, cls = string.rsplit(".", 1)
@@ -54,8 +54,9 @@ if __name__ == '__main__':
     # cfg.merge_from_file(Path("configs")/(args.config+".yaml"))
     # Load configuration
     config = get_config_from_file(Path("configs")/(args.config+".yaml"))
-    config_now = CN(OmegaConf.to_container(config))
-    cfg.update(config_now)
+    config_dict = OmegaConf.to_container(config, resolve=True)
+    # 将新的配置字典中的键添加到之前的CfgNode对象中
+    merge_cfg(cfg, config_dict)
     loss_config = config['MODEL']['loss']
 
     now_experiment_path = Path("experiments")/(args.config)
