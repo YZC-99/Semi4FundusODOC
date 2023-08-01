@@ -49,7 +49,7 @@ class Base(pl.LightningModule):
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
         self.loss = initialize_from_config(loss)
 
-        if cfg.MODEL.align_loss > 0:
+        if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
                 nn.Conv2d(self.model.classifier.out_channels, 1, kernel_size=1),
                 nn.BatchNorm2d(1),
