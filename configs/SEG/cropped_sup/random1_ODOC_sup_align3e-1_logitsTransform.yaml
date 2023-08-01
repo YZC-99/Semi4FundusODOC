@@ -11,7 +11,7 @@ MODEL:
     target: segment.losses.grw_cross_entropy_loss.GRWCrossEntropyLoss
     params:
       num_classes: 3
-      class_weight: 'dataset/SEG/whole_class_weight.txt'
+      class_weight: 'dataset/SEG/whole_cropped_class_weight.txt'
       exp_scale: 0.3
 
 dataset:
