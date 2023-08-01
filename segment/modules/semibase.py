@@ -106,7 +106,7 @@ class Base(pl.LightningModule):
         if self.cfg.MODEL.BlvLoss:
             viariation = self.sampler.sample(logits.shape).clamp(-1, 1)
             viariation = viariation.to(self.device)
-            self.frequency_list.to(self.device)
+            self.frequency_list = self.frequency_list.to(self.device)
             logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
             out['out'] = logits
         return out
