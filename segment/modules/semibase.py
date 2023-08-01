@@ -52,7 +52,9 @@ class Base(pl.LightningModule):
         self.loss = initialize_from_config(loss)
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
-            self.cls_num_list = torch.tensor([200482,42736,18925])
+            cls_num_list = torch.tensor([200482,42736,18925])
+            frequency_list = torch.log(cls_num_list)
+            self.frequency_list = torch.log(sum(cls_num_list)) - frequency_list
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
