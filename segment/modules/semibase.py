@@ -51,8 +51,8 @@ class Base(pl.LightningModule):
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
         self.loss = initialize_from_config(loss)
         if cfg.MODEL.BlvLoss:
-            self.sampler = normal.Normal(0, cfg.MODEL.loss.params.sigma)
-            self.cls_num_list = torch.tensor(cfg.MODEL.loss.params.cls_num_list)
+            self.sampler = normal.Normal(0, 4)
+            self.cls_num_list = torch.tensor([200482,42736,18925])
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
