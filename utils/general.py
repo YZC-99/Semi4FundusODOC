@@ -18,6 +18,18 @@ from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger
 import torch.distributed as dist
 from .callback import *
 
+def get_obj_from_str(name: str, reload: bool = False) -> ClassVar:
+    module, cls = name.rsplit(".", 1)
+
+    if reload:
+        module_imp = importlib.import_module(module)
+        importlib.reload(module_imp)
+
+    return getattr(importlib.import_module(module, package=None), cls)
+
+
+def initialize_from_config(config: OmegaConf) -> object:
+    return get_obj_from_str(config["target"])(**config.get("params", dict()))
 
 def set_seed(seed: int):
     random.seed(seed)

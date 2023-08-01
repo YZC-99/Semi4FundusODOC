@@ -17,6 +17,8 @@ from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
+from utils.general import initialize_from_config
+
 
 def color_code_labels(labels):
     unique_labels = torch.unique(labels)
@@ -37,13 +39,16 @@ class Base(pl.LightningModule):
     def __init__(self,
                  backbone: str,
                  num_classes: int,
-                 cfg
+                 cfg,
+                 loss
                  ):
         super(Base, self).__init__()
         self.cfg = cfg
         self.backbone = backbone
         self.num_classes = num_classes
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
+        self.loss = initialize_from_config(loss)
+
         if cfg.MODEL.align_loss > 0:
             self.confidence_layer = nn.Sequential(
                 nn.Conv2d(self.model.classifier.out_channels, 1, kernel_size=1),
@@ -52,9 +57,9 @@ class Base(pl.LightningModule):
             )
             self.logit_scale = nn.Parameter(torch.ones(1, self.num_classes, 1, 1))
             self.logit_bias = nn.Parameter(torch.zeros(1, self.num_classes, 1, 1))
-            self.loss = GRWCrossEntropyLoss(class_weight=cfg.MODEL.class_weight,num_classes=cfg.MODEL.NUM_CLASSES,exp_scale=cfg.MODEL.align_loss)
-        else:
-            self.loss = CrossEntropyLoss(ignore_index=255)
+            # self.loss = GRWCrossEntropyLoss(class_weight=cfg.MODEL.class_weight,num_classes=cfg.MODEL.NUM_CLASSES,exp_scale=cfg.MODEL.align_loss)
+        # else:
+        #     self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
         self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)

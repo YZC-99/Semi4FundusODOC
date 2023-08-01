@@ -54,6 +54,8 @@ if __name__ == '__main__':
     cfg.merge_from_file(Path("configs")/(args.config+".yaml"))
     # Load configuration
     config = get_config_from_file(Path("configs")/(args.config+".yaml"))
+    loss_config = config['MODEL']['loss']
+    del config['MODEL']['loss']
     now_experiment_path = Path("experiments")/(args.config)
     now_ex_pseudo_masks_path = os.path.join(now_experiment_path,'pseudo_masks')
     now_ex_prototypes_path = os.path.join(now_experiment_path,'prototypes')
@@ -80,7 +82,7 @@ if __name__ == '__main__':
     if cfg.MODEL.Dual:
         model = DualBase('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
     else:
-        model = Base('resnet50',cfg.MODEL.NUM_CLASSES,cfg)
+        model = Base('resnet50',cfg.MODEL.NUM_CLASSES,cfg,loss_config)
     model.learning_rate = cfg.MODEL.lr
 
     # Setup callbacks
