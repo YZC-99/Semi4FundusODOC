@@ -14,6 +14,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, Callback
 from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger
 import torch.distributed as dist
 from .callback import *
+from yacs.config import CfgNode
 
 def merge_cfg(cfg_node, config_dict):
     for key, value in config_dict.items():
