@@ -72,23 +72,23 @@ class Base(pl.LightningModule):
         self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
         self.val_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
         self.val_od_dice_score = Dice(num_classes=2,average='macro').to(self.device)
-        self.val_od_jaccard = JaccardIndex(num_classes=2,task='binary').to(self.device)
+        self.val_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
         self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
         self.test_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
         self.test_od_dice_score = Dice(num_classes=2,average='macro').to(self.device)
-        self.test_od_jaccard = JaccardIndex(num_classes=2,task='binary').to(self.device)
+        self.test_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
         if self.cfg.MODEL.NUM_CLASSES == 3:
             self.val_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.val_oc_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+            self.val_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
             self.val_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.val_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+            self.val_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
 
             self.test_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.test_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+            self.test_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
             self.test_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.test_oc_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+            self.test_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
 
         if cfg.MODEL.stage1_ckpt_path is not None and cfg.MODEL.uda_pretrained:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
