@@ -23,8 +23,8 @@ class BlvLoss(nn.Module):
         self.sampler = normal.Normal(0, sigma)
 
     def forward(self, pred, target):
-        self.frequency_list.to(self.device)
-        viariation = self.sampler.sample(pred.shape).clamp(-1, 1).to(self.device)
+        self.frequency_list.to(target.device)
+        viariation = self.sampler.sample(pred.shape).clamp(-1, 1).to(target.device)
         pred = pred + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
 
         loss = F.cross_entropy(pred, target, reduction='none')
