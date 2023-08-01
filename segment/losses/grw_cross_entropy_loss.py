@@ -113,13 +113,7 @@ class GRWCrossEntropyLoss(nn.Module):
         else:
             class_weight = None
         loss_cls = self.loss_weight * nn.functional.cross_entropy(cls_score,label,weight=class_weight)
-        # loss_cls = self.loss_weight * self.cls_criterion(
-        #     cls_score,
-        #     label,
-        #     weight=class_weight,
-        #     reduction=reduction,
-        #     avg_factor=avg_factor,
-        #     **kwargs)
+
         return loss_cls
 
     @property
