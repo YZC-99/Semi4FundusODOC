@@ -4,7 +4,7 @@ import numpy as np
 
 def compute_class_weight():
     root = '../data/fundus_datasets/od_oc/SEG/'
-    path = '../dataset/SEG/sup/random1/training.txt'
+    path = '../dataset/SEG/cropped_sup/random1/training.txt'
 
     od_ratio = 0.0
     oc_ratio = 0.0
@@ -15,7 +15,7 @@ def compute_class_weight():
             count += 0
             mask_path = i.split(' ')[-1]
             mask_arr = np.array(Image.open(os.path.join(root, mask_path)))
-
+            shape = mask_arr.shape
             counts = np.bincount(mask_arr.flatten())
             now_od_ratio = counts[1] / sum(counts)
             now_oc_ratio = counts[2] / sum(counts)
@@ -25,6 +25,8 @@ def compute_class_weight():
 
     print('od_ratio:{}'.format(od_ratio / count))
     print('oc_ratio:{}'.format(oc_ratio / count))
+    print('od_counts:{}'.format(od_ratio*shape[0]*shape[1]))
+    print('oc_counts:{}'.format(oc_ratio*shape[0]*shape[1]))
 
 def test_crw():
     num_classes = 3
@@ -46,4 +48,5 @@ def test_crw():
 
     ratio = [item['ratio'] for item in data_info.values()]
     print(ratio)
-test_crw()
+# test_crw()
+compute_class_weight()
