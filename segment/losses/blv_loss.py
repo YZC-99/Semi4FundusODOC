@@ -23,7 +23,7 @@ class BlvLoss(pl.LightningModule):
         self.frequency_list = torch.log(sum(cls_num_list)) - frequency_list
         self.sampler = normal.Normal(0, sigma)
 
-    def forward(self, pred, target,cls_num_list):
+    def forward(self, pred, target):
 
 
         viariation = self.sampler.sample(pred.shape).clamp(-1, 1).to(self.device)
