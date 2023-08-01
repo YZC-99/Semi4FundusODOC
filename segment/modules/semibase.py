@@ -54,7 +54,7 @@ class Base(pl.LightningModule):
             self.sampler = normal.Normal(0, 4)
             cls_num_list = torch.tensor([200482,42736,18925])
             frequency_list = torch.log(cls_num_list)
-            self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list).to(self.device)
+            self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list)
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
@@ -105,6 +105,7 @@ class Base(pl.LightningModule):
             out['out'] = output_out
         if self.cfg.MODEL.BlvLoss:
             viariation = (self.sampler.sample(logits.shape).clamp(-1, 1)).to(self.device)
+            self.frequency_list.to(self.device)
             logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
             out['out'] = logits
         return out
