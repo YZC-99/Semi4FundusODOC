@@ -2,6 +2,7 @@ MODEL:
   sup: False
   NUM_CLASSES: 3
   epochs: 100
+  BlvLoss: True
   lr: 0.004 # 0.004/16*batch_size
   crop_size: 512
   backbone: 'resnet50'
