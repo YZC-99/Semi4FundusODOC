@@ -12,7 +12,7 @@ def compute_class_weight():
     with open(path, 'r') as f:
         ids = f.read().splitlines()
         for i in ids:
-            count += 0
+            count += 1
             mask_path = i.split(' ')[-1]
             mask_arr = np.array(Image.open(os.path.join(root, mask_path)))
             shape = mask_arr.shape
