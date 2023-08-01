@@ -8,7 +8,11 @@ MODEL:
   backbone: 'resnet50'
   model: 'deeplabv3plus'
   loss:
-    target: torch.nn.CrossEntropyLoss
+#    target: torch.nn.CrossEntropyLoss
+    target: segment.losses.blv_loss.BlvLoss
+    params:
+      cls_num_list: [200482,42736,18925]
+      sigma: 4
 
 
 
