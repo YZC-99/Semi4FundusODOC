@@ -50,11 +50,11 @@ class Base(pl.LightningModule):
         self.num_classes = num_classes
         self.model = DeepLabV3Plus(self.backbone,self.num_classes)
         self.loss = initialize_from_config(loss)
-        # if cfg.MODEL.BlvLoss:
-        #     self.sampler = normal.Normal(0, 4)
-        #     cls_num_list = torch.tensor([200482,42736,18925])
-        #     frequency_list = torch.log(cls_num_list)
-        #     self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list).to(self.device)
+        if cfg.MODEL.BlvLoss:
+            self.sampler = normal.Normal(0, 4)
+            cls_num_list = torch.tensor([200482,42736,18925])
+            frequency_list = torch.log(cls_num_list)
+            self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list).to(self.device)
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
@@ -103,10 +103,10 @@ class Base(pl.LightningModule):
             scores_out_tmp = confidence * (logits * self.logit_scale + self.logit_bias)
             output_out = scores_out_tmp + (1 - confidence) * logits
             out['out'] = output_out
-        # if self.cfg.MODEL.BlvLoss:
-        #     viariation = (self.sampler.sample(logits.shape).clamp(-1, 1)).to(self.device)
-        #     logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
-        #     out['out'] = logits
+        if self.cfg.MODEL.BlvLoss:
+            viariation = (self.sampler.sample(logits.shape).clamp(-1, 1)).to(self.device)
+            logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
+            out['out'] = logits
         return out
 
     def gray2rgb(self,y,predict):
