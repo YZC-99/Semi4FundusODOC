@@ -17,7 +17,7 @@ class BlvLoss(nn.Module):
     def __init__(self, cls_num_list, sigma=4):
         super(BlvLoss, self).__init__()
         cls_num_list = torch.tensor(cls_num_list)
-        cls_list = torch.cuda.FloatTensor(cls_num_list)
+        cls_list = torch.FloatTensor(cls_num_list)
         frequency_list = torch.log(cls_list)
         self.frequency_list = torch.log(sum(cls_num_list)) - frequency_list
         self.sampler = normal.Normal(0, sigma)
