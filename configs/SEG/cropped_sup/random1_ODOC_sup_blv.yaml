@@ -7,7 +7,7 @@ MODEL:
   backbone: 'resnet50'
   model: 'deeplabv3plus'
   loss:
-    target: segment.losses.seg.blv_loss.BlvLoss
+    target: segment.losses.blv_loss.BlvLoss
     params:
       cls_num_list: [200482,42736,18925]
       sigma: 4
