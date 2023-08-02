@@ -114,8 +114,8 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
-        return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback,model_architecture_callback], logger
-    return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback,model_architecture_callback], logger
+        return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger
+    return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger
 
 
 def get_config_from_file(config_file: str) -> Dict:
