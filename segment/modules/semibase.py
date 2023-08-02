@@ -68,10 +68,20 @@ class Base(pl.LightningModule):
         # else:
         #     self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
-
+        '''
+        - 这里计算dice有几个注意事项，如果计算二分类的dice时，num_classes=2，则返回的是正负样本的dice均值
+        如果num_classes=1，则返回的是正样本的dice，但此时需要手动调整multiclass=False
+        
+        - 计算iou也有同样的事项需要注意：如果二分类任务的时候，num_classes=2，且task='binary'，那么此时计算的是正样本的iou。
+        如果num_classes=2，且task='multiclass'，则计算的是正负样本的iou的总和取均值
+        
+        配置文件中的v2是指dice开了multiclass=True
+        配置文件中的v3是指dice开了multiclass=False
+        '''
         self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
         self.val_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
-        self.val_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
+        # self.val_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
+        self.val_od_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
         self.val_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
         self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
@@ -80,9 +90,11 @@ class Base(pl.LightningModule):
         self.test_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
         if self.cfg.MODEL.NUM_CLASSES == 3:
-            self.val_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+            # self.val_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+            self.val_oc_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
             self.val_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
-            self.val_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+            # self.val_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+            self.val_od_coverOC_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
             self.val_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
 
             self.test_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
