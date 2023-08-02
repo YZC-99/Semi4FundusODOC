@@ -1,0 +1,40 @@
+info:
+  setting: 'od_val_refuge/1_7/100gamma'
+  description: 'sup_100GAMMA'
+MODEL:
+  sup: False
+  NUM_CLASSES: 3
+  epochs: 100
+  lr: 0.004 # 0.004/16*batch_size
+  crop_size: 512
+  task: 'od'
+  dataset: 'sup'
+  backbone: 'resnet50'
+  model: 'deeplabv3plus'
+  loss:
+    target: torch.nn.CrossEntropyLoss
+
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 16
+        num_workers: 8
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'REFUGE/cropped'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                labeled_id_path: 'dataset/REFUGE/cropped_sup/training.txt'
+                size: 512
+                mode: 'train'
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'Drishti-GS/cropped'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                size: 512
+                mode: 'val'
