@@ -26,7 +26,7 @@ dataset:
                 task: 'od_oc'
                 name: 'REFUGE/cropped'
                 root: './data/fundus_datasets/od_oc/SEG/'
-                labeled_id_path: 'dataset/REFUGE/cropped/training.txt'
+                labeled_id_path: 'dataset/REFUGE/cropped_sup/training.txt'
                 size: 512
                 mode: 'train'
 
