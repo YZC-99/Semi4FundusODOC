@@ -335,7 +335,7 @@ class Base(pl.LightningModule):
 
         self.log("val/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_IoU", od_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_dice_score", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_dice", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_withBdice", od_withBdice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
 
@@ -363,15 +363,15 @@ class Base(pl.LightningModule):
 
         od_rm_oc_iou = self.val_od_rmOC_jaccard.compute()
         od_rm_oc_dice = self.val_od_rmOC_dice_score.compute()
-        self.val_od_coverOC_dice_score.reset()
-        self.val_od_coverOC_jaccard.reset()
+        self.val_od_rmOC_jaccard.reset()
+        self.val_od_rmOC_dice_score.reset()
         self.log("val_OD_rm_OC_IoU", od_rm_oc_iou, prog_bar=True, logger=False, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_OD_rm_OC_dice_score", od_rm_oc_dice, prog_bar=True, logger=False, on_step=False,
+        self.log("val_OD_rm_OC_dice", od_rm_oc_dice, prog_bar=True, logger=False, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
         self.log("val/OD_rm_OC_IoU", od_rm_oc_iou, prog_bar=False, logger=True, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OD_rm_OC_dice_score", od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
+        self.log("val/OD_rm_OC_dice", od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
 
 
