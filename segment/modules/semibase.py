@@ -69,14 +69,14 @@ class Base(pl.LightningModule):
         #     self.loss = CrossEntropyLoss(ignore_index=255)
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
-        self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+        self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
         self.val_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
-        self.val_od_dice_score = Dice(num_classes=2,average='macro').to(self.device)
+        self.val_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
         self.val_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
-        self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+        self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
         self.test_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
-        self.test_od_dice_score = Dice(num_classes=2,average='macro').to(self.device)
+        self.test_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
         self.test_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
         if self.cfg.MODEL.NUM_CLASSES == 3:

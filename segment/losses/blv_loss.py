@@ -15,7 +15,6 @@ class BlvLoss(nn.Module):
 #cls_nufrequency_list
     def __init__(self, cls_num_list, sigma=4):
         super(BlvLoss, self).__init__()
-
         cls_num_list = torch.tensor(cls_num_list)
         cls_list = torch.tensor(cls_num_list, dtype=torch.float)
         frequency_list = torch.log(cls_list)
@@ -27,10 +26,6 @@ class BlvLoss(nn.Module):
         viariation = self.sampler.sample(pred.shape).clamp(-1, 1)
         viariation = viariation.to(pred.device)
         self.frequency_list = self.frequency_list.to(pred.device)
-        print(viariation.device)
-        print(self.frequency_list.device)
-        print(pred.device)
-        print(target.device)
         pred = pred + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
         loss = F.cross_entropy(pred, target, reduction='none')
         return loss

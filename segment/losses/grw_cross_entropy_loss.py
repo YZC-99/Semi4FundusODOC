@@ -26,7 +26,6 @@ def get_class_grw_weight(class_weight, num_classes=2, exp_scale=1, dataset_type=
     1	0.0432	2400	600
     2	0.0345	1800	450
     ...
-
     """
     assert class_weight.endswith("txt"), class_weight
     if dataset_type == "ddr":
