@@ -78,29 +78,29 @@ class Base(pl.LightningModule):
         配置文件中的v2是指dice开了multiclass=True
         配置文件中的v3是指dice开了multiclass=False
         '''
-        self.val_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
-        self.val_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
-        # self.val_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
         self.val_od_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
-        self.val_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
+        self.val_od_withB_dice_score = Dice(num_classes=2,average='macro').to(self.device)
+        self.val_od_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
+        self.val_od_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
 
-        self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
-        self.test_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
-        self.test_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
-        self.test_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
+        # self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
+        # self.test_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
+        # self.test_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
+        # self.test_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
         if self.cfg.MODEL.NUM_CLASSES == 3:
-            # self.val_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
             self.val_oc_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
-            self.val_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
-            # self.val_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.val_od_coverOC_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
-            self.val_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
+            self.val_oc_withB_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+            self.val_oc_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
+            self.val_oc_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
 
-            self.test_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.test_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
-            self.test_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
-            self.test_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
+            self.val_od_rmOC_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
+            self.val_od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
+
+            # self.test_od_coverOC_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+            # self.test_od_coverOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
+            # self.test_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
+            # self.test_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
 
         if cfg.MODEL.stage1_ckpt_path is not None and cfg.MODEL.uda_pretrained:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
@@ -297,82 +297,83 @@ class Base(pl.LightningModule):
             oc_y[oc_y != 2] = 0
             oc_y[oc_y != 0] = 1
             self.val_oc_dice_score.update(oc_preds, oc_y)
-            self.val_oc_jaccard.update(oc_preds, oc_y)
+            self.val_oc_withB_dice_score.update(oc_preds, oc_y)
+            self.val_oc_multiclass_jaccard.update(oc_preds, oc_y)
+            self.val_oc_binary_jaccard.update(oc_preds, oc_y)
 
             #计算 od_cover_oc
             od_cover_gt = od_y + oc_y
             od_cover_gt[od_cover_gt > 0] = 1
-
             od_cover_preds = od_preds + oc_preds
             od_cover_preds[od_cover_preds > 0] = 1
-            self.val_od_coverOC_dice_score.update(od_cover_preds,od_cover_gt)
-            self.val_od_coverOC_jaccard.update(od_cover_preds,od_cover_gt)
+
+            self.val_od_dice_score.update(od_cover_preds,od_cover_gt)
+            self.val_od_withB_dice_score.update(od_cover_preds,od_cover_gt)
+            self.val_od_multiclass_jaccard.update(od_cover_preds,od_cover_gt)
+            self.val_od_binary_jaccard.update(od_cover_preds,od_cover_gt)
 
 
-        self.val_od_dice_score.update(od_preds, od_y)
-        self.val_od_jaccard.update(od_preds, od_y)
-
-        self.val_mean_dice_score.update(preds, y)
-        self.val_mean_jaccard.update(preds, y)
+        self.val_od_rmOC_dice_score.update(od_preds, od_y)
+        self.val_od_rmOC_jaccard.update(od_preds, od_y)
 
     def on_validation_epoch_end(self) -> None:
-        od_iou = self.val_od_jaccard.compute()
+        od_miou = self.val_od_multiclass_jaccard.compute()
+        od_iou = self.val_od_binary_jaccard.compute()
+
         od_dice = self.val_od_dice_score.compute()
-        self.log("val_OD_IoU", od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_OD_dice_score",od_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_dice_score", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        od_withBdice = self.val_od_withB_dice_score.compute()
 
-        self.log("val_Mean_bg_IoU", self.val_mean_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_Mean_bg_dice_score", self.val_mean_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/Mean_bg_IoU", self.val_mean_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/Mean_bg_dice_score", self.val_mean_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        m_iou = od_iou
-        m_dice = od_dice
-        # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
-        self.val_mean_dice_score.reset()
-        self.val_mean_jaccard.reset()
+        self.val_od_multiclass_jaccard.reset()
+        self.val_od_binary_jaccard.reset()
         self.val_od_dice_score.reset()
-        self.val_od_jaccard.reset()
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_iou = self.val_oc_jaccard.compute()
-            oc_dice = self.val_oc_dice_score.compute()
+        self.val_od_withB_dice_score.reset()
 
-            self.log("val_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val_OC_dice_score", oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OC_dice_score", oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.val_oc_dice_score.reset()
-            self.val_oc_jaccard.reset()
-            m_iou = (od_iou + oc_iou)/2
-            m_dice = (od_dice + oc_dice)/2
+        self.log("val_OD_IoU", od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_OD_mIoU", od_miou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_OD_dice",od_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_OD_withBdice",od_withBdice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
-            od_cover_oc_iou = self.val_od_coverOC_jaccard.compute()
-            od_cover_oc_dice = self.val_od_coverOC_dice_score.compute()
-            self.log("val_OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val_OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("val/OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.val_od_coverOC_dice_score.reset()
-            self.val_od_coverOC_jaccard.reset()
+        self.log("val/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_IoU", od_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_dice_score", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_withBdice", od_withBdice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
-        self.log("val_mIoU", m_iou, prog_bar=True, logger=False, on_step=False,
+
+        # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
+
+        oc_miou = self.val_oc_multiclass_jaccard.compute()
+        oc_iou = self.val_oc_binary_jaccard.compute()
+        oc_dice = self.val_oc_dice_score.compute()
+        oc_withBdice = self.val_oc_withB_dice_score.compute()
+        self.val_oc_multiclass_jaccard.reset()
+        self.val_oc_binary_jaccard.reset()
+        self.val_oc_dice_score.reset()
+        self.val_oc_withB_dice_score.reset()
+
+        self.log("val_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_OC_mIoU", oc_miou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_OC_dice", oc_dice, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_OC_withBdice", oc_withBdice, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+
+        self.log("val/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OC_mIoU", oc_miou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OC_dice", oc_dice, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OC_withBdice", oc_withBdice, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+
+
+        od_rm_oc_iou = self.val_od_rmOC_jaccard.compute()
+        od_rm_oc_dice = self.val_od_rmOC_dice_score.compute()
+        self.val_od_coverOC_dice_score.reset()
+        self.val_od_coverOC_jaccard.reset()
+        self.log("val_OD_rm_OC_IoU", od_rm_oc_iou, prog_bar=True, logger=False, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/mIoU", m_iou, prog_bar=False, logger=True, on_step=False,
+        self.log("val_OD_rm_OC_dice_score", od_rm_oc_dice, prog_bar=True, logger=False, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_mDice", m_dice, prog_bar=True, logger=False, on_step=False,
+        self.log("val/OD_rm_OC_IoU", od_rm_oc_iou, prog_bar=False, logger=True, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/mDice", m_dice, prog_bar=False, logger=True, on_step=False,
+        self.log("val/OD_rm_OC_dice_score", od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
+
 
     def test_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
