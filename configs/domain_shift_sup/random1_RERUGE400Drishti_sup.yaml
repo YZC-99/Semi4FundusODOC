@@ -1,14 +1,9 @@
-info:
-  setting: 'od_val_refuge/1_7/100gamma'
-  description: 'sup_100GAMMA'
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 100
-  lr: 0.004 # 0.004/16*batch_size
+  epochs: 200
+  lr: 0.002
   crop_size: 512
-  task: 'od'
-  dataset: 'sup'
   backbone: 'resnet50'
   model: 'deeplabv3plus'
   loss:

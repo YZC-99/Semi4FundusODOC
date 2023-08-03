@@ -319,7 +319,6 @@ class Base(pl.LightningModule):
     def on_validation_epoch_end(self) -> None:
         od_miou = self.val_od_multiclass_jaccard.compute()
         od_iou = self.val_od_binary_jaccard.compute()
-
         od_dice = self.val_od_dice_score.compute()
         od_withBdice = self.val_od_withB_dice_score.compute()
 
@@ -334,7 +333,7 @@ class Base(pl.LightningModule):
         self.log("val_OD_withBdice",od_withBdice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
         self.log("val/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_IoU", od_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_mIoU", od_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_dice", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_withBdice", od_withBdice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
