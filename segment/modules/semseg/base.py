@@ -8,7 +8,7 @@ class BaseNet(nn.Module):
     def __init__(self, backbone):
         super(BaseNet, self).__init__()
         backbone_zoo = {'resnet50': resnet50, 'resnet101': resnet101}
-        self.backbone = backbone_zoo[backbone](pretrained=True)
+        self.backbone = backbone_zoo[backbone](pretrained=False)
 
     def base_forward(self, x):
         h, w = x.shape[-2:]

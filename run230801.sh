@@ -15,6 +15,7 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py --config SEG/cropped_sup/random1_ODOC_su
 
 CUDA_VISIBLE_DEVICES=0,1 python main.py --config domain_shift_sup/random1_RERUGE400RIM-ONE_sup
 CUDA_VISIBLE_DEVICES=0,1 python main.py --config domain_shift_sup/random1_RERUGE400Drishti_sup
+CUDA_VISIBLE_DEVICES=0,1 python main.py --config SEG/sup/random1_ODOC_sup
 
 
 
