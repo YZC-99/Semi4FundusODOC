@@ -20,6 +20,7 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.general import initialize_from_config
+from utils.my_torchmetrics import BoundaryIoU
 
 
 def color_code_labels(labels):
@@ -82,6 +83,7 @@ class Base(pl.LightningModule):
         self.val_od_withB_dice_score = Dice(num_classes=2,average='macro').to(self.device)
         self.val_od_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
         self.val_od_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+        self.val_od_boundary_jaccard = BoundaryIoU(num_classes=2).to(self.device)
 
         # self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
         # self.test_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
@@ -93,6 +95,7 @@ class Base(pl.LightningModule):
             self.val_oc_withB_dice_score = Dice(num_classes=2, average='macro').to(self.device)
             self.val_oc_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
             self.val_oc_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(self.device)
+            self.val_oc_boundary_jaccard = BoundaryIoU(num_classes=2).to(self.device)
 
             self.val_od_rmOC_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
             self.val_od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
@@ -300,6 +303,7 @@ class Base(pl.LightningModule):
             self.val_oc_withB_dice_score.update(oc_preds, oc_y)
             self.val_oc_multiclass_jaccard.update(oc_preds, oc_y)
             self.val_oc_binary_jaccard.update(oc_preds, oc_y)
+            self.val_oc_boundary_jaccard.update(oc_preds, oc_y)
 
             #计算 od_cover_oc
             od_cover_gt = od_y + oc_y
@@ -311,6 +315,7 @@ class Base(pl.LightningModule):
             self.val_od_withB_dice_score.update(od_cover_preds,od_cover_gt)
             self.val_od_multiclass_jaccard.update(od_cover_preds,od_cover_gt)
             self.val_od_binary_jaccard.update(od_cover_preds,od_cover_gt)
+            self.val_od_boundary_jaccard.update(od_cover_preds, od_cover_gt)
 
 
         self.val_od_rmOC_dice_score.update(od_preds, od_y)
@@ -318,7 +323,8 @@ class Base(pl.LightningModule):
 
     def on_validation_epoch_end(self) -> None:
         od_miou = self.val_od_multiclass_jaccard.compute()
-        od_iou = self.val_od_binary_jaccard.compute()
+        od_biou = self.val_od_binary_jaccard.compute()
+        od_iou = self.val_od_boundary_jaccard.compute()
         od_dice = self.val_od_dice_score.compute()
         od_withBdice = self.val_od_withB_dice_score.compute()
 
@@ -328,11 +334,14 @@ class Base(pl.LightningModule):
         self.val_od_withB_dice_score.reset()
 
         self.log("val_OD_IoU", od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val_OD_BIoU", od_biou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val_OD_mIoU", od_miou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+
         self.log("val_OD_dice",od_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val_OD_withBdice",od_withBdice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
 
         self.log("val/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
+        self.log("val/OD_BIoU", od_biou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_mIoU", od_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_dice", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         self.log("val/OD_withBdice", od_withBdice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
@@ -342,6 +351,7 @@ class Base(pl.LightningModule):
 
         oc_miou = self.val_oc_multiclass_jaccard.compute()
         oc_iou = self.val_oc_binary_jaccard.compute()
+        oc_biou = self.val_oc_boundary_jaccard.compute()
         oc_dice = self.val_oc_dice_score.compute()
         oc_withBdice = self.val_oc_withB_dice_score.compute()
         self.val_oc_multiclass_jaccard.reset()
@@ -350,11 +360,13 @@ class Base(pl.LightningModule):
         self.val_oc_withB_dice_score.reset()
 
         self.log("val_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_OC_BIoU", oc_biou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
         self.log("val_OC_mIoU", oc_miou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
         self.log("val_OC_dice", oc_dice, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
         self.log("val_OC_withBdice", oc_withBdice, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
 
         self.log("val/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.log("val/OC_BIoU", oc_biou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
         self.log("val/OC_mIoU", oc_miou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
         self.log("val/OC_dice", oc_dice, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
         self.log("val/OC_withBdice", oc_withBdice, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)

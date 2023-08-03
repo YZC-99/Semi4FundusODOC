@@ -5,7 +5,7 @@ import torch
 import matplotlib.pyplot as plt
 
 # General util function to get the boundary of a binary mask.
-def mask_to_boundary(mask, dilation_ratio=0.005):
+def mask_to_boundary(mask,boundary_size = 3, dilation_ratio=0.005):
     """
     Convert binary mask to boundary mask.
     :param mask (numpy array, uint8): binary mask
@@ -19,7 +19,7 @@ def mask_to_boundary(mask, dilation_ratio=0.005):
         dilation = 1
     # Pad image so mask truncated by the image border is also considered as boundary.
     new_mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
-    kernel = np.ones((3, 3), dtype=np.uint8)
+    kernel = np.ones((boundary_size, boundary_size), dtype=np.uint8)
     new_mask_erode = cv2.erode(new_mask, kernel, iterations=dilation)
     mask_erode = new_mask_erode[1 : h + 1, 1 : w + 1]
     # G_d intersects G in the paper.
@@ -66,11 +66,11 @@ def tensor_mask_to_boundary(mask, dilation_ratio=0.005):
 mask_path = './g0001.bmp'
 mask_arr = cv2.imread(mask_path,2)
 mask_arr[mask_arr > 0] = 1
-boundary_mask = mask_to_boundary(mask_arr)
+boundary_mask = mask_to_boundary(mask_arr,boundary_size=5)
 
 plt.figure()
 plt.imshow(boundary_mask)
 plt.axis('off')
 plt.show()
-biou = boundary_iou(mask_arr,mask_arr)
-print(biou)
+# biou = boundary_iou(mask_arr,mask_arr)
+# print(biou)
