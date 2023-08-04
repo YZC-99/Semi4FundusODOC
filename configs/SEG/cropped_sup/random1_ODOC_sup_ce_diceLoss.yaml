@@ -1,18 +1,14 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 100
+  epochs: 200
   lr: 0.004 # 0.004/16*batch_size
   crop_size: 512
-  logitsTransform: True
   backbone: 'resnet50'
   model: 'deeplabv3plus'
   loss:
-    target: segment.losses.grw_cross_entropy_loss.GRWCrossEntropyLoss
-    params:
-      num_classes: 3
-      class_weight: 'dataset/SEG/whole_cropped_class_weight.txt'
-      exp_scale: 0.3
+    target: segment.losses.seg.dice_loss.DC_and_CE_loss
+
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
