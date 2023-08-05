@@ -28,4 +28,5 @@ class DeepLabV2(BaseNet):
 
         out = F.interpolate(out, size=(h, w), mode="bilinear", align_corners=True)
 
-        return out
+        return {'out':out,
+                'backbone_features':x}
