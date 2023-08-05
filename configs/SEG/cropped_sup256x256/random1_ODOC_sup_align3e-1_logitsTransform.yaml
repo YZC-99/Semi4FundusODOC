@@ -1,8 +1,8 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 200
-  lr: 0.004 # 0.004/16*batch_size
+  epochs: 240
+  lr: 0.001 # 0.004/16*batch_size
   crop_size: 512
   logitsTransform: True
   backbone: 'resnet50'
@@ -26,7 +26,7 @@ dataset:
                 name: 'cropped_sup/random1'
                 root: './data/fundus_datasets/od_oc/SEG/'
                 labeled_id_path: 'dataset/SEG/cropped_sup/random1/training.txt'
-                size: 512
+                size: 256
                 mode: 'train'
 
         validation:
@@ -35,7 +35,7 @@ dataset:
                 task: 'od_oc'
                 name: 'SEG/cropped_sup/random1'
                 root: './data/fundus_datasets/od_oc/SEG/'
-                size: 512
+                size: 256
                 mode: 'val'
         test:
             target: segment.dataloader.od_oc_dataset.SupTrain
@@ -43,5 +43,5 @@ dataset:
               task: 'od_oc'
               name: 'SEG/cropped_sup/random1'
               root: './data/fundus_datasets/od_oc/SEG/'
-              size: 512
+              size: 256
               mode: 'test'
