@@ -4,15 +4,11 @@ MODEL:
   epochs: 80
   lr: 0.001 # 0.004/16*batch_size
   crop_size: 512
-  logitsTransform: True
   backbone: 'resnet50'
   model: 'deeplabv3plus'
   loss:
-    target: segment.losses.grw_cross_entropy_loss.GRWCrossEntropyLoss
-    params:
-      num_classes: 3
-      class_weight: 'dataset/SEG/whole_cropped_class_weight.txt'
-      exp_scale: 0.3
+    target: torch.nn.CrossEntropyLoss
+
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
@@ -23,9 +19,9 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'cropped_sup/random1'
+                name: 'cropped_semi/random1/30'
                 root: './data/fundus_datasets/od_oc/SEG/'
-                labeled_id_path: 'dataset/SEG/cropped_sup/random1/training.txt'
+                labeled_id_path: 'dataset/SEG/cropped_semi/random1/30/labeled.txt'
                 size: 256
                 mode: 'train'
 
@@ -33,7 +29,7 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'SEG/cropped_sup/random1'
+                name: 'SEG/cropped_semi/random1'
                 root: './data/fundus_datasets/od_oc/SEG/'
                 size: 256
                 mode: 'val'
