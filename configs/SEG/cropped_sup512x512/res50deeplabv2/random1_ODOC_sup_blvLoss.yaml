@@ -1,19 +1,22 @@
 MODEL:
   backbone: 'resnet50'
-  sup: False
+  model: 'deeplabv2'
   NUM_CLASSES: 3
   epochs: 200
+  BlvLoss: True
   lr: 0.001 # 0.004/16*batch_size
-  model: 'deeplabv2'
   loss:
     target: torch.nn.CrossEntropyLoss
-
+#    target: segment.losses.blv_loss.BlvLoss
+#    params:
+#      cls_num_list: [200482,42736,18925]
+#      sigma: 4
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
         batch_size: 8
-        num_workers: 4
+        num_workers: 7
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
