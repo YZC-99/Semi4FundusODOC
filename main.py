@@ -85,8 +85,7 @@ if __name__ == '__main__':
     if cfg.MODEL.Dual:
         model = DualBase('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
     else:
-        model = Base('resnet50',cfg.MODEL.NUM_CLASSES,cfg,loss_config)
-    model.learning_rate = cfg.MODEL.lr
+        model = Base(cfg.MODEL.model,'resnet50',cfg.MODEL.NUM_CLASSES,cfg,loss_config)
 
     # Setup callbacks
     callbacks, logger = setup_callbacks(exp_config, config)

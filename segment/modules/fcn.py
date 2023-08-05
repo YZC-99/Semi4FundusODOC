@@ -10,7 +10,7 @@ from utils.general import initialize_from_config
 from omegaconf import OmegaConf
 from typing import List,Tuple, Dict, Any, Optional
 
-from .base import BaseModel
+from segment.modules.semseg.base import BaseModel
 
 class Res50_FCN(BaseModel):
     def __init__(self,

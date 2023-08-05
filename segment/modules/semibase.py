@@ -16,6 +16,7 @@ import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
+from segment.modules.semseg.unet import UNet
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,6 +41,7 @@ def color_code_labels(labels):
 
 class Base(pl.LightningModule):
     def __init__(self,
+                 model:str,
                  backbone: str,
                  num_classes: int,
                  cfg,
@@ -47,9 +49,13 @@ class Base(pl.LightningModule):
                  ):
         super(Base, self).__init__()
         self.cfg = cfg
-        self.backbone = backbone
         self.num_classes = num_classes
-        self.model = DeepLabV3Plus(self.backbone,self.num_classes)
+        if model != 'unet':
+            self.backbone = backbone
+            self.model = DeepLabV3Plus(self.backbone,self.num_classes)
+        if model == 'unet':
+            self.model = UNet(in_channels=self.num_classes,num_classes=3,base_c=64,bilinear=True)
+
         self.loss = initialize_from_config(loss)
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)

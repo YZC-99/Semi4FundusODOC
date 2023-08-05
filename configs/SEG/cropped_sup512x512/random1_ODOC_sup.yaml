@@ -1,13 +1,10 @@
 MODEL:
+  name: 'unet'
   sup: False
   NUM_CLASSES: 3
   epochs: 200
   lr: 0.001 # 0.004/16*batch_size
-  crop_size: 512
-  task: 'od'
-  dataset: 'sup'
-  backbone: 'resnet50'
-  model: 'deeplabv3plus'
+  model: 'unet'
   loss:
     target: torch.nn.CrossEntropyLoss
 
