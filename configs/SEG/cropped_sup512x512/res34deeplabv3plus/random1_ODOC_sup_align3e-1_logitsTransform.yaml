@@ -1,5 +1,5 @@
 MODEL:
-  backbone: 'resnet50'
+  backbone: 'resnet34'
   model: 'deeplabv3plus'
   NUM_CLASSES: 3
   epochs: 200
