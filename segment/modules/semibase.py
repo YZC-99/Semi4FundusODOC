@@ -16,6 +16,8 @@ import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
+from segment.modules.semseg.deeplabv2 import DeepLabV2
+
 from segment.modules.semseg.unet import UNet
 import copy
 import numpy as np
@@ -50,9 +52,12 @@ class Base(pl.LightningModule):
         super(Base, self).__init__()
         self.cfg = cfg
         self.num_classes = num_classes
-        if model != 'unet':
+        if model == 'deeplabv3plus':
             self.backbone = backbone
             self.model = DeepLabV3Plus(self.backbone,self.num_classes)
+        if model == 'deeplabv2':
+            self.backbone = backbone
+            self.model = DeepLabV2(self.backbone,self.num_classes)
         if model == 'unet':
             self.model = UNet(in_channels=self.num_classes,num_classes=3,base_c=64,bilinear=True)
 
