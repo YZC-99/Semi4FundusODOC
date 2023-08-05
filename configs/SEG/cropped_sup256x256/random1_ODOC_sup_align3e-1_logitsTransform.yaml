@@ -1,8 +1,8 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 80
-  lr: 0.001 # 0.004/16*batch_size
+  epochs: 200
+  lr: 0.004 # 0.004/16*batch_size
   crop_size: 512
   logitsTransform: True
   backbone: 'resnet50'
