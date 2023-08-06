@@ -6,11 +6,11 @@ from torchvision.transforms import functional as F
 import torch.nn as nn
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
 from segment.util import  color_map
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
-
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 
 num_classes = 3
 ckpt_path = '../temp/val_OD_dice=0.847466.ckpt'
@@ -42,34 +42,19 @@ mask_tensor = T.ToTensor()(Image.open(mask_path))
 
 
 output = model(image_tensor)
+'''
+logits的形状为1*3*512*512,其中3代表语义类别数，现在需要对logits进行t-sne降维.
+降维的目的是想要展示语义分割网络最后一层输出的logits通过降维后的二维可视化，
+比如当前是三个类别，那么我希望降维后就应该呈现出三个点，这三个点分别代表语义分割的三个类别，
+请你写出python代码
+'''
 backbone_feat, logits = output['backbone_features'], output['out']
 
-b,c,h,w = logits.shape
-feat = logits.reshape(b*h*w, c)
-label = mask_tensor.reshape(b*h*w)
+# Take the first sample in batch
+logits_sample = logits[0].detach().numpy()
+# 将logits的形状转换为(512*512, 3)
+logits_reshaped = logits_sample.reshape(-1, 3)
 
-pca = PCA(n_components=2)
-visual_feats = pca.fit_transform(feat.detach().numpy().astype(np.float32))
-plt.scatter(visual_feats[:,0], visual_feats[:,1], c=label)
-plt.legend({0,1,2})
-# 1. 拟合模型
-lr = LogisticRegression()
-lr.fit(visual_feats, label)
-
-# 2. 预测
-boundary = lr.predict(visual_feats)
-plt.contour(boundary)
-plt.show()
-
-# # pred = torch.argmax(logits, dim=1)
-# pred = nn.functional.softmax(logits, dim=1).argmax(1)
-# pred = pred.squeeze()
-#
-# preds_arr = pred.numpy().astype(np.uint8)
-# pred = Image.fromarray(preds_arr, mode='P')
-# pred.putpalette(cmap)
-# pred.save('./T0001_preds.bmp')
-
-
-
-# print(pred.shape)
+# 使用t-SNE进行降维，降维后的结果为(512*512, 2)
+tsne = TSNE(n_components=2)
+logits_tsne = tsne.fit_transform(logits_reshaped)
