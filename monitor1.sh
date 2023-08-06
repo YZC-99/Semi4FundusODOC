@@ -2,7 +2,7 @@
 
 # Function to check GPU utilization
 check_gpu_utilization() {
-  gpu_utilization=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits -i 0,1,2,3| grep -o '[0-9]\+' | awk '{print $1}')
+  gpu_utilization=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits -i 0,1| grep -o '[0-9]\+' | awk '{print $1}')
   echo "$gpu_utilization"
 }
 
@@ -10,7 +10,9 @@ check_gpu_utilization() {
 execute_task() {
   # Replace this function with the logic to execute your task on the specified GPU
   echo "Executing your task on GPU"
-  /usr/bin/shutdown
+  CUDA_VISIBLE_DEVICES=0,1 python main.py --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_tgt_prototype
+  CUDA_VISIBLE_DEVICES=0,1 python main.py --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_B_CJ_CO_RG_tgt_prototype
+
 }
 
 # Main loop

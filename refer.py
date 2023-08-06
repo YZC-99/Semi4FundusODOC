@@ -19,8 +19,8 @@ from torch.utils.data import DataLoader
 
 #
 num_classes = 3
-ckpt_path = ''
-
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/domain_shift_sup/random1_RERUGE400Drishti_sup/ckpt/val_OD_dice=0.932737.ckpt'
+log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
 model = model_zoo['deeplabv3plus']('resnet50', num_classes)
 
@@ -38,7 +38,7 @@ for key, value in sd.items():
     key = key.replace('model.', '')
     new_state_dict[key] = value
 model.load_state_dict(new_state_dict)
-model.cuda()
+model.to('cuda:3')
 model.eval()
 
 dataset = SupTrain(task='od_oc',
@@ -50,20 +50,22 @@ dataset = SupTrain(task='od_oc',
 dataloader = DataLoader(dataset, batch_size=1, shuffle=False,
                                   pin_memory=True, num_workers=8, drop_last=False)
 tbar = tqdm(dataloader)
-od_mIoU = JaccardIndex(num_classes=2, task='multiclass').to('cuda')
-oc_mIoU = JaccardIndex(num_classes=2, task='multiclass').to('cuda')
-od_Dice = Dice(num_classes=1,multiclass=False).to('cuda')
-oc_Dice = Dice(num_classes=1,multiclass=False).to('cuda')
+od_mIoU = JaccardIndex(num_classes=2, task='multiclass').to('cuda:3')
+oc_mIoU = JaccardIndex(num_classes=2, task='multiclass').to('cuda:3')
+od_Dice = Dice(num_classes=1,multiclass=False).to('cuda:3')
+oc_Dice = Dice(num_classes=1,multiclass=False).to('cuda:3')
 cmap = color_map('eye')
-
+if not os.path.exists(log_path):
+    os.mkdir(log_path)
 # 创建csv文件
-with open(os.path.join('pseudo_label_metrics.csv'), 'w', newline='') as file:
+with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['ID', 'OD_mIoU','OD_Dice','OC_mIoU','OC_Dice'])  # 写入表头
     with torch.no_grad():
         for batch in tbar:
             img,mask,id = batch['img'],batch['mask'],batch['id']
-            img = img.cuda()
+            mask = mask.to('cuda:3')
+            img = img.to('cuda:3')
             logits = model(img)['out']
             preds = nn.functional.softmax(logits, dim=1).argmax(1)
 
@@ -90,16 +92,15 @@ with open(os.path.join('pseudo_label_metrics.csv'), 'w', newline='') as file:
             # oc_mIoU(oc_mask,oc_preds)
             # oc_Dice(oc_mask,oc_preds)
 
-            pred = Image.fromarray(preds.squeeze(0).numpy().astype(np.uint8), mode='P')
+            pred = Image.fromarray(preds.squeeze(0).cpu().detach().numpy().astype(np.uint8), mode='P')
             pred.putpalette(cmap)
-            if not os.path.exists('experiments/preds'):
-                os.mkdir('experiments/preds')
-            pred.save('%s/%s' % ('experiments/preds', os.path.basename(id[0].split(' ')[1])))
+
+            pred.save('%s/%s' % (log_path, os.path.basename(id[0].split(' ')[1])))
 
             # 写入csv
             writer.writerow([id[0],
-                             od_mIoU(od_cover_gt,od_cover_preds),
-                             od_Dice(od_cover_gt,od_cover_preds),
-                             oc_mIoU(oc_mask, oc_preds),
-                             oc_Dice(oc_mask, oc_preds)
+                             round(od_mIoU(od_cover_gt,od_cover_preds).item()*100,2),
+                             round(od_Dice(od_cover_gt,od_cover_preds).item()*100,2),
+                             round(oc_mIoU(oc_mask, oc_preds).item()*100,2),
+                             round(oc_Dice(oc_mask, oc_preds).item()*100,2)
                              ])
