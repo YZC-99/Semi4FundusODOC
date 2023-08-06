@@ -46,6 +46,9 @@ def prototype_dist_init(cfg,src_train_loader):
     model = model_zoo['deeplabv3plus']('resnet50',num_classes)
 
     sd = torch.load(ckpt_path,map_location='cpu')
+    if 'state_dict' in sd:
+        # If 'state_dict' exists, use it directly
+        sd = sd['state_dict']
     new_state_dict = {}
     for key, value in sd.items():
         if not key.startswith('module.'):  # 如果关键字没有"module."前缀，加上该前缀
