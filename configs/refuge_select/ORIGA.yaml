@@ -1,0 +1,32 @@
+MODEL:
+  backbone: 'resnet50'
+  model: 'deeplabv3plus'
+  NUM_CLASSES: 3
+  epochs: 200
+  lr: 0.001 # 0.004/16*batch_size
+  loss:
+    target: torch.nn.CrossEntropyLoss
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 16
+        num_workers: 16
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'ORIGA/cropped_sup'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                labeled_id_path: 'dataset/ORIGA/cropped_sup/training.txt'
+                size: 512
+                mode: 'train'
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'ORIGA/cropped_sup'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                size: 512
+                mode: 'val'
