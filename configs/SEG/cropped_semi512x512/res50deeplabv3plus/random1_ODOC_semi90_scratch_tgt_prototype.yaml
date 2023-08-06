@@ -57,7 +57,7 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'SEG/cropped_semi/random1/90'
+                name: 'SEG/cropped_semi/random1'
                 root: './data/fundus_datasets/od_oc/SEG/'
                 size: 512
                 mode: 'val'
