@@ -20,8 +20,8 @@ dataset:
                 task: 'od_oc'
                 name: 'SEG/cropped_semi/random1/90'
                 root: './data/fundus_datasets/od_oc/SEG/'
-                labeled_id_path: 'dataset/SEG/cropped_semi/random1/random1/90/labeled.txt'
-                unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/random1/90/unlabeled.txt'
+                labeled_id_path: 'dataset/SEG/cropped_semi/random1/90/labeled.txt'
+                unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/90/unlabeled.txt'
                 size: 512
                 mode: 'train'
                 aug:
@@ -38,8 +38,8 @@ dataset:
             task: 'od_oc'
             name: 'SEG/cropped_semi/random1/90'
             root: './data/fundus_datasets/od_oc/SEG/'
-            labeled_id_path: 'dataset/SEG/cropped_semi/random1/random1/90/labeled.txt'
-            unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/random1/90/unlabeled.txt'
+            labeled_id_path: 'dataset/SEG/cropped_semi/random1/90/labeled.txt'
+            unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/90/unlabeled.txt'
             size: 512
             mode: 'semi_train'
             aug:
