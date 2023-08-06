@@ -19,7 +19,7 @@ dataset:
                 task: 'od_oc'
                 name: 'REFUGE/cropped_sup/select_val'
                 root: './data/fundus_datasets/od_oc/SEG/'
-                labeled_id_path: 'dataset/REFUGE/cropped_sup/select_all/training.txt'
+                labeled_id_path: 'dataset/REFUGE/cropped_sup/select_val/training.txt'
                 size: 512
                 mode: 'train'
 
