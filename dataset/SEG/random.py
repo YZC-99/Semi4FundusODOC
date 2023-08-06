@@ -1,8 +1,9 @@
 import random
 
 # 读取txt文件内容
-with open('version2/whole_cropped_excludedBAD.txt', 'r') as f:
+with open('version1/whole_cropped_excludedBAD.txt', 'r') as f:
     data = f.readlines()
+    data = [line.strip() for line in data]
 
 # 随机打乱样本顺序
 random.shuffle(data)
@@ -16,20 +17,15 @@ val_end = int(0.7 * total_samples)
 train_data = data[:train_end]
 val_data = data[train_end:val_end]
 test_data = data[val_end:]
+# 将划分结果保存到文件，并确保每行以换行符结尾
+with open('cropped_sup/excludedBADv1/random_SEG.txt', 'w') as f:
+    f.write('\n'.join(data))
 
-# 将划分结果保存到文件
-with open('cropped_sup/excludedBADv2/random_SEG.txt', 'w') as f:
-    for item in data:
-        f.write(item)
+with open('cropped_sup/excludedBADv1/training.txt', 'w') as f:
+    f.write('\n'.join(train_data))
 
-with open('cropped_sup/excludedBADv2/training.txt', 'w') as f:
-    for item in train_data:
-        f.write(item)
+with open('cropped_sup/excludedBADv1/val.txt', 'w') as f:
+    f.write('\n'.join(val_data))
 
-with open('cropped_sup/excludedBADv2/val.txt', 'w') as f:
-    for item in val_data:
-        f.write(item)
-
-with open('cropped_sup/excludedBADv2/test.txt', 'w') as f:
-    for item in test_data:
-        f.write(item)
+with open('cropped_sup/excludedBADv1/test.txt', 'w') as f:
+    f.write('\n'.join(test_data))
