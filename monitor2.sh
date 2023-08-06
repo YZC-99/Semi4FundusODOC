@@ -10,9 +10,8 @@ check_gpu_utilization() {
 execute_task() {
   # Replace this function with the logic to execute your task on the specified GPU
   echo "Executing your task on GPU"
-  CUDA_VISIBLE_DEVICES=2,3 python main.py --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_B_CJ_CO_RG
-  CUDA_VISIBLE_DEVICES=2,3 python main.py --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_B_CJ_CO_RG_scratch
-  CUDA_VISIBLE_DEVICES=2,3 python main.py --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_None_scratch
+  CUDA_VISIBLE_DEVICES=2,3 python main.py --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_tgt_prototype
+  CUDA_VISIBLE_DEVICES=2,3 python main.py --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_B_CJ_CO_RG_tgt_prototype
 }
 
 # Main loop
