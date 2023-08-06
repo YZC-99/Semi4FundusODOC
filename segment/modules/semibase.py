@@ -173,9 +173,7 @@ class Base(pl.LightningModule):
         src, tgt = batch
         src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']
 
-        ce_criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
         pcl_criterion = PrototypeContrastiveLoss(self.cfg)
-
 
 
         # 源域图片的大小
@@ -191,9 +189,9 @@ class Base(pl.LightningModule):
         if self.cfg.SOLVER.LAMBDA_LOV > 0:
             pred_softmax = F.softmax(src_pred, dim=1)
             loss_lov = lovasz_softmax(pred_softmax, src_label, ignore=255)
-            loss_sup = ce_criterion(src_pred, src_label) + self.cfg.SOLVER.LAMBDA_LOV * loss_lov
+            loss_sup = self.loss(src_pred, src_label) + self.cfg.SOLVER.LAMBDA_LOV * loss_lov
         else:
-            loss_sup = ce_criterion(src_pred, src_label)
+            loss_sup = self.loss(src_pred, src_label)
 
         # 获取源域高维特征尺寸
         B, A, Hs_feat, Ws_feat = src_feat.size()
