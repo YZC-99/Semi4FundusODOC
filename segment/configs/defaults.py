@@ -68,6 +68,9 @@ _C.MODEL.CONTRAST.TAU = 50.0
 _C.MODEL.CONTRAST.USE_MOMENTUM = False
 _C.MODEL.CONTRAST.MOMENTUM = 0.9
 
+_C.INPUT = CN()
+_C.INPUT.IGNORE_LABEL = 255
+
 _C.dataset = CN()
 _C.dataset.target =''
 _C.dataset.params = CN()
