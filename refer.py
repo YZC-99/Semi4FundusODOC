@@ -92,7 +92,9 @@ with open(os.path.join('pseudo_label_metrics.csv'), 'w', newline='') as file:
 
             pred = Image.fromarray(preds.squeeze(0).numpy().astype(np.uint8), mode='P')
             pred.putpalette(cmap)
-            pred.save('%s/%s' % ('preds', os.path.basename(id[0].split(' ')[1])))
+            if not os.path.exists('experiments/preds'):
+                os.mkdir('experiments/preds')
+            pred.save('%s/%s' % ('experiments/preds', os.path.basename(id[0].split(' ')[1])))
 
             # 写入csv
             writer.writerow([id[0],
