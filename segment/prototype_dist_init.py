@@ -55,6 +55,7 @@ def prototype_dist_init(cfg,src_train_loader):
             if 'module.' + key in model.state_dict():
                 # 模型在多GPU上训练并保存，加载权重时加上"module."前缀
                 key = 'module.' + key
+        key = key.replace('model.', '')
         new_state_dict[key] = value
     model.load_state_dict(new_state_dict)
 
