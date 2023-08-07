@@ -71,7 +71,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     setup_callback = SetupCallback(config, exp_config, basedir)
     on_best_ODmIoU = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename="{val_OD_mIoU:.6f}",
+        filename="{epoch}-{val_OD_mIoU:.6f}",
         monitor="val_OD_mIoU",
         mode="max",
         save_top_k=1,
@@ -80,7 +80,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     )
     on_best_OD_Dice = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename="{val_OD_dice:.6f}",
+        filename="{epoch}-{val_OD_dice:.6f}",
         monitor="val_OD_dice",
         mode="max",
         save_top_k=1,
@@ -89,7 +89,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     )
     on_best_OCmIoU = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename="{val_OC_mIoU:.6f}",
+        filename="{epoch}-{val_OC_mIoU:.6f}",
         monitor="val_OC_mIoU",
         mode="max",
         save_top_k=1,
@@ -98,7 +98,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     )
     on_best_OC_Dice = ModelCheckpoint(
         dirpath=setup_callback.ckptdir,
-        filename="{val_OC_dice:.6f}",
+        filename="{epoch}-{val_OC_dice:.6f}",
         monitor="val_OC_dice",
         mode="max",
         save_top_k=1,
