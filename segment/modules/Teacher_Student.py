@@ -209,7 +209,7 @@ class TSBase(pl.LightningModule):
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         self.log("train/ema_total_loss", ema_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
-        self.update_ema_variables()
+        # self.update_ema_variables()
         return loss+ema_loss
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
