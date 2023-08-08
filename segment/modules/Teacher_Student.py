@@ -366,7 +366,7 @@ class TSBase(pl.LightningModule):
 
         if isinstance(batch, tuple):
             HQ, LQ = batch
-            x, LQ_input, HQ_label, LQ_label = HQ['img'], LQ['img'], HQ['mask'], LQ['mask']
+            x, LQ_input, y, LQ_label = HQ['img'], LQ['img'], HQ['mask'], LQ['mask']
             out = self(x, LQ_input)
         elif isinstance(batch, dict):
             x = batch['img']
