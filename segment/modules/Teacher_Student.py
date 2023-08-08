@@ -362,9 +362,17 @@ class TSBase(pl.LightningModule):
 
 
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
-        x = batch['img']
-        y = batch['mask']
-        out = self(x,x)
+        log = dict()
+
+        if isinstance(batch, tuple):
+            HQ, LQ = batch
+            HQ_input, LQ_input, HQ_label, LQ_label = HQ['img'], LQ['img'], HQ['mask'], LQ['mask']
+            out = self(HQ_input, LQ_input)
+            y = HQ_input
+        elif isinstance(batch, dict):
+            x = batch['img']
+            y = batch['mask']
+            out = self(x,x)
         HQ_output = out['HQ_output']
         HQ_logits = HQ_output['out']
         HQ_preds = nn.functional.softmax(HQ_logits, dim=1).argmax(1)
@@ -373,7 +381,6 @@ class TSBase(pl.LightningModule):
         LQ_logits = LQ_output['out']
         LQ_preds = nn.functional.softmax(LQ_logits, dim=1).argmax(1)
 
-        log = dict()
 
         HQ_preds_color, LQ_preds_color = self.gray2rgb(HQ_preds, LQ_preds)
         y_color, _ = self.gray2rgb(y, HQ_preds)
