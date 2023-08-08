@@ -130,7 +130,7 @@ class TSBase(pl.LightningModule):
     def forward(self, HQ_input,LQ_input) -> Dict[str, torch.Tensor]:
         # train student
         HQ_input = torch.cat([HQ_input, LQ_input], dim=0)
-        HQ_output = self(HQ_input)
+        HQ_output = self.model(HQ_input)
 
         LQ_output = self.ema_model(LQ_input)
 
@@ -212,7 +212,7 @@ class TSBase(pl.LightningModule):
         HQ_preds = nn.functional.softmax(HQ_logits, dim=1).argmax(1)
         loss = self.loss(HQ_logits, y)
 
-        LQ_output = self.ema_model(x)
+        LQ_output = out['LQ_output']
         LQ_logits = LQ_output['out']
         LQ_preds = nn.functional.softmax(LQ_logits, dim=1).argmax(1)
         ema_loss = self.loss(LQ_logits,y)
