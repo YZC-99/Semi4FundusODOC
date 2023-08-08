@@ -127,21 +127,18 @@ class TSBase(pl.LightningModule):
         if cfg.MODEL.retraining:
             self.init_from_ckpt(cfg.MODEL.stage2_ckpt_path, ignore_keys='')
 
-    def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        out = self.model(x)
-        backbone_feat, logits = out['backbone_features'], out['out']
-        if self.cfg.MODEL.logitsTransform:
-            confidence = self.confidence_layer(logits).sigmoid()
-            scores_out_tmp = confidence * (logits * self.logit_scale + self.logit_bias)
-            output_out = scores_out_tmp + (1 - confidence) * logits
-            out['out'] = output_out
-        if self.cfg.MODEL.BlvLoss:
-            viariation = self.sampler.sample(logits.shape).clamp(-1, 1)
-            viariation = viariation.to(self.device)
-            self.frequency_list = self.frequency_list.to(self.device)
-            logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
-            out['out'] = logits
-        return out
+    def forward(self, batch: torch.Tensor) -> Dict[str, torch.Tensor]:
+        HQ, LQ = batch
+        HQ_input,  LQ_input = HQ['img'],  LQ['img']
+        # train student
+        HQ_input = torch.cat([HQ_input, LQ_input], dim=0)
+        HQ_output = self(HQ_input)
+
+        LQ_output = self.ema_model(LQ_input)
+
+        return {'HQ_out':HQ_output,
+                'LQ_output':LQ_output
+        }
 
     def update_ema_variables(self,alpha=0.99):
         alpha = min(1 - 1 / (self.trainer.global_step + 1), alpha)
@@ -191,21 +188,15 @@ class TSBase(pl.LightningModule):
 
     def training_step(self, batch):
         HQ, LQ = batch
-        HQ_input, HQ_label, LQ_input, LQ_label = HQ['img'], HQ['mask'], LQ['img'], LQ['mask']
+        HQ_label, LQ_label = HQ['mask'], LQ['mask']
+        out = self(batch)
+        HQ_out, LQ_output = out['HQ_out'],out['LQ_output']
+        HQ_logits,LQ_logits = HQ_out['out'],LQ_output['out']
 
 
-        # train student
-        HQ_input = torch.cat([HQ_input,LQ_input],dim=0)
-        HQ_label = torch.cat([HQ_label,LQ_label],dim=0)
-        HQ_output = self(HQ_input)
-        HQ_logits = HQ_output['out']
         loss = self.loss(HQ_logits,HQ_label)
-
         # train teacher
-        LQ_output = self.ema_model(LQ_input)
-        LQ_logits = LQ_output['out']
         ema_loss = self.ema_loss(LQ_logits,LQ_label)
-
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         self.log("train/ema_total_loss", ema_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
