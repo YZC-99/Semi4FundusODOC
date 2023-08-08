@@ -188,7 +188,6 @@ class TSBase(pl.LightningModule):
         HQ, LQ = batch
         HQ_input, LQ_input,HQ_label, LQ_label = HQ['img'], LQ['img'], HQ['mask'], LQ['mask']
         # HQ_input = torch.cat([HQ_input,LQ_input],dim=0)
-        HQ_input = [HQ_input,LQ_input]
         HQ_label = torch.cat([HQ_label,LQ_label],dim=0)
         out = self(HQ_input,LQ_input)
         HQ_out, LQ_output = out['HQ_output'],out['LQ_output']
