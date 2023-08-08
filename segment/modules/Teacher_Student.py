@@ -50,6 +50,8 @@ class TSBase(pl.LightningModule):
                  loss
                  ):
         super(TSBase, self).__init__()
+        self.save_hyperparameters()
+        self.automatic_optimization = False
         self.cfg = cfg
         self.num_classes = num_classes
         if model == 'deeplabv3plus':
