@@ -211,7 +211,9 @@ class TSBase(pl.LightningModule):
         HQ_output = out['HQ_output']
         HQ_logits = HQ_output['out']
         HQ_preds = nn.functional.softmax(HQ_logits, dim=1).argmax(1)
-        loss = self.loss(HQ_logits, y)
+        # print(HQ_logits.shape)
+        # print(y.shape)
+        loss = self.loss(HQ_logits, torch.cat([y,y],dim=0))
 
         LQ_output = out['LQ_output']
         LQ_logits = LQ_output['out']
