@@ -193,7 +193,6 @@ class TSBase(pl.LightningModule):
         HQ, LQ = batch
         HQ_input, HQ_label, LQ_input, LQ_label = HQ['img'], HQ['mask'], LQ['img'], LQ['mask']
 
-        optimizer, ema_optimizer = self.optimizers()
 
         # train student
         HQ_input = torch.cat([HQ_input,LQ_input],dim=0)
@@ -203,7 +202,6 @@ class TSBase(pl.LightningModule):
         loss = self.loss(HQ_logits,HQ_label)
 
         # train teacher
-        self.toggle_optimizer(ema_optimizer)
         LQ_output = self.ema_model(LQ_input)
         LQ_logits = LQ_output['out']
         ema_loss = self.loss(LQ_logits,LQ_label)
