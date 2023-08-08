@@ -341,107 +341,8 @@ class TSBase(pl.LightningModule):
         self.log("val/OD_rm_OC_dice", od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
 
-    def test_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
-        x = batch['img']
-        y = batch['mask']
-        output = self(x)
-        backbone_feat,logits = output['backbone_features'],output['out']
-        preds = nn.functional.softmax(logits, dim=1).argmax(1)
-        return {'preds':preds,'y':y}
-
-    def test_step_end(self, outputs):
-        preds,y = outputs['preds'],outputs['y']
-        # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
-        # 背景的指标不必计算
-        # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
-        od_preds = copy.deepcopy(preds)
-        od_y = copy.deepcopy(y)
-        od_preds[od_preds != 1] = 0
-        od_y[od_y != 1] = 0
-
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_preds = copy.deepcopy(preds)
-            oc_y = copy.deepcopy(y)
-            oc_preds[oc_preds != 2] = 0
-            oc_preds[oc_preds != 0] = 1
-            oc_y[oc_y != 2] = 0
-            oc_y[oc_y != 0] = 1
-            self.test_oc_dice_score.update(oc_preds, oc_y)
-            self.test_oc_jaccard.update(oc_preds, oc_y)
-
-            #计算 od_cover_oc
-            od_cover_gt = od_y + oc_y
-            od_cover_gt[od_cover_gt > 0] = 1
-
-            od_cover_preds = od_preds + oc_preds
-            od_cover_preds[od_cover_preds > 0] = 1
-            self.test_od_coverOC_dice_score.update(od_cover_preds,od_cover_gt)
-            self.test_oc_jaccard.update(od_cover_preds,od_cover_gt)
 
 
-        self.test_od_dice_score.update(od_preds, od_y)
-        self.test_od_jaccard.update(od_preds, od_y)
-
-        self.test_mean_dice_score.update(preds, y)
-        self.test_mean_jaccard.update(preds, y)
-
-    def on_test_epoch_end(self) -> None:
-        od_iou = self.test_od_jaccard.compute()
-        od_dice = self.test_od_dice_score.compute()
-        self.log("test_OD_IoU", od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test_OD_dice_score",od_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/OD_dice_score", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        self.log("test_Mean_bg_IoU", self.test_mean_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test_Mean_bg_dice_score", self.test_mean_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/Mean_bg_IoU", self.test_mean_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/Mean_bg_dice_score", self.test_mean_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        m_iou = od_iou
-        m_dice = od_dice
-        # 每一次testidation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
-        self.test_mean_dice_score.reset()
-        self.test_mean_jaccard.reset()
-        self.test_od_dice_score.reset()
-        self.test_od_jaccard.reset()
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_iou = self.test_oc_jaccard.compute()
-            oc_dice = self.test_oc_dice_score.compute()
-            self.log("test_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test_OC_dice_score", oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OC_dice_score", oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.test_oc_dice_score.reset()
-            self.test_oc_jaccard.reset()
-            m_iou = (od_iou + oc_iou)/2
-            m_dice = (od_dice + oc_dice)/2
-
-            od_cover_oc_iou = self.test_od_coverOC_jaccard.compute()
-            od_cover_oc_dice = self.test_od_coverOC_dice_score.compute()
-            self.log("test_OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test_OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.test_od_coverOC_dice_score.reset()
-            self.test_od_coverOC_jaccard.reset()
-
-        self.log("test_mIoU", m_iou, prog_bar=True, logger=False, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("test/mIoU", m_iou, prog_bar=False, logger=True, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("test_mDice", m_dice, prog_bar=True, logger=False, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("test/mDice", m_dice, prog_bar=False, logger=True, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
 
 
     def configure_optimizers(self) -> Tuple[List, List]:
@@ -459,38 +360,25 @@ class TSBase(pl.LightningModule):
         ]
         return optimizers, schedulers
 
-    #
-    # def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
-    #     log = dict()
-    #
-    #     if isinstance(batch,tuple):
-    #         src, tgt = batch
-    #         src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']
-    #         src_out = self(src_input)['out']
-    #         src_out = torch.nn.functional.softmax(src_out,dim=1)
-    #         src_predict = src_out.argmax(1)
-    #
-    #         tgt_out = self(tgt_input)['out']
-    #         tgt_out = torch.nn.functional.softmax(tgt_out,dim=1)
-    #         tgt_predict = tgt_out.argmax(1)
-    #
-    #         src_predict_color, tgt_predict_color = self.gray2rgb(src_predict, tgt_predict)
-    #         src_y_color, tgt_y_color = self.gray2rgb(src_label, tgt_label)
-    #
-    #         log["src_image"] = src_input
-    #         log["src_label"] = src_y_color
-    #         log["src_predict"] = src_predict_color
-    #         log["tgt_image"] = tgt_input
-    #         log["tgt_label"] = tgt_y_color
-    #         log["tgt_predict"] = tgt_predict_color
-    #     elif isinstance(batch,dict):
-    #         x = batch['img'].to(self.device)
-    #         y = batch['mask']
-    #         out = self(x)['out']
-    #         out = torch.nn.functional.softmax(out,dim=1)
-    #         predict = out.argmax(1)
-    #         y_color,predict_color = self.gray2rgb(y,predict)
-    #         log["image"] = x
-    #         log["label"] = y_color
-    #         log["predict"] = predict_color
-    #     return log
+
+    def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
+        x = batch['img']
+        y = batch['mask']
+        out = self(x,x)
+        HQ_output = out['HQ_output']
+        HQ_logits = HQ_output['out']
+        HQ_preds = nn.functional.softmax(HQ_logits, dim=1).argmax(1)
+
+        LQ_output = out['LQ_output']
+        LQ_logits = LQ_output['out']
+        LQ_preds = nn.functional.softmax(LQ_logits, dim=1).argmax(1)
+
+        log = dict()
+
+        HQ_preds_color, LQ_preds_color = self.gray2rgb(HQ_preds, LQ_preds)
+        y_color, _ = self.gray2rgb(y, HQ_preds)
+        log["image"] = x
+        log["label"] = y_color
+        log["student_pred"] = HQ_preds_color
+        log["teacher_pred"] = LQ_preds_color
+        return log
