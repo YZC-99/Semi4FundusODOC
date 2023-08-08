@@ -221,31 +221,28 @@ class TSBase(pl.LightningModule):
         self.update_ema_variables()
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
-        HQ, LQ = batch
-        HQ_input, HQ_label, LQ_input, LQ_label = HQ['img'], HQ['mask'], LQ['img'], LQ['mask']
-        HQ_input = torch.cat([HQ_input,LQ_input],dim=0)
-        HQ_label = torch.cat([HQ_label,LQ_label],dim=0)
-        HQ_output = self(HQ_input)
+        x = batch['img']
+        y = batch['mask']
+        HQ_output = self(x)
         HQ_logits = HQ_output['out']
         HQ_preds = nn.functional.softmax(HQ_logits, dim=1).argmax(1)
-        loss = self.loss(HQ_logits, HQ_label)
+        loss = self.loss(HQ_logits, y)
 
-        LQ_output = self.ema_model(LQ_input)
+        LQ_output = self.ema_model(x)
         LQ_logits = LQ_output['out']
         LQ_preds = nn.functional.softmax(LQ_logits, dim=1).argmax(1)
-        ema_loss = self.loss(LQ_logits,LQ_label)
+        ema_loss = self.loss(LQ_logits,y)
 
 
         return {'val_loss':loss,
                 'val_ema_loss': ema_loss,
-                'y': HQ_label,
+                'y': y,
                 'preds':HQ_preds,
-                'ema_y':LQ_label,
                 'ema_preds':LQ_preds
                 }
 
     def validation_step_end(self, outputs):
-        loss,val_ema_loss,preds,y,ema_preds,ema_y = outputs['val_loss'],outputs['val_ema_loss'],outputs['preds'],outputs['y'],outputs['ema_preds'],outputs['ema_y']
+        loss,val_ema_loss,preds,y,ema_preds= outputs['val_loss'],outputs['val_ema_loss'],outputs['preds'],outputs['y'],outputs['ema_preds']
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
         # 背景的指标不必计算
