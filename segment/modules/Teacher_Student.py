@@ -203,7 +203,7 @@ class TSBase(pl.LightningModule):
         # self.update_ema_variables()
         return loss+ema_loss
 
-    def validation_step(self, batch) -> Dict:
+    def validation_step(self, batch):
         x = batch['img']
         y = batch['mask']
         HQ_input = torch.cat([x,x],dim=0)
