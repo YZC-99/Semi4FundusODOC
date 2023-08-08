@@ -1,4 +1,3 @@
-
 from segment.modules.semibase import Base
 from segment.dataloader.od_oc_dataset import SemiUabledTrain
 from segment.modules.semseg.deeplabv3plus import DualDeepLabV3Plus
@@ -19,7 +18,7 @@ from sklearn.manifold import TSNE
 from cleanlab.pruning import get_noise_indices
 
 num_classes = 2
-ckpt_path = '../temp/panaro.ckpt'
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/SEG/sup/Dual_random1_ODOC_sup/ckpt/val_OD_dice_score=0.943096-val_mIoU=0.797430-val_mDice=0.943162-val_OD_IoU=0.797840-val_OC_dice_score=0.943229-val_OC_IoU=0.797019.ckpt'
 
 cmap = color_map('eye')
 
@@ -47,10 +46,10 @@ model.to('cuda:0')
 dataset = SemiUabledTrain(task='od_oc',
                          name='SEG/semi/50',
                          root='./data/fundus_datasets/od_oc/SEG/',
-                         mode='pseudo',
+                         mode='src_tgt_train',
                          size=512,
                          unlabeled_id_path='dataset/SEG/semi/50/random1/unlabeled.txt',
-                         pseudo_mask_path='path',
+                         pseudo_mask_path='/root/autodl-tmp/Semi4FundusODOC/experiments/SEG/semi/50/ODOC_semi50/pseudo_masks',
                          aug=None)
 dataloader = DataLoader(dataset,batch_size=1)
 for batch in dataloader:
@@ -61,8 +60,8 @@ for batch in dataloader:
 
     # 计算uncertainty
     T = 4
-    _, _, w, h = batch.shape
-    volume_batch_r = batch.repeat(2, 1, 1, 1)
+    _, _, w, h = x.shape
+    volume_batch_r = x.repeat(2, 1, 1, 1)
     stride = volume_batch_r.shape[0] // 2
     preds = torch.zeros([stride * T, num_classes, w, h]).cuda()
     for i in range(T // 2):

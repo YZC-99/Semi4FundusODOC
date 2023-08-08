@@ -12,6 +12,7 @@ import yaml
 from torch.utils.data import DataLoader
 from segment.configs import cfg
 from segment.modules.semibase import Base
+from segment.modules.Teacher_Student import TSBase
 from segment.modules.dualsemibase import DualBase
 from segment.prototype_dist_init import prototype_dist_init
 from segment.dataloader.od_oc_dataset import SemiDataset,SemiUabledTrain
@@ -84,6 +85,8 @@ if __name__ == '__main__':
     # Build model
     if cfg.MODEL.Dual:
         model = DualBase('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
+    elif cfg.MODEL.Teacher_Student:
+        model = TSBase(cfg.MODEL.model,cfg.MODEL.backbone,cfg.MODEL.NUM_CLASSES,cfg,loss_config)
     else:
         model = Base(cfg.MODEL.model,cfg.MODEL.backbone,cfg.MODEL.NUM_CLASSES,cfg,loss_config)
 
