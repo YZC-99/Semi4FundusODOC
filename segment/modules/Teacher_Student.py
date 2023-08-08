@@ -204,7 +204,7 @@ class TSBase(pl.LightningModule):
         # train teacher
         LQ_output = self.ema_model(LQ_input)
         LQ_logits = LQ_output['out']
-        ema_loss = self.loss(LQ_logits,LQ_label)
+        ema_loss = self.ema_loss(LQ_logits,LQ_label)
 
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
