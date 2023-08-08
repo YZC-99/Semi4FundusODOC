@@ -50,8 +50,8 @@ class TSBase(pl.LightningModule):
                  loss
                  ):
         super(TSBase, self).__init__()
-        self.save_hyperparameters()
-        self.automatic_optimization = False
+        # self.save_hyperparameters()
+        # self.automatic_optimization = False
         self.cfg = cfg
         self.num_classes = num_classes
         if model == 'deeplabv3plus':
@@ -201,26 +201,18 @@ class TSBase(pl.LightningModule):
         HQ_output = self(HQ_input)
         HQ_logits = HQ_output['out']
         loss = self.loss(HQ_logits,HQ_label)
-        self.manual_backward(loss)
-        optimizer.step()
-        optimizer.zero_grad()
-        self.untoggle_optimizer(optimizer)
 
         # train teacher
         self.toggle_optimizer(ema_optimizer)
         LQ_output = self.ema_model(LQ_input)
         LQ_logits = LQ_output['out']
         ema_loss = self.loss(LQ_logits,LQ_label)
-        self.manual_backward(ema_loss)
-        ema_optimizer.step()
-        ema_optimizer.zero_grad()
-        self.untoggle_optimizer(ema_optimizer)
 
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
-        self.log("train/ema_lr", self.optimizers().param_groups[1]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         self.log("train/ema_total_loss", ema_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         self.update_ema_variables()
+        return loss+ema_loss
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
@@ -244,7 +236,7 @@ class TSBase(pl.LightningModule):
                 }
 
     def validation_step_end(self, outputs):
-        loss,val_ema_loss,preds,y,ema_preds= outputs['val_loss'],outputs['val_ema_loss'],outputs['preds'],outputs['y'],outputs['ema_preds']
+        loss,ema_loss,preds,y,ema_preds= outputs['val_loss'],outputs['val_ema_loss'],outputs['preds'],outputs['y'],outputs['ema_preds']
         self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
         # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
         # 背景的指标不必计算
@@ -462,8 +454,7 @@ class TSBase(pl.LightningModule):
     def configure_optimizers(self) -> Tuple[List, List]:
         lr = self.cfg.MODEL.lr
         total_iters = self.trainer.max_steps
-        optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4),
-                      SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
+        optimizers = [SGD(list(self.model.parameters()) + list(self.ema_model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4), lr=lr, momentum=0.9,weight_decay=1e-4)]
         lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
         scheduler = LambdaLR(optimizers[0],lr_lambda=lambda_lr)
         schedulers = [
@@ -472,11 +463,6 @@ class TSBase(pl.LightningModule):
                 'interval': 'step',
                 'frequency': 1
             },
-            {
-                'scheduler': scheduler,
-                'interval': 'step',
-                'frequency': 1
-            }
         ]
         return optimizers, schedulers
 
