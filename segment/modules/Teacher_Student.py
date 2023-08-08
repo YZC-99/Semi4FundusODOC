@@ -193,8 +193,8 @@ class TSBase(pl.LightningModule):
         HQ_output, LQ_output = out['HQ_output'],out['LQ_output']
         HQ_logits,LQ_logits = HQ_output['out'],LQ_output['out']
 
-        print(torch.unique(HQ_label))
-        print(torch.unique(LQ_label))
+        # print(torch.unique(HQ_label))
+        # print(torch.unique(LQ_label))
         loss = self.loss(HQ_logits,HQ_label)
         # train teacher
         ema_loss = self.ema_loss(LQ_logits,LQ_label)

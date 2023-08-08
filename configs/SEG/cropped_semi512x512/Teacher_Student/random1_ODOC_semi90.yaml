@@ -10,8 +10,8 @@ MODEL:
   stage1_ckpt_path: 'experiments/SEG/cropped_sup/random1_ODOC_sup90/ckpt/val_OD_dice=0.958672.ckpt'
   loss:
     target: torch.nn.CrossEntropyLoss
-      params:
-        ignore_index: 255
+    params:
+      ignore_index: 255
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
