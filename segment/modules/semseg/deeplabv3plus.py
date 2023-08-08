@@ -90,12 +90,15 @@ class DeepLabV3Plus(BaseNet):
         c1 = self.reduce(c1)
 
         out = torch.cat([c1, c4], dim=1)
-        out = self.fuse(out)
+        out_fuse = self.fuse(out)
 
-        out = self.classifier(out)
-        out = F.interpolate(out, size=(h, w), mode="bilinear", align_corners=True)
+        out_classifier = self.classifier(out_fuse)
+        out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
+        # out = nn.Upsample(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
 
         return {'out':out,
+                'out_classifier':out_classifier,
+                'out_fuse':out_fuse,
                 'backbone_features':backbone_feats}
 
 
