@@ -127,12 +127,11 @@ class TSBase(pl.LightningModule):
         if cfg.MODEL.retraining:
             self.init_from_ckpt(cfg.MODEL.stage2_ckpt_path, ignore_keys='')
 
-    def forward(self, input) -> Dict[str, torch.Tensor]:
+    def forward(self, HQ_input,LQ_input) -> Dict[str, torch.Tensor]:
         # train student
-        HQ_input = torch.cat(input, dim=0)
+        HQ_input = torch.cat([HQ_input, LQ_input], dim=0)
         HQ_output = self.model(HQ_input)
 
-        LQ_input = torch.cat([input[1],input[1]],dim=0)
         LQ_output = self.ema_model(LQ_input)
 
         return {'HQ_output':HQ_output,
@@ -198,7 +197,6 @@ class TSBase(pl.LightningModule):
 
         loss = self.loss(HQ_logits,HQ_label)
         # train teacher
-        LQ_label = torch.cat([LQ_label,LQ_label],dim=0)
         ema_loss = self.ema_loss(LQ_logits,LQ_label)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
@@ -209,13 +207,12 @@ class TSBase(pl.LightningModule):
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
         y = batch['mask']
-        input = [x,x]
-        y = torch.cat([y,y],dim=0)
-        out = self(input)
+        HQ_label = torch.cat([y,y],dim=0)
+        out = self(x,x)
         HQ_output = out['HQ_output']
         HQ_logits = HQ_output['out']
         HQ_preds = nn.functional.softmax(HQ_logits, dim=1).argmax(1)
-        loss = self.loss(HQ_logits, y)
+        loss = self.loss(HQ_logits, HQ_label)
 
         LQ_output = out['LQ_output']
         LQ_logits = LQ_output['out']
