@@ -198,6 +198,7 @@ class TSBase(pl.LightningModule):
 
         loss = self.loss(HQ_logits,HQ_label)
         # train teacher
+        LQ_label = torch.cat([LQ_label,LQ_label],dim=0)
         ema_loss = self.ema_loss(LQ_logits,LQ_label)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
@@ -209,6 +210,7 @@ class TSBase(pl.LightningModule):
         x = batch['img']
         y = batch['mask']
         input = [x,x]
+        y = torch.cat([y,y],dim=0)
         out = self(input)
         HQ_output = out['HQ_output']
         HQ_logits = HQ_output['out']
