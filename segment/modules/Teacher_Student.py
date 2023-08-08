@@ -132,7 +132,8 @@ class TSBase(pl.LightningModule):
         HQ_input = torch.cat(input, dim=0)
         HQ_output = self.model(HQ_input)
 
-        LQ_output = self.ema_model(input[1])
+        LQ_input = torch.cat([input[1],input[1]],dim=0)
+        LQ_output = self.ema_model(LQ_input)
 
         return {'HQ_output':HQ_output,
                 'LQ_output':LQ_output
