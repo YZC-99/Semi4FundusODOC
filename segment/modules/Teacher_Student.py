@@ -190,8 +190,8 @@ class TSBase(pl.LightningModule):
         # HQ_input = torch.cat([HQ_input,LQ_input],dim=0)
         HQ_label = torch.cat([HQ_label,LQ_label],dim=0)
         out = self(HQ_input,LQ_input)
-        HQ_out, LQ_output = out['HQ_output'],out['LQ_output']
-        HQ_logits,LQ_logits = HQ_out['out'],LQ_output['out']
+        HQ_output, LQ_output = out['HQ_output'],out['LQ_output']
+        HQ_logits,LQ_logits = HQ_output['out'],LQ_output['out']
 
 
         loss = self.loss(HQ_logits,HQ_label)
