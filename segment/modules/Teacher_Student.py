@@ -454,7 +454,7 @@ class TSBase(pl.LightningModule):
     def configure_optimizers(self) -> Tuple[List, List]:
         lr = self.cfg.MODEL.lr
         total_iters = self.trainer.max_steps
-        optimizers = [SGD(list(self.model.parameters()) + list(self.ema_model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4), lr=lr, momentum=0.9,weight_decay=1e-4)]
+        optimizers = [SGD(list(self.model.parameters()) + list(self.ema_model.parameters()), lr=lr, momentum=0.9, weight_decay=1e-4)]
         lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
         scheduler = LambdaLR(optimizers[0],lr_lambda=lambda_lr)
         schedulers = [
