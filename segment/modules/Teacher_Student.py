@@ -174,15 +174,15 @@ class TSBase(pl.LightningModule):
 
 
 
-    def on_train_start(self) -> None:
-        if self.cfg.MODEL.uda:
-            self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
-            if self.cfg.SOLVER.MULTI_LEVEL:
-                self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
-
-        self.print(len(self.trainer.train_dataloader))
-        self.training_dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
-        self.training_jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
+    # def on_train_start(self) -> None:
+    #     if self.cfg.MODEL.uda:
+    #         self.feat_estimator = prototype_dist_estimator(feature_num=2048, cfg=self.cfg)
+    #         if self.cfg.SOLVER.MULTI_LEVEL:
+    #             self.out_estimator = prototype_dist_estimator(feature_num=self.cfg.MODEL.NUM_CLASSES, cfg=self.cfg)
+    #
+    #     self.print(len(self.trainer.train_dataloader))
+    #     self.training_dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
+    #     self.training_jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
     def training_step(self, batch):
         HQ, LQ = batch
@@ -193,7 +193,8 @@ class TSBase(pl.LightningModule):
         HQ_output, LQ_output = out['HQ_output'],out['LQ_output']
         HQ_logits,LQ_logits = HQ_output['out'],LQ_output['out']
 
-
+        print(torch.unique(HQ_label))
+        print(torch.unique(LQ_label))
         loss = self.loss(HQ_logits,HQ_label)
         # train teacher
         ema_loss = self.ema_loss(LQ_logits,LQ_label)
