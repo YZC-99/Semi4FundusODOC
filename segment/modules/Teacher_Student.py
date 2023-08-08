@@ -223,7 +223,7 @@ class TSBase(pl.LightningModule):
 
         return {'val_loss':loss,
                 'val_ema_loss': ema_loss,
-                'y': y,
+                'y': torch.cat([y,y],dim=0),
                 'preds':HQ_preds,
                 'ema_preds':LQ_preds
                 }
