@@ -207,12 +207,11 @@ class TSBase(pl.LightningModule):
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
         y = batch['mask']
-        HQ_label = torch.cat([y,y],dim=0)
         out = self(x,x)
         HQ_output = out['HQ_output']
         HQ_logits = HQ_output['out']
         HQ_preds = nn.functional.softmax(HQ_logits, dim=1).argmax(1)
-        loss = self.loss(HQ_logits, HQ_label)
+        loss = self.loss(HQ_logits, y)
 
         LQ_output = out['LQ_output']
         LQ_logits = LQ_output['out']
