@@ -193,7 +193,7 @@ class TSBase(pl.LightningModule):
         return consistency * sigmoid_rampup(self.trainer.current_epoch, consistency_rampup)
 
     def get_confident_maps(self,masks,preds):
-        b,_,w,h = preds.shape()
+        b,_,w,h = preds.shape
         preds_np = preds.cpu().detach().numpy()
         masks_np = masks.cpu().detach().numpy()
 
@@ -223,7 +223,7 @@ class TSBase(pl.LightningModule):
 
         confident_maps = self.get_confident_maps(LQ_label,LQ_outputs_soft)
         smooth_arg = 0.8
-        corrected_masks_np = HQ_label[-LQ_label.shape()[0]:] + confident_maps * torch.power(-1, HQ_label[-LQ_label.shape()[0]:]) * smooth_arg
+        corrected_masks_np = HQ_label[-LQ_label.shape[0]:] + confident_maps * torch.power(-1, HQ_label[-LQ_label.shape[0]:]) * smooth_arg
 
 
 
