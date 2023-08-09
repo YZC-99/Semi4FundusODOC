@@ -13,6 +13,7 @@ from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
+import cleanlab
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
@@ -191,6 +192,23 @@ class TSBase(pl.LightningModule):
         # Consistency ramp-up from https://arxiv.org/abs/1610.02242
         return consistency * sigmoid_rampup(self.trainer.current_epoch, consistency_rampup)
 
+    def get_confident_maps(self,masks,preds):
+        b,_,w,h = preds.shape()
+        preds_np = preds.cpu().detach().numpy()
+        masks_np = masks.cpu().detach().numpy()
+
+        preds_softmax_np_accumulated = np.swapaxes(preds_np, 1, 2)
+        preds_softmax_np_accumulated = np.swapaxes(preds_softmax_np_accumulated, 2, 3)
+        preds_softmax_np_accumulated = preds_softmax_np_accumulated.reshape(-1, self.num_classes)
+        preds_softmax_np_accumulated = np.ascontiguousarray(preds_softmax_np_accumulated)
+        masks_np_accumulated = masks_np.reshape(-1).astype(np.uint8)
+        noise = cleanlab.pruning.get_noise_indices(masks_np_accumulated, preds_softmax_np_accumulated,
+                                                   prune_method='both', n_jobs=1)
+        confident_maps_np = noise.reshape(-1, w, h).astype(np.uint8)
+        confident_maps = torch.from_numpy(confident_maps_np).to(self.device)
+        confident_maps = confident_maps.repeat(b,1,1,1)
+        return confident_maps
+
     def training_step(self, batch):
         HQ, LQ = batch
         HQ_input, LQ_input,HQ_label, LQ_label = HQ['img'], LQ['img'], HQ['mask'], LQ['mask']
@@ -203,9 +221,20 @@ class TSBase(pl.LightningModule):
         HQ_outputs_soft = torch.softmax(HQ_logits, dim=1)
         LQ_outputs_soft = torch.softmax(LQ_logits, dim=1)
 
+        confident_maps = self.get_confident_maps(LQ_label,LQ_outputs_soft)
+        smooth_arg = 0.8
+        corrected_masks_np = HQ_label[-LQ_label.shape()[0]:] + confident_maps * torch.power(-1, HQ_label[-LQ_label.shape()[0]:]) * smooth_arg
+
+
+
+
+        if self.trainer.global_step < 200:
+            ema_loss = 0
+        elif self.trainer.global_step>= 200:
+            ema_loss = self.ema_loss(LQ_logits, LQ_label)
+
         loss = self.loss(HQ_logits,HQ_label)
         # train teacher
-        ema_loss = self.ema_loss(LQ_logits,LQ_label)
 
         consistency_loss = torch.mean((HQ_outputs_soft[LQ_outputs_soft.shape[0]:].float()  - LQ_outputs_soft.float() ) ** 2)
 
