@@ -19,6 +19,7 @@ from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 
 from segment.modules.semseg.unet import UNet
+from segment.ramps import sigmoid_rampup
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -184,6 +185,12 @@ class TSBase(pl.LightningModule):
     #     self.training_dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
     #     self.training_jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
+    def get_current_consistency_weight(self):
+        consistency = 0.1
+        consistency_rampup = 200.0
+        # Consistency ramp-up from https://arxiv.org/abs/1610.02242
+        return consistency * sigmoid_rampup(self.trainer.current_epoch, consistency_rampup)
+
     def training_step(self, batch):
         HQ, LQ = batch
         HQ_input, LQ_input,HQ_label, LQ_label = HQ['img'], LQ['img'], HQ['mask'], LQ['mask']
@@ -193,16 +200,22 @@ class TSBase(pl.LightningModule):
         HQ_output, LQ_output = out['HQ_output'],out['LQ_output']
         HQ_logits,LQ_logits = HQ_output['out'],LQ_output['out']
 
-        # print(torch.unique(HQ_label))
-        # print(torch.unique(LQ_label))
+        HQ_outputs_soft = torch.softmax(HQ_logits, dim=1)
+        LQ_outputs_soft = torch.softmax(LQ_logits, dim=1)
+
         loss = self.loss(HQ_logits,HQ_label)
         # train teacher
         ema_loss = self.ema_loss(LQ_logits,LQ_label)
+
+        consistency_loss = torch.mean((HQ_outputs_soft[LQ_outputs_soft.shape[0]:] - LQ_outputs_soft) ** 2)
+
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         self.log("train/ema_total_loss", ema_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         # self.update_ema_variables()
-        return loss+ema_loss
+        consistency_weight = self.get_current_consistency_weight().to(self.device)
+        all_loss = loss + consistency_weight*(0.5*ema_loss + consistency_loss)
+        return all_loss
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
