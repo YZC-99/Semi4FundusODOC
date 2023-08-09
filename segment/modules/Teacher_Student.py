@@ -7,6 +7,8 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import LambdaLR
 from segment.util import meanIOU
 from segment.losses.loss import PrototypeContrastiveLoss
+from segment.losses.seg.boundary_loss import DC_and_BD_loss
+
 from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCrossEntropyLoss
 from segment.losses.blv_loss import BlvLoss
 from segment.losses.lovasz_loss import lovasz_softmax
@@ -68,6 +70,8 @@ class TSBase(pl.LightningModule):
 
         self.loss = initialize_from_config(loss)
         self.ema_loss = initialize_from_config(loss)
+        if cfg.MODEL.DC_BD_loss:
+            self.DC_BD_loss = DC_and_BD_loss()
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
             cls_num_list = torch.tensor([200482,42736,18925])

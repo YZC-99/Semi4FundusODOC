@@ -12,6 +12,7 @@ _C.info.description=''
 # _C = CN()
 _C.MODEL = CN()
 _C.MODEL.Dual = False
+_C.MODEL.DC_BD_loss = False
 _C.MODEL.Teacher_pretrined = True
 _C.MODEL.Student_pretrined = False
 _C.MODEL.sup = False

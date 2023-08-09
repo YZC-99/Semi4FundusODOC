@@ -8,7 +8,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from segment.util import meanIOU
 from segment.losses.loss import PrototypeContrastiveLoss
 from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCrossEntropyLoss
-from segment.losses.blv_loss import BlvLoss
+from segment.losses.seg.boundary_loss import DC_and_BD_loss
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -62,6 +62,8 @@ class Base(pl.LightningModule):
             self.model = UNet(in_channels=self.num_classes,num_classes=3,base_c=64,bilinear=True)
 
         self.loss = initialize_from_config(loss)
+        if cfg.MODEL.DC_BD_loss:
+            self.DC_BD_loss = DC_and_BD_loss()
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
             cls_num_list = torch.tensor([200482,42736,18925])
@@ -278,6 +280,8 @@ class Base(pl.LightningModule):
             output = self(x)
             backbone_feat,logits = output['backbone_features'],output['out']
             loss = self.loss(logits, y)
+            if self.cfg.MODEL.DC_BD_loss:
+                loss += self.DC_BD_loss(logits, y)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -290,6 +294,8 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
+        if self.cfg.MODEL.DC_BD_loss:
+            loss += self.DC_BD_loss(logits, y)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
