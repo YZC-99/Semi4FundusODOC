@@ -221,17 +221,18 @@ class TSBase(pl.LightningModule):
         HQ_outputs_soft = torch.softmax(HQ_logits, dim=1)
         LQ_outputs_soft = torch.softmax(LQ_logits, dim=1)
 
-        confident_maps = self.get_confident_maps(LQ_label,LQ_outputs_soft)
-        smooth_arg = 0.8
-        corrected_masks_np = HQ_label[-LQ_label.shape[0]:] + confident_maps * torch.pow(-1, HQ_label[-LQ_label.shape[0]:]) * smooth_arg
+        # confident_maps = self.get_confident_maps(LQ_label,LQ_outputs_soft)
+        # smooth_arg = 0.8
+        # corrected_masks_np = HQ_label[-LQ_label.shape[0]:] + confident_maps * torch.pow(-1, HQ_label[-LQ_label.shape[0]:]) * smooth_arg
 
 
 
 
-        if self.trainer.global_step < 200:
-            ema_loss = 0
-        elif self.trainer.global_step>= 200:
-            ema_loss = self.ema_loss(LQ_logits, LQ_label)
+        # if self.trainer.global_step < 200:
+        #     ema_loss = 0
+        # elif self.trainer.global_step>= 200:
+        #     ema_loss = self.ema_loss(LQ_logits, LQ_label)
+        ema_loss = self.ema_loss(LQ_logits, LQ_label)
 
         loss = self.loss(HQ_logits,HQ_label)
         # train teacher
