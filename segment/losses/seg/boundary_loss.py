@@ -99,7 +99,7 @@ class BDLoss(nn.Module):
         pc = net_output[:, 1:, ...].type(torch.float32)
         dc = bound[:,1:, ...].type(torch.float32)
 
-        multipled = torch.einsum("bcxyz,bcxyz->bcxyz", pc, dc)
+        multipled = torch.einsum("bcxy,bcxy->bcxy", pc, dc)
         bd_loss = multipled.mean()
 
         return bd_loss
@@ -144,11 +144,11 @@ class SoftDiceLoss(nn.Module):
         return -dc
 
 class DC_and_BD_loss(nn.Module):
-    def __init__(self, soft_dice_kwargs, bd_kwargs, aggregate="sum"):
+    def __init__(self, aggregate="sum"):
         super(DC_and_BD_loss, self).__init__()
         self.aggregate = aggregate
-        self.bd = BDLoss(**bd_kwargs)
-        self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, **soft_dice_kwargs)
+        self.bd = BDLoss()
+        self.dc = SoftDiceLoss(apply_nonlin=softmax_helper)
 
     def forward(self, net_output, target, bound):
         dc_loss = self.dc(net_output, target)
