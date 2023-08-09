@@ -213,7 +213,7 @@ class TSBase(pl.LightningModule):
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         self.log("train/ema_total_loss", ema_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         # self.update_ema_variables()
-        consistency_weight = self.get_current_consistency_weight().to(self.device)
+        consistency_weight = self.get_current_consistency_weight()
         all_loss = loss + consistency_weight*(0.5*ema_loss + consistency_loss)
         return all_loss
 
@@ -233,8 +233,11 @@ class TSBase(pl.LightningModule):
         LQ_preds = nn.functional.softmax(LQ_logits, dim=1).argmax(1)
         ema_loss = self.loss(LQ_logits,y)
 
+        consistency_loss = torch.mean((HQ_preds[LQ_preds.shape[0]:] - LQ_preds) ** 2)
+        consistency_weight = self.get_current_consistency_weight()
+        all_loss = loss + consistency_weight*(0.5*ema_loss + consistency_loss)
 
-        return {'val_loss':loss,
+        return {'val_loss':all_loss,
                 'val_ema_loss': ema_loss,
                 'y': torch.cat([y,y],dim=0),
                 'preds':HQ_preds,
