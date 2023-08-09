@@ -124,10 +124,10 @@ class TSBase(pl.LightningModule):
             # self.test_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
             # self.test_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
 
-        if cfg.MODEL.stage1_ckpt_path is not None and cfg.MODEL.uda_pretrained:
-            self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='')
-        if cfg.MODEL.retraining:
-            self.init_from_ckpt(cfg.MODEL.stage2_ckpt_path, ignore_keys='')
+        if cfg.MODEL.Teacher_pretrined :
+            self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='',model='teacher')
+        if cfg.MODEL.Student_pretrined:
+            self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='',model='student')
 
     def forward(self, HQ_input,LQ_input) -> Dict[str, torch.Tensor]:
         # train student
@@ -157,7 +157,7 @@ class TSBase(pl.LightningModule):
                 predict_color[mask_p, i] = color[i]
         return y_color,predict_color
 
-    def init_from_ckpt(self,path: str,ignore_keys: List[str] = list()):
+    def init_from_ckpt(self,path: str,ignore_keys: List[str] = list(),model='student'):
         sd = torch.load(path,map_location='cpu')
         if 'state_dict' in sd:
             # If 'state_dict' exists, use it directly
@@ -170,8 +170,10 @@ class TSBase(pl.LightningModule):
                     if k.startswith(ik):
                         print("Deleting key {} from state_dict.".format(k))
                         del sd[k]
-
-            self.model.load_state_dict(sd, strict=False)
+            if model=='student':
+                self.model.load_state_dict(sd, strict=False)
+            elif model=='teacher':
+                self.ema_model.load_state_dict(sd, strict=False)
         print(f"Restored from {path}")
 
 
