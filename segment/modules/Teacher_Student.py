@@ -124,7 +124,7 @@ class TSBase(pl.LightningModule):
             # self.test_oc_dice_score = Dice(num_classes=2, average='macro').to(self.device)
             # self.test_oc_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(self.device)
 
-        if cfg.MODEL.Teacher_pretrined :
+        if cfg.MODEL.Teacher_pretrined:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='',model='teacher')
         if cfg.MODEL.Student_pretrined:
             self.init_from_ckpt(cfg.MODEL.stage1_ckpt_path, ignore_keys='',model='student')
@@ -244,7 +244,7 @@ class TSBase(pl.LightningModule):
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         self.log("train/ema_total_loss", ema_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
-        # self.update_ema_variables()
+        self.update_ema_variables()
         consistency_weight = self.get_current_consistency_weight()
         if self.cfg.MODEL.weighted_loss:
             all_loss = loss + consistency_weight*(0.5*ema_loss + consistency_loss)
