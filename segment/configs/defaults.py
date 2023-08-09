@@ -19,6 +19,7 @@ _C.MODEL.batch_size = 16
 _C.MODEL.epochs = 150
 _C.MODEL.crop_size = 150
 _C.MODEL.lr = 0.004
+_C.MODEL.weighted_loss = False
 
 _C.MODEL.align_loss = 0.0
 _C.MODEL.BlvLoss = False
