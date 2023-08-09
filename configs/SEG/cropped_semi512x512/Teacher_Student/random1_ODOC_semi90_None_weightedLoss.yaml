@@ -1,5 +1,6 @@
 MODEL:
   Teacher_Student: True
+  Teacher_pretrined: True
   uda: True
   backbone: 'resnet50'
   model: 'deeplabv3plus'
