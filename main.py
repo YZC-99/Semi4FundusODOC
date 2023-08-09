@@ -142,7 +142,7 @@ if __name__ == '__main__':
         config.dataset.params.train.params.pseudo_mask_path = now_ex_pseudo_masks_path
 
     # 设置此时不进行uda
-    if not cfg.MODEL.uda:
+    if not cfg.MODEL.uda and not cfg.MODEL.Teacher_Student:
         config.dataset.params.train2 = None
     # Build data modules
     data = initialize_from_config(config.dataset)
