@@ -223,7 +223,7 @@ class TSBase(pl.LightningModule):
 
         confident_maps = self.get_confident_maps(LQ_label,LQ_outputs_soft)
         smooth_arg = 0.8
-        corrected_masks_np = HQ_label[-LQ_label.shape[0]:] + confident_maps * torch.power(-1, HQ_label[-LQ_label.shape[0]:]) * smooth_arg
+        corrected_masks_np = HQ_label[-LQ_label.shape[0]:] + confident_maps * torch.pow(-1, HQ_label[-LQ_label.shape[0]:]) * smooth_arg
 
 
 
