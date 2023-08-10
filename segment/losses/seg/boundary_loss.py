@@ -147,10 +147,10 @@ class SoftDiceLoss(nn.Module):
         return -dc
 
 class SurfaceLoss():
-    def __init__(self, **kwargs):
+    def __init__(self, idc):
         # Self.idc is used to filter out some classes of the target mask. Use fancy indexing
-        self.idc: List[int] = kwargs["idc"]
-        print(f"Initialized {self.__class__.__name__} with {kwargs}")
+        self.idc = idc
+        # print(f"Initialized {self.__class__.__name__} with {kwargs}")
 
     def __call__(self, probs: Tensor, dist_maps: Tensor) -> Tensor:
 
@@ -167,7 +167,7 @@ class DC_and_BD_loss(nn.Module):
     def __init__(self, idc, aggregate="sum"):
         super(DC_and_BD_loss, self).__init__()
         self.aggregate = aggregate
-        self.bd = SurfaceLoss(**idc)
+        self.bd = SurfaceLoss(idc)
         self.dc = SoftDiceLoss(apply_nonlin=softmax_helper)
 
     def forward(self, net_output, target, bound):
