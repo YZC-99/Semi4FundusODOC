@@ -63,7 +63,7 @@ class Base(pl.LightningModule):
 
         self.loss = initialize_from_config(loss)
         if cfg.MODEL.DC_BD_loss:
-            self.DC_BD_loss = DC_and_BD_loss(idc=[0,1,2])
+            self.DC_BD_loss = DC_and_BD_loss(idc=[1,2])
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
             cls_num_list = torch.tensor([200482,42736,18925])
