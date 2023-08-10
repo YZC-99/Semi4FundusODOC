@@ -282,7 +282,7 @@ class Base(pl.LightningModule):
             loss = self.loss(logits, y)
             if self.cfg.MODEL.DC_BD_loss:
                 dist = batch['boundary']
-                loss += self.DC_BD_loss(net_output=logits, target=y, bound=dist)
+                loss += self.DC_BD_loss(net_output=logits, target=y, bound=dist) + 1
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -297,7 +297,7 @@ class Base(pl.LightningModule):
         loss = self.loss(logits, y)
         if self.cfg.MODEL.DC_BD_loss:
             dist = batch['boundary']
-            loss += self.DC_BD_loss(net_output=logits, target=y, bound=dist)
+            loss += self.DC_BD_loss(net_output=logits, target=y, bound=dist) + 1
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
