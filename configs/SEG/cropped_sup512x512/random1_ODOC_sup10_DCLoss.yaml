@@ -1,10 +1,12 @@
 MODEL:
+  sup: False
   NUM_CLASSES: 3
   epochs: 200
   lr: 0.001 # 0.004/16*batch_size
   crop_size: 512
   backbone: 'resnet50'
   model: 'deeplabv3plus'
+  DC_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -12,8 +14,8 @@ MODEL:
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
-        batch_size: 8
-        num_workers: 4
+        batch_size: 16
+        num_workers: 8
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:

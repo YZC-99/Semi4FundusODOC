@@ -63,8 +63,9 @@ class Base(pl.LightningModule):
             self.model = UNet(in_channels=self.num_classes,num_classes=3,base_c=64,bilinear=True)
 
         self.loss = initialize_from_config(loss)
-        if cfg.MODEL.DC_BD_loss:
+        if cfg.MODEL.DC_loss:
             self.Dice_loss = DiceLoss(n_classes=self.num_classes)
+        if cfg.MODEL.BD_loss:
             self.BD_loss = SurfaceLoss(idc=[1,2])
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
@@ -280,9 +281,11 @@ class Base(pl.LightningModule):
             out_soft = nn.functional.softmax(logits, dim=1)
             ce_loss = self.loss(logits, y)
             loss = ce_loss
-            if self.cfg.MODEL.DC_BD_loss:
+            if self.cfg.MODEL.DC_loss:
+                loss = ce_loss + self.Dice_loss(out_soft,y)
+            if self.cfg.MODEL.BD_loss:
                 dist = batch['boundary']
-                loss = 0.5 * (self.Dice_loss(out_soft,y) + ce_loss) + 0.5 * self.BD_loss(out_soft,dist)
+                loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft,dist)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -297,9 +300,11 @@ class Base(pl.LightningModule):
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         ce_loss = self.loss(logits, y)
         loss = ce_loss
-        if self.cfg.MODEL.DC_BD_loss:
+        if self.cfg.MODEL.DC_loss:
+            loss = ce_loss + self.Dice_loss(out_soft, y)
+        if self.cfg.MODEL.BD_loss:
             dist = batch['boundary']
-            loss = 0.5 * (self.Dice_loss(out_soft,y) + ce_loss) + 0.5 * self.BD_loss(out_soft,dist)
+            loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft, dist)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
