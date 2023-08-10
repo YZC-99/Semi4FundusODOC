@@ -167,7 +167,7 @@ class DC_and_BD_loss(nn.Module):
     def __init__(self, idc, aggregate="sum"):
         super(DC_and_BD_loss, self).__init__()
         self.aggregate = aggregate
-        self.bd = SurfaceLoss(idc)
+        self.bd = SurfaceLoss(**idc)
         self.dc = SoftDiceLoss(apply_nonlin=softmax_helper)
 
     def forward(self, net_output, target, bound):
