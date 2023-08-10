@@ -3,10 +3,7 @@ from PIL import Image, ImageOps, ImageFilter
 import random
 import torch
 from torchvision import transforms
-from torchvision import transforms as T
-from torchvision.transforms import functional as F
-from typing import Callable, BinaryIO, Match, Pattern, Tuple, Union, Optional
-from boundary_utils import class2one_hot,one_hot2dist
+from segment.dataloader.boundary_utils import class2one_hot,one_hot2dist
 
 
 def dist_transform(mask):
