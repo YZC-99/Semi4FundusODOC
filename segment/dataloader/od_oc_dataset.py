@@ -1,6 +1,6 @@
 import torch
 
-from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout
+from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout,dist_transform
 import cv2
 import math
 import os
@@ -112,7 +112,8 @@ class SemiDataset(Dataset):
             mask = get_labels(self.task,mask_path)
             img, mask = resize(img, mask, 512)
             img, mask = normalize(img, mask)
-            return {'img':img, 'mask':mask, 'id':id}
+            boundary = dist_transform(mask)
+            return {'img':img, 'mask':mask, 'id':id,'boundary':boundary}
 
         if self.mode == 'train' or (self.mode == 'semi_train' and id in self.labeled_ids):
             mask = get_labels(self.task, mask_path)
@@ -129,7 +130,8 @@ class SemiDataset(Dataset):
         if (self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids) and self.aug :
             if self.aug.strong.Not:
                 img, mask = normalize(img, mask)
-                return {'img':img, 'mask':mask}
+                boundary = dist_transform(mask)
+                return {'img':img, 'mask':mask,'boundary':boundary}
 
             if self.aug == None or self.aug.strong.default:
                 if random.random() < 0.8:
@@ -147,9 +149,11 @@ class SemiDataset(Dataset):
                 img, mask = cutout(img, mask, p=1.0)
 
             img, mask = normalize(img, mask)
-            return {'img':img, 'mask':mask}
+            boundary = dist_transform(mask)
+            return {'img':img, 'mask':mask,'boundary':boundary}
         img, mask = normalize(img, mask)
-        return {'img':img, 'mask':mask}
+        boundary = dist_transform(mask)
+        return {'img':img, 'mask':mask,'boundary':boundary}
 
     def __len__(self):
         return len(self.ids)

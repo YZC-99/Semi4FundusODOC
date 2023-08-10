@@ -63,7 +63,7 @@ class Base(pl.LightningModule):
 
         self.loss = initialize_from_config(loss)
         if cfg.MODEL.DC_BD_loss:
-            self.DC_BD_loss = DC_and_BD_loss()
+            self.DC_BD_loss = DC_and_BD_loss(idc=[0,1,2])
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
             cls_num_list = torch.tensor([200482,42736,18925])
@@ -281,7 +281,8 @@ class Base(pl.LightningModule):
             backbone_feat,logits = output['backbone_features'],output['out']
             loss = self.loss(logits, y)
             if self.cfg.MODEL.DC_BD_loss:
-                loss += self.DC_BD_loss(logits, y)
+                dist = batch['boundary']
+                loss += self.DC_BD_loss(logits, dist)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -295,7 +296,8 @@ class Base(pl.LightningModule):
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.loss(logits, y)
         if self.cfg.MODEL.DC_BD_loss:
-            loss += self.DC_BD_loss(logits, y)
+            dist = batch['boundary']
+            loss += self.DC_BD_loss(logits, dist)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):

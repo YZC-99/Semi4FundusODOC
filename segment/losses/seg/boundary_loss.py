@@ -1,8 +1,11 @@
-import torch
 from torch import nn
 from scipy.ndimage import distance_transform_edt
-import numpy as np
 
+from typing import List
+
+import torch
+import numpy as np
+from torch import Tensor, einsum
 
 
 def softmax_helper(x):
@@ -90,9 +93,9 @@ class BDLoss(nn.Module):
 
     def forward(self, net_output, target, bound):
         """
-        net_output: (batch_size, class, x,y,z)
-        target: ground truth, shape: (batch_size, 1, x,y,z)
-        bound: precomputed distance map, shape (batch_size, class, x,y,z)
+        net_output: (batch_size, class, x,y)
+        target: ground truth, shape: (batch_size, 1, x,y)
+        bound: precomputed distance map, shape (batch_size, class, x,y)
         """
         net_output = softmax_helper(net_output)
         # print('net_output shape: ', net_output.shape)
@@ -142,6 +145,23 @@ class SoftDiceLoss(nn.Module):
         dc = dc.mean()
 
         return -dc
+
+class SurfaceLoss():
+    def __init__(self, **kwargs):
+        # Self.idc is used to filter out some classes of the target mask. Use fancy indexing
+        self.idc: List[int] = kwargs["idc"]
+        print(f"Initialized {self.__class__.__name__} with {kwargs}")
+
+    def __call__(self, probs: Tensor, dist_maps: Tensor) -> Tensor:
+
+        pc = probs[:, self.idc, ...].type(torch.float32)
+        dc = dist_maps[:, self.idc, ...].type(torch.float32)
+
+        multipled = einsum("bkwh,bkwh->bkwh", pc, dc)
+
+        loss = multipled.mean()
+
+        return loss
 
 class DC_and_BD_loss(nn.Module):
     def __init__(self, aggregate="sum"):

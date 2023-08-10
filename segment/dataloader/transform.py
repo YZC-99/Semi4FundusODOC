@@ -5,6 +5,20 @@ import torch
 from torchvision import transforms
 from torchvision import transforms as T
 from torchvision.transforms import functional as F
+from typing import Callable, BinaryIO, Match, Pattern, Tuple, Union, Optional
+from boundary_utils import class2one_hot,one_hot2dist
+
+
+def dist_transform(mask):
+    # mask = np.array(mask)
+    # mask_arr_ex = np.expand_dims(mask, axis=0)
+    mask_tensor = torch.unsqueeze(mask,dim=0)
+    mask_tensor = mask_tensor.to(torch.int64)
+    # mask_tensor = torch.tensor(mask_arr_ex, dtype=torch.int64)
+    mask_trans = class2one_hot(mask_tensor, 3)
+    mask_trans_arr = mask_trans.cpu().squeeze().numpy()
+    bounadry = one_hot2dist(mask_trans_arr, resolution=[1, 1])
+    return bounadry
 
 def crop(img, mask, size):
     # padding height or width if smaller than cropping size
