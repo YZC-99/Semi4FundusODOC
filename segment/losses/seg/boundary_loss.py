@@ -172,7 +172,7 @@ class DC_and_BD_loss(nn.Module):
 
     def forward(self, net_output, target, bound):
         dc_loss = self.dc(net_output, target)
-        bd_loss = self.bd(net_output, target, bound)
+        bd_loss = self.bd(net_output, bound)
         if self.aggregate == "sum":
             result = dc_loss + bd_loss
         else:
