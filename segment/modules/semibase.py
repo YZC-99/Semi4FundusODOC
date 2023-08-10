@@ -8,7 +8,8 @@ from torch.optim.lr_scheduler import LambdaLR
 from segment.util import meanIOU
 from segment.losses.loss import PrototypeContrastiveLoss
 from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCrossEntropyLoss
-from segment.losses.seg.boundary_loss import DC_and_BD_loss
+from segment.losses.seg.boundary_loss import SurfaceLoss
+from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -63,7 +64,8 @@ class Base(pl.LightningModule):
 
         self.loss = initialize_from_config(loss)
         if cfg.MODEL.DC_BD_loss:
-            self.DC_BD_loss = DC_and_BD_loss(idc=[1,2])
+            self.Dice_loss = DiceLoss(n_classes=self.num_classes)
+            self.BD_loss = SurfaceLoss(idc=[1,2])
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
             cls_num_list = torch.tensor([200482,42736,18925])
@@ -99,10 +101,6 @@ class Base(pl.LightningModule):
         self.val_od_binary_boundary_jaccard = BoundaryIoU(num_classes=2,task='binary').to(self.device)
         self.val_od_multiclass_boundary_jaccard = BoundaryIoU(num_classes=2,task='multiclass').to(self.device)
 
-        # self.test_mean_dice_score = Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro',multiclass=True).to(self.device)
-        # self.test_mean_jaccard = JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='multiclass').to(self.device)
-        # self.test_od_dice_score = Dice(num_classes=2,average='macro',multiclass=True).to(self.device)
-        # self.test_od_jaccard = JaccardIndex(num_classes=2,task='multiclass').to(self.device)
 
         if self.cfg.MODEL.NUM_CLASSES == 3:
             self.val_oc_dice_score = Dice(num_classes=1,multiclass=False).to(self.device)
@@ -279,10 +277,12 @@ class Base(pl.LightningModule):
             y = batch['mask']
             output = self(x)
             backbone_feat,logits = output['backbone_features'],output['out']
-            loss = self.loss(logits, y)
+            out_soft = nn.functional.softmax(logits, dim=1)
+            ce_loss = self.loss(logits, y)
+            loss = ce_loss
             if self.cfg.MODEL.DC_BD_loss:
                 dist = batch['boundary']
-                loss += self.DC_BD_loss(net_output=logits, target=y, bound=dist) + 1
+                loss = 0.5 * (self.Dice_loss(out_soft,y) + ce_loss) + 0.5 * self.BD_loss(out_soft,dist)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -293,11 +293,13 @@ class Base(pl.LightningModule):
         y = batch['mask']
         output = self(x)
         backbone_feat,logits = output['backbone_features'],output['out']
+        out_soft = nn.functional.softmax(logits, dim=1)
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
-        loss = self.loss(logits, y)
+        ce_loss = self.loss(logits, y)
+        loss = ce_loss
         if self.cfg.MODEL.DC_BD_loss:
             dist = batch['boundary']
-            loss += self.DC_BD_loss(net_output=logits, target=y, bound=dist) + 1
+            loss = 0.5 * (self.Dice_loss(out_soft,y) + ce_loss) + 0.5 * self.BD_loss(out_soft,dist)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
