@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torch.autograd import Variable
 
 class FocalLoss(nn.Module):
     def __init__(self, gamma=2, alpha=None, size_average=True):
