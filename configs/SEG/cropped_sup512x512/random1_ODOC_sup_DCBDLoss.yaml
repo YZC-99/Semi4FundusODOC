@@ -1,0 +1,44 @@
+MODEL:
+  NUM_CLASSES: 3
+  epochs: 500
+  lr: 0.001 # 0.004/16*batch_size
+  crop_size: 512
+  backbone: 'resnet50'
+  model: 'deeplabv3plus'
+  DC_loss: True
+  BD_loss: True
+  loss:
+    target: torch.nn.CrossEntropyLoss
+
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 16
+        num_workers: 4
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'cropped_semi/random1'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                labeled_id_path: 'dataset/SEG/cropped_semi/random1/training.txt'
+                size: 512
+                mode: 'train'
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'SEG/cropped_semi/random1'
+                root: './data/fundus_datasets/od_oc/SEG/'
+                size: 512
+                mode: 'val'
+        test:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+              task: 'od_oc'
+              name: 'SEG/cropped_sup/random1'
+              root: './data/fundus_datasets/od_oc/SEG/'
+              size: 512
+              mode: 'test'
