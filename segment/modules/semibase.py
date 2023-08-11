@@ -10,6 +10,7 @@ from segment.losses.loss import PrototypeContrastiveLoss
 from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCrossEntropyLoss
 from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss
+from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -67,6 +68,8 @@ class Base(pl.LightningModule):
             self.Dice_loss = DiceLoss(n_classes=self.num_classes)
         if cfg.MODEL.BD_loss:
             self.BD_loss = SurfaceLoss(idc=[1,2])
+        if cfg.MODEL.FC_loss:
+            self.FC_loss = FocalLoss()
         if cfg.MODEL.BlvLoss:
             self.sampler = normal.Normal(0, 4)
             cls_num_list = torch.tensor([200482,42736,18925])
@@ -286,6 +289,8 @@ class Base(pl.LightningModule):
             if self.cfg.MODEL.BD_loss:
                 dist = batch['boundary']
                 loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft,dist)
+            if self.cfg.MODEL.FC_loss:
+                loss = loss + self.FC_loss(logits,y)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -305,6 +310,8 @@ class Base(pl.LightningModule):
         if self.cfg.MODEL.BD_loss:
             dist = batch['boundary']
             loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft, dist)
+        if self.cfg.MODEL.FC_loss:
+            loss = loss + self.FC_loss(logits, y)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
