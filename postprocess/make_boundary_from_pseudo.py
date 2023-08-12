@@ -65,8 +65,8 @@ for name in truth:
     od_boundary_mask_arr = mask_to_boundary(od_pseudo_arr, boundary_size=2)
     oc_boundary_mask_arr = mask_to_boundary(oc_pseudo_arr, boundary_size=2)
 
-    od_boundary_mask = Image.fromarrar(od_boundary_mask_arr,mode='p')
-    oc_boundary_mask = Image.fromarrar(oc_boundary_mask_arr,mode='p')
+    od_boundary_mask = Image.fromarray(od_boundary_mask_arr,mode='P')
+    oc_boundary_mask = Image.fromarray(oc_boundary_mask_arr,mode='P')
 
     od_boundary_mask.putpalette(cmap)
     oc_boundary_mask.putpalette(cmap)

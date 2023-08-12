@@ -14,6 +14,27 @@ import numpy as np
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 from segment.modules.semseg.pspnet import PSPNet
+import cv2
+
+def mask_to_boundary(mask,boundary_size = 3, dilation_ratio=0.005):
+    """
+    Convert binary mask to boundary mask.
+    :param mask (numpy array, uint8): binary mask
+    :param dilation_ratio (float): ratio to calculate dilation = dilation_ratio * image_diagonal
+    :return: boundary mask (numpy array)
+    """
+    h, w = mask.shape
+    img_diag = np.sqrt(h ** 2 + w ** 2)
+    dilation = int(round(dilation_ratio * img_diag))
+    if dilation < 1:
+        dilation = 1
+    # Pad image so mask truncated by the image border is also considered as boundary.
+    new_mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
+    kernel = np.ones((boundary_size, boundary_size), dtype=np.uint8)
+    new_mask_erode = cv2.erode(new_mask, kernel, iterations=dilation)
+    mask_erode = new_mask_erode[1 : h + 1, 1 : w + 1]
+    # G_d intersects G in the paper.
+    return mask - mask_erode
 
 
 def label(dataloader, ckpt_path,cfg):
@@ -56,12 +77,24 @@ def label(dataloader, ckpt_path,cfg):
                 img = img.cuda()
                 pred = model(img)['out']
                 pred = torch.argmax(pred, dim=1).cpu()
+                pred_arr = pred.squeeze(0).numpy().astype(np.uint8)
+
+                if cfg.MODEL.label_minus_boundary != 0:
+                    od_pred = np.zeros_like(pred_arr)
+                    od_pred[pred_arr > 0] = 1
+
+                    oc_pred = np.zeros_like(pred_arr)
+                    oc_pred[pred_arr > 0] = 1
+
+                    od_pred_boundary = mask_to_boundary(od_pred, boundary_size=cfg.MODEL.label_minus_boundary)
+                    oc_pred_boundary = mask_to_boundary(od_pred, boundary_size=cfg.MODEL.label_minus_boundary)
+                    pred_arr = oc_pred + od_pred - od_pred_boundary - oc_pred_boundary
 
                 metric.add_batch(pred.numpy(), mask.numpy())
                 dice_score = dice(pred.cpu(), mask.cpu())
                 mIOU = metric.evaluate()[-1]
 
-                pred = Image.fromarray(pred.squeeze(0).numpy().astype(np.uint8), mode='P')
+                pred = Image.fromarray(pred_arr, mode='P')
                 pred.putpalette(cmap)
                 pred.save('%s/%s' % (cfg.MODEL.pseudo_mask_path, os.path.basename(id[0].split(' ')[1])))
 
