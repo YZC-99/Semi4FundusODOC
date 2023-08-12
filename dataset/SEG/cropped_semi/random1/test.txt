@@ -218,7 +218,8 @@ ORIGA/images_cropped/AGLAIA_GT_107.jpg ORIGA/my_gts_cropped/AGLAIA_GT_107.png
 REFUGE/images_cropped/V0106.jpg REFUGE/my_gts_cropped/V0106.bmp
 ORIGA/images_cropped/AGLAIA_GT_225.jpg ORIGA/my_gts_cropped/AGLAIA_GT_225.png
 REFUGE/images_cropped/n0304.jpg REFUGE/my_gts_cropped/n0304.bmp
-RIM-ONE/images_cropped/G-30-L.jpg RIM-ONE/my_gts_cropped/G-30-L.pngORIGA/images_cropped/AGLAIA_GT_595.jpg ORIGA/my_gts_cropped/AGLAIA_GT_595.png
+RIM-ONE/images_cropped/G-30-L.jpg RIM-ONE/my_gts_cropped/G-30-L.png
+ORIGA/images_cropped/AGLAIA_GT_595.jpg ORIGA/my_gts_cropped/AGLAIA_GT_595.png
 RIGA/MESSIDOR_cropped/image385prime.tif RIGA/my_gts_cropped/MESSIDOR/image385prime.png
 REFUGE/images_cropped/n0088.jpg REFUGE/my_gts_cropped/n0088.bmp
 RIGA/MESSIDOR_cropped/image36prime.tif RIGA/my_gts_cropped/MESSIDOR/image36prime.png
