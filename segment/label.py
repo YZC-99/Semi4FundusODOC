@@ -84,14 +84,14 @@ def label(dataloader, ckpt_path,cfg):
                     od_pred[pred_arr > 0] = 1
 
                     oc_pred = np.zeros_like(pred_arr)
-                    oc_pred[pred_arr > 0] = 1
+                    oc_pred[pred_arr == 2] = 1
 
                     od_pred_boundary = mask_to_boundary(od_pred, boundary_size=cfg.MODEL.label_minus_boundary)
                     oc_pred_boundary = mask_to_boundary(od_pred, boundary_size=cfg.MODEL.label_minus_boundary)
                     pred_arr = oc_pred + od_pred - od_pred_boundary - oc_pred_boundary
 
-                metric.add_batch(pred.numpy(), mask.numpy())
-                dice_score = dice(pred.cpu(), mask.cpu())
+                metric.add_batch(pred_arr, mask.numpy())
+                dice_score = dice(pred_arr, mask.cpu())
                 mIOU = metric.evaluate()[-1]
 
                 pred = Image.fromarray(pred_arr, mode='P')
