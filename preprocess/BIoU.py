@@ -65,8 +65,9 @@ def tensor_mask_to_boundary(mask, dilation_ratio=0.005):
 
 mask_path = './g0001.bmp'
 mask_arr = cv2.imread(mask_path,2)
+# 仅仅得到视盘的boundary，如果想要获得视杯的boundary还应当将视杯的像素区域单独提取出来，这样才能更好的提取出
 mask_arr[mask_arr > 0] = 1
-boundary_mask = mask_to_boundary(mask_arr,boundary_size=5)
+boundary_mask = mask_to_boundary(mask_arr,boundary_size=2)
 
 plt.figure()
 plt.imshow(boundary_mask)
