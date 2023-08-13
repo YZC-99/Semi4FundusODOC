@@ -25,7 +25,7 @@ dataset:
                 labeled_id_path: 'dataset/SEG/cropped_semi/random1/10/labeled.txt'
                 unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/10/unlabeled.txt'
                 size: 512
-                mode: 'train'
+                mode: 'semi_train'
                 aug:
                   strong:
                     Not: True
