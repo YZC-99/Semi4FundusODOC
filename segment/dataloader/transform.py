@@ -11,6 +11,7 @@ def dist_transform(mask):
     # mask_arr_ex = np.expand_dims(mask, axis=0)
     mask_tensor = torch.unsqueeze(mask,dim=0)
     mask_tensor = mask_tensor.to(torch.int64)
+    mask_tensor[mask_tensor == 255] = 0
     # mask_tensor = torch.tensor(mask_arr_ex, dtype=torch.int64)
     mask_trans = class2one_hot(mask_tensor, 3)
     mask_trans_arr = mask_trans.cpu().squeeze().numpy()
