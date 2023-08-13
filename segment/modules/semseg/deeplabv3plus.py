@@ -94,7 +94,6 @@ class DeepLabV3Plus(BaseNet):
 
         out_classifier = self.classifier(out_fuse)
         out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
-        # out = nn.Upsample(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
 
         return {'out':out,
                 'out_classifier':out_classifier,
