@@ -109,7 +109,8 @@ class SemiDataset(Dataset):
 
             if add_unlabeled_id_path is not None and mode == 'label':
                 with open(add_unlabeled_id_path, 'r') as f:
-                    self.ids.extend(f.read().splitlines())
+                    self.add_unlabeled_ids = f.read().splitlines()
+                    self.ids.extend(self.add_unlabeled_ids)
 
     def __getitem__(self, item):
         id = self.ids[item]
