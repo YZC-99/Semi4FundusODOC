@@ -19,10 +19,10 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'SEG/cropped_semi/random1/90'
+                name: 'SEG/cropped_semi/random1/10'
                 root: './data/fundus_datasets/od_oc/SEG/'
-                labeled_id_path: 'dataset/SEG/cropped_semi/random1/90/labeled.txt'
-                unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/90/unlabeled.txt'
+                labeled_id_path: 'dataset/SEG/cropped_semi/random1/10/labeled.txt'
+                unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/10/unlabeled.txt'
                 add_unlabeled_id_path: 'dataset/add/705ACRIMA_G1020.txt'
                 size: 512
                 mode: 'train'
@@ -38,10 +38,10 @@ dataset:
           target: segment.dataloader.od_oc_dataset.SupTrain
           params:
             task: 'od_oc'
-            name: 'SEG/cropped_semi/random1/90'
+            name: 'SEG/cropped_semi/random1/10'
             root: './data/fundus_datasets/od_oc/SEG/'
-            labeled_id_path: 'dataset/SEG/cropped_semi/random1/90/labeled.txt'
-            unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/90/unlabeled.txt'
+            labeled_id_path: 'dataset/SEG/cropped_semi/random1/10/labeled.txt'
+            unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/10/unlabeled.txt'
             add_unlabeled_id_path: 'dataset/add/705ACRIMA_G1020.txt'
             size: 512
             mode: 'semi_train'

@@ -1,2 +1,2 @@
-CUDA_VISIBLE_DEVICES=0,1 python main.py  --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_B_CJ_CO_RG_scratch_addARC705_G1020
+CUDA_VISIBLE_DEVICES=0,1 python main.py  --config SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi10_B_CJ_CO_RG_scratch_DCBDLoss_addARC705_G1020
 
