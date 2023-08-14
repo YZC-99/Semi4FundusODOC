@@ -25,7 +25,7 @@ dataset:
                 unlabeled_id_path: 'dataset/SEG/cropped_semi/random1/10/unlabeled.txt'
                 add_unlabeled_id_path: 'dataset/add/705ACRIMA_G1020.txt'
                 size: 512
-                mode: 'train'
+                mode: 'semi_train'
                 aug:
                   strong:
                     Not: False
