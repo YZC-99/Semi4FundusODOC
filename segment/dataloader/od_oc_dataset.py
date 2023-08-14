@@ -175,7 +175,7 @@ class SemiDataset(Dataset):
         return len(self.ids)
 
 class Validation(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -183,11 +183,12 @@ class Validation(SemiDataset):
                          size=size,
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
+                         add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
                          aug=aug)
 
 class SupTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -195,11 +196,12 @@ class SupTrain(SemiDataset):
                          size=size,
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
+                         add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
                          aug=aug)
 
 class SemiTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -207,11 +209,12 @@ class SemiTrain(SemiDataset):
                          size=size,
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
+                         add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
                          aug=aug)
 
 class SemiUabledTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -219,5 +222,6 @@ class SemiUabledTrain(SemiDataset):
                          size=size,
                          labeled_id_path=labeled_id_path,
                          unlabeled_id_path=unlabeled_id_path,
+                         add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
                          aug=aug)
