@@ -93,4 +93,31 @@ def RIGA(root):
             f.write(f"{image_path} {ground_truth_path}\n")
 
 
-RIGA(root)
+def ACRIMA(root):
+    data_path = '/root/autodl-tmp/data/ACRIMA'  # 数据路径
+
+    images_dir = data_path  # 图像文件夹路径
+
+    save_path = '/root/autodl-tmp/data/ACRIMA_index.txt'
+
+    image_files = [os.path.join(images_dir, file) for file in os.listdir(images_dir) if file.endswith('.jpg')]
+
+    with open(save_path, 'w') as f:
+        for image_file in image_files:
+            image_path = image_file.replace(root, '')
+            f.write(f"{image_path} {image_path}\n")
+
+
+def G1020():
+    data_path = '/root/autodl-tmp/data/G1020'  # 数据路径
+
+    images_dir = data_path  # 图像文件夹路径
+
+    save_path = '/root/autodl-tmp/data/G1020_index.txt'
+
+    image_files = [os.path.join(images_dir, file) for file in os.listdir(images_dir) if file.endswith('.jpg')]
+
+    with open(save_path, 'w') as f:
+        for image_file in image_files:
+            image_path = image_file.replace('/root/autodl-tmp/data/', '')
+            f.write(f"{image_path} {image_path}\n")

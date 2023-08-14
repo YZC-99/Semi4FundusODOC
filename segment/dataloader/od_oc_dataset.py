@@ -45,7 +45,7 @@ def get_labels(task,mask_path):
 
 
 class SemiDataset(Dataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
         """
         :param name: dataset name, pascal or cityscapes
         :param root: root path of the dataset.
@@ -79,9 +79,15 @@ class SemiDataset(Dataset):
                 with open(unlabeled_id_path, 'r') as f:
                     self.unlabeled_ids = f.read().splitlines()
                 self.ids = self.unlabeled_ids
+
+            if add_unlabeled_id_path is not None:
+                with open(add_unlabeled_id_path, 'r') as f:
+                    self.add_unlabeled_ids = f.read().splitlines()
+                self.unlabeled_ids.extend(self.add_unlabeled_ids)
+
             if labeled_id_path is not None and unlabeled_id_path is not None:
-                self.ids = \
-                    self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
+                    self.ids = \
+                        self.labeled_ids * math.ceil(len(self.unlabeled_ids) / len(self.labeled_ids)) + self.unlabeled_ids
 
         elif mode == 'src_tgt_train':
             with open(unlabeled_id_path, 'r') as f:
@@ -95,10 +101,16 @@ class SemiDataset(Dataset):
                 id_path = 'dataset/%s/test.txt' % name
             elif mode == 'label':
                 id_path = unlabeled_id_path
+
             elif mode == 'train':
                 id_path = labeled_id_path
             with open(id_path, 'r') as f:
                 self.ids = f.read().splitlines()
+
+            if add_unlabeled_id_path is not None and mode == 'label':
+                with open(add_unlabeled_id_path, 'r') as f:
+                    self.ids.extend(f.read().splitlines())
+
     def __getitem__(self, item):
         id = self.ids[item]
         img_path = os.path.join(self.root, id.split(' ')[0])
@@ -109,7 +121,11 @@ class SemiDataset(Dataset):
         mask_path = os.path.join(self.root, id.split(' ')[1])
 
         if self.mode == 'val' or self.mode == 'test' or self.mode == 'label':
-            mask = get_labels(self.task,mask_path)
+            if id in self.add_unlabeled_ids:
+                mask_arr = np.zeros(img.size)
+                mask = Image.fromarray(mask_arr.astype(np.uint8))
+            else:
+                mask = get_labels(self.task,mask_path)
             img, mask = resize(img, mask, 512)
             img, mask = normalize(img, mask)
             boundary = dist_transform(mask)
