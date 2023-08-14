@@ -122,7 +122,7 @@ class SemiDataset(Dataset):
         mask_path = os.path.join(self.root, id.split(' ')[1])
 
         if self.mode == 'val' or self.mode == 'test' or self.mode == 'label':
-            if id in self.add_unlabeled_ids and self.mode == 'label':
+            if self.add_unlabeled_ids and id in self.add_unlabeled_ids:
                 mask_arr = np.zeros(img.size)
                 mask = Image.fromarray(mask_arr.astype(np.uint8))
             else:
