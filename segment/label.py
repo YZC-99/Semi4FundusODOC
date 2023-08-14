@@ -96,7 +96,7 @@ def label(dataloader, ckpt_path,cfg):
 
                 pred = Image.fromarray(pred_arr, mode='P')
                 pred.putpalette(cmap)
-                pred.save('%s/%s' % (cfg.MODEL.pseudo_mask_path, os.path.basename(id[0].split(' ')[1])))
+                pred.save('%s/%s' % (cfg.MODEL.pseudo_mask_path, os.path.basename(id[0].split(' ')[1].replace('.jpg','.png'))))
 
                 # 写入csv
                 writer.writerow([id[0],mIOU,dice_score.item()])
