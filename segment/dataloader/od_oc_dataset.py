@@ -67,6 +67,8 @@ class SemiDataset(Dataset):
         self.size = size
         self.pseudo_mask_path = pseudo_mask_path
 
+        self.add_unlabeled_ids = None
+
         '''
         细节，如果标记数据少于未标记数据，那么在此过程中，会自动复制样本，直到与未标记数量相当，因此100-700，会变成700-700
         '''
@@ -122,10 +124,9 @@ class SemiDataset(Dataset):
         mask_path = os.path.join(self.root, id.split(' ')[1])
 
         if self.mode == 'val' or self.mode == 'test' or self.mode == 'label':
-            if self.mode == 'label':
-                if id in self.add_unlabeled_ids:
-                    mask_arr = np.zeros(img.size)
-                    mask = Image.fromarray(mask_arr.astype(np.uint8))
+            if self.add_unlabeled_ids is not None and id in self.add_unlabeled_ids:
+                mask_arr = np.zeros(img.size)
+                mask = Image.fromarray(mask_arr.astype(np.uint8))
             else:
                 mask = get_labels(self.task,mask_path)
             img, mask = resize(img, mask, 512)
