@@ -121,3 +121,21 @@ def G1020():
         for image_file in image_files:
             image_path = image_file.replace('/root/autodl-tmp/data/', '')
             f.write(f"{image_path} {image_path}\n")
+
+def DDR_Cropped():
+    root = '/root/autodl-tmp/data/'
+    data_path = os.path.join(root,'DDR_Cropped')  # 数据路径
+
+    train_dir = os.path.join(data_path,'cropped_train')  # 图像文件夹路径
+    val_dir = os.path.join(data_path,'cropped_valid')  # 图像文件夹路径
+
+    save_path = os.path.join(data_path,'all_index.txt')
+
+    image_files = [os.path.join(train_dir, file) for file in os.listdir(train_dir) if file.endswith('.jpg')]
+    image_files2 = [os.path.join(val_dir, file) for file in os.listdir(val_dir) if file.endswith('.jpg')]
+    image_files.extend(image_files2)
+    with open(save_path, 'w') as f:
+        for image_file in image_files:
+            image_path = image_file.replace(root, '')
+            f.write(f"{image_path} {image_path.replace('.jpg','.png')}\n")
+DDR_Cropped()
