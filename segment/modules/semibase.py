@@ -532,7 +532,7 @@ class Base(pl.LightningModule):
 
 
     def configure_optimizers(self) -> Tuple[List, List]:
-        lr = self.cfg.MODEL.lr
+        lr = self.learning_rate
         total_iters = self.trainer.max_steps
         optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
         lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
