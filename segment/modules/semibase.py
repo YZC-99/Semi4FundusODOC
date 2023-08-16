@@ -534,9 +534,8 @@ class Base(pl.LightningModule):
         if stage == 'fit':
             limit_batches = self.trainer.limit_train_batches
             batches = len(self.trainer._data_connector._train_dataloader_source.dataloader())
-            print(batches)
             batches = min(batches, limit_batches) if isinstance(limit_batches, int) else int(limit_batches * batches)
-            num_devices = max(1, self.trainer.num_devices, self.trainer.num_processes)
+            num_devices = max(1, self.trainer.num_devices)
             effective_accum = self.trainer.accumulate_grad_batches * num_devices
             self.train_steps = (batches // effective_accum) * self.trainer.max_epochs
 
