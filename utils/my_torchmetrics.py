@@ -24,7 +24,7 @@ class BoundaryIoU(torchmetrics.Metric):
             num_classes,
             task,
             threshold=0.5,
-            boundary_size=3,
+            boundary_size=5,
             compute_on_step=True,
             dist_sync_on_step=False,
             process_group=None,
