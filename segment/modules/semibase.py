@@ -530,10 +530,16 @@ class Base(pl.LightningModule):
         self.log("test/mDice", m_dice, prog_bar=False, logger=True, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
 
+    def setup(self, stage: str):
+        if stage == 'fit':
+            total_devices = self.hparams.n_gpus * self.hparams.n_nodes
+            train_batches = len(self.train_dataloader()) // total_devices
+            self.train_steps = (self.hparams.epochs * train_batches) // self.hparams.accumulate_grad_batches
 
     def configure_optimizers(self) -> Tuple[List, List]:
         lr = self.learning_rate
-        total_iters = self.trainer.max_steps
+        # total_iters = self.trainer.max_steps
+        total_iters = self.train_steps
         optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
         lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
         scheduler = LambdaLR(optimizers[0],lr_lambda=lambda_lr)

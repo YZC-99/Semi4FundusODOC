@@ -1,0 +1,16 @@
+REFUGE/images_cropped/V0196.jpg REFUGE/my_gts_cropped/V0196.bmp
+REFUGE/images_cropped/V0107.jpg REFUGE/my_gts_cropped/V0107.bmp
+REFUGE/images_cropped/V0243.jpg REFUGE/my_gts_cropped/V0243.bmp
+REFUGE/images_cropped/V0236.jpg REFUGE/my_gts_cropped/V0236.bmp
+ORIGA/images_cropped/AGLAIA_GT_459.jpg ORIGA/my_gts_cropped/AGLAIA_GT_459.png
+Drishti-GS1/Drishti-GS1_files/Training/images_cropped/drishtiGS_068.png Drishti-GS1/Drishti-GS1_files/my_gts_cropped/drishtiGS_068.png
+RIGA/MESSIDOR_cropped/image413prime.tif RIGA/my_gts_cropped/MESSIDOR/image413prime.png
+ORIGA/images_cropped/AGLAIA_GT_067.jpg ORIGA/my_gts_cropped/AGLAIA_GT_067.png
+REFUGE/images_cropped/T0211.jpg REFUGE/my_gts_cropped/T0211.bmp
+ORIGA/images_cropped/AGLAIA_GT_606.jpg ORIGA/my_gts_cropped/AGLAIA_GT_606.png
+RIM-ONE/images_cropped/S-19-R.jpg RIM-ONE/my_gts_cropped/S-19-R.png
+RIGA/Magrabia_cropped/Magrabia_croppedMale/image4prime.tif RIGA/my_gts_cropped/Magrabia/MagrabiaMale/image4prime.png
+RIGA/MESSIDOR_cropped/image405prime.tif RIGA/my_gts_cropped/MESSIDOR/image405prime.png
+Drishti-GS1/Drishti-GS1_files/Test/images_cropped/drishtiGS_006.png Drishti-GS1/Drishti-GS1_files/my_gts_cropped/drishtiGS_006.png
+REFUGE/images_cropped/V0321.jpg REFUGE/my_gts_cropped/V0321.bmp
+ORIGA/images_cropped/AGLAIA_GT_313.jpg ORIGA/my_gts_cropped/AGLAIA_GT_313.png
