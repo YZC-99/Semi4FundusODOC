@@ -546,7 +546,7 @@ class Base(pl.LightningModule):
         optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
         # lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
         # scheduler = LambdaLR(optimizers[0],lr_lambda=lambda_lr)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
+        scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters,power=0.9)
         schedulers = [
             {
                 'scheduler': scheduler,
