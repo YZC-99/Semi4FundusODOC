@@ -539,17 +539,14 @@ class Base(pl.LightningModule):
             effective_accum = self.trainer.accumulate_grad_batches * num_devices
             self.train_steps = (batches // effective_accum) * self.trainer.max_epochs
 
-            # total_devices = self.hparams.n_gpus * self.hparams.n_nodes
-            # train_batches = len(self.train_dataloader()) // total_devices
-            # self.train_steps = (self.hparams.epochs * train_batches) // self.hparams.accumulate_grad_batches
-
     def configure_optimizers(self) -> Tuple[List, List]:
         lr = self.learning_rate
         # total_iters = self.trainer.max_steps
         total_iters = self.train_steps
         optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
-        lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
-        scheduler = LambdaLR(optimizers[0],lr_lambda=lambda_lr)
+        # lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
+        # scheduler = LambdaLR(optimizers[0],lr_lambda=lambda_lr)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
         schedulers = [
             {
                 'scheduler': scheduler,
