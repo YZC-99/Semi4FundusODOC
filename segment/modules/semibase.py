@@ -540,6 +540,7 @@ class Base(pl.LightningModule):
             self.train_steps = (batches // effective_accum) * self.trainer.max_epochs
 
     def configure_optimizers(self) -> Tuple[List, List]:
+
         lr = self.learning_rate
         # total_iters = self.trainer.max_steps
         total_iters = self.train_steps
@@ -554,6 +555,8 @@ class Base(pl.LightningModule):
                 'frequency': 1
             }
         ]
+
+        print(">>>>>>>>>>>>>total iters:{}<<<<<<<<<<<<<<<<".format(total_iters))
         return optimizers, schedulers
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
         log = dict()
