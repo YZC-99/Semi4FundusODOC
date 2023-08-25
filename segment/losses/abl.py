@@ -8,6 +8,7 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt as distance
 # can find here: https://github.com/CoinCheung/pytorch-loss/blob/af876e43218694dc8599cc4711d9a5c5e043b1b2/label_smooth.py
 from segment.losses.label_smooth import LabelSmoothSoftmaxCEV1 as LSSCE
+from segment.losses.korniadt import distance_transform
 from torchvision import transforms
 from functools import partial
 from operator import itemgetter
@@ -77,6 +78,23 @@ class ABL(nn.Module):
                 ignore_index=ignore_label,
                 lb_smooth=label_smoothing
             )
+
+    def compute_dtm_gpu(img_gt, out_shape, kernel_size=5):
+        """
+        compute the distance transform map of foreground in binary mask
+        input: segmentation, shape = (batch_size, x, y, z)
+        output: the foreground Distance Map (SDM)
+        dtm(x) = 0; x in segmentation boundary
+                 inf|x-y|; x in segmentation
+        """
+        if len(out_shape) == 5:  # B,C,H,W,D
+            fg_dtm = torch.cat([distance_transform(1 - img_gt[b].float(), kernel_size=kernel_size).unsqueeze(0) \
+                                for b in range(out_shape[0])], axis=0)
+        else:
+            fg_dtm = distance_transform(1 - img_gt.float(), kernel_size=kernel_size)
+
+        fg_dtm[~torch.isfinite(fg_dtm)] = kernel_size
+        return fg_dtm
 
     def logits2boundary(self, logit):
         eps = 1e-5
@@ -231,9 +249,9 @@ class ABL(nn.Module):
         # 获得gt_boundary
         gt_boundary = self.gt2boundary(target, ignore_label=self.ignore_label)
         # 获得dist_maps
-        # dist_map_tensor = compute_dtm_gpu(gt_boundary.unsqueeze(0), logits.shape)
-        dist_maps = self.get_dist_maps(
-            gt_boundary).cuda()  # <-- it will slow down the training, you can put it to dataloader.
+        dist_maps = self.compute_dtm_gpu(gt_boundary.unsqueeze(0), logits.shape).cuda()
+        # dist_maps = self.get_dist_maps(
+        #     gt_boundary).cuda()  # <-- it will slow down the training, you can put it to dataloader.
 
         # 获得logtis的boundary
         pred_boundary = self.logits2boundary(logits)
