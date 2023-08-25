@@ -11,6 +11,7 @@ from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCr
 from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.seg.focal_loss import FocalLoss
+from segment.losses.abl import ABL
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -64,6 +65,8 @@ class Base(pl.LightningModule):
             self.model = UNet(in_channels=self.num_classes,num_classes=3,base_c=64,bilinear=True)
 
         self.loss = initialize_from_config(loss)
+        if cfg.MODEL.ABL_loss:
+            self.ABL_loss = ABL()
         if cfg.MODEL.DC_loss:
             self.Dice_loss = DiceLoss(n_classes=self.num_classes)
         if cfg.MODEL.BD_loss:
@@ -291,6 +294,10 @@ class Base(pl.LightningModule):
                 loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft,dist)
             if self.cfg.MODEL.FC_loss:
                 loss = loss + self.FC_loss(logits,y)
+            if self.cfg.MODEL.ABL_Loss:
+                loss = loss + self.ABL_loss(logits,y)
+                if self.MODEL.LOVASZ_Loss:
+                    loss  = loss + lovasz_softmax(out_soft, y, ignore=255)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
         return loss
@@ -312,6 +319,10 @@ class Base(pl.LightningModule):
             loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft, dist)
         if self.cfg.MODEL.FC_loss:
             loss = loss + self.FC_loss(logits, y)
+        if self.cfg.MODEL.ABL_Loss:
+            loss = loss + self.ABL_loss(logits, y)
+            if self.MODEL.LOVASZ_Loss:
+                loss = loss + lovasz_softmax(out_soft, y, ignore=255)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
