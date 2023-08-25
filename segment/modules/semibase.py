@@ -296,7 +296,7 @@ class Base(pl.LightningModule):
                 loss = loss + self.FC_loss(logits,y)
             if self.cfg.MODEL.ABL_Loss:
                 loss = loss + self.ABL_loss(logits,y)
-                if self.MODEL.LOVASZ_Loss:
+                if self.MODEL.LOVASZ_loss:
                     loss  = loss + lovasz_softmax(out_soft, y, ignore=255)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
@@ -321,7 +321,7 @@ class Base(pl.LightningModule):
             loss = loss + self.FC_loss(logits, y)
         if self.cfg.MODEL.ABL_Loss:
             loss = loss + self.ABL_loss(logits, y)
-            if self.MODEL.LOVASZ_Loss:
+            if self.MODEL.LOVASZ_loss:
                 loss = loss + lovasz_softmax(out_soft, y, ignore=255)
         return {'val_loss':loss,'preds':preds,'y':y}
 
