@@ -6,8 +6,8 @@ MODEL:
   crop_size: 512
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  ABL_Loss: True
-  LOVASZ_Loss: True
+  ABL_loss: True
+  LOVASZ_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
 
