@@ -321,7 +321,7 @@ class Base(pl.LightningModule):
             loss = loss + self.FC_loss(logits, y)
         if self.cfg.MODEL.ABL_loss:
             loss = loss + self.ABL_loss(logits, y)
-            if self.MODEL.LOVASZ_loss:
+            if self.cfg.MODEL.LOVASZ_loss:
                 loss = loss + lovasz_softmax(out_soft, y, ignore=255)
         return {'val_loss':loss,'preds':preds,'y':y}
 
