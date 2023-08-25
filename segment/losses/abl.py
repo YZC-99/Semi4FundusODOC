@@ -79,7 +79,7 @@ class ABL(nn.Module):
                 lb_smooth=label_smoothing
             )
 
-    def compute_dtm_gpu(img_gt, out_shape, kernel_size=5):
+    def compute_dtm_gpu(self,img_gt, out_shape, kernel_size=5):
         """
         compute the distance transform map of foreground in binary mask
         input: segmentation, shape = (batch_size, x, y, z)
