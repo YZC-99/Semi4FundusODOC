@@ -250,9 +250,10 @@ class ABL(nn.Module):
         gt_boundary = self.gt2boundary(target, ignore_label=self.ignore_label)
         # 获得dist_maps
         dist_maps = self.compute_dtm_gpu(gt_boundary.unsqueeze(0), logits.shape).cuda()
-        # dist_maps = self.get_dist_maps(
-        #     gt_boundary).cuda()  # <-- it will slow down the training, you can put it to dataloader.
-
+        dist_maps1 = self.get_dist_maps(
+            gt_boundary).cuda()  # <-- it will slow down the training, you can put it to dataloader.
+        print(dist_maps.shape)
+        print(dist_maps1.shape)
         # 获得logtis的boundary
         pred_boundary = self.logits2boundary(logits)
         if pred_boundary.sum() < 1:  # avoid nan
