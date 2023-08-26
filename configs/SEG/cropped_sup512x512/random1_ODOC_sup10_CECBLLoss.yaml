@@ -14,7 +14,7 @@ MODEL:
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
-        batch_size: 16
+        batch_size: 10
         num_workers: 8
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
