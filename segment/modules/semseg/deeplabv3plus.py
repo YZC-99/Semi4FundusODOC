@@ -91,7 +91,6 @@ class DeepLabV3Plus(BaseNet):
 
         out = torch.cat([c1, c4], dim=1)
         out_fuse = self.fuse(out)
-
         out_classifier = self.classifier(out_fuse)
         out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
 

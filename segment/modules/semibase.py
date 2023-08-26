@@ -12,6 +12,7 @@ from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
+from segment.losses.cbl import CBL
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -78,6 +79,8 @@ class Base(pl.LightningModule):
             cls_num_list = torch.tensor([200482,42736,18925])
             frequency_list = torch.log(cls_num_list)
             self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list)
+        if cfg.MODEL.CBL_loss:
+            self.CBL_loss = CBL(self.num_classes)
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
@@ -276,41 +279,10 @@ class Base(pl.LightningModule):
         self.training_dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
         self.training_jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
-    def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
-        if self.cfg.MODEL.uda:
-            loss = self.uda_train(batch)
-        else:
-            x = batch['img']
-            y = batch['mask']
-            output = self(x)
-            backbone_feat,logits = output['backbone_features'],output['out']
-            out_soft = nn.functional.softmax(logits, dim=1)
-            ce_loss = self.loss(logits, y)
-            loss = ce_loss
-            if self.cfg.MODEL.DC_loss:
-                loss = ce_loss + self.Dice_loss(out_soft,y)
-            if self.cfg.MODEL.BD_loss:
-                dist = batch['boundary']
-                loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft,dist)
-            if self.cfg.MODEL.FC_loss:
-                loss = loss + self.FC_loss(logits,y)
-            if self.cfg.MODEL.ABL_loss:
-                if self.ABL_loss(logits, y) is not None:
-                    loss = loss + self.ABL_loss(logits, y)
-                if self.cfg.MODEL.LOVASZ_loss:
-                    loss  = loss + lovasz_softmax(out_soft, y, ignore=255)
-        self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
-        self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
-        return loss
-
-
-    def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
-        x = batch['img']
+    def compute_loss(self,output,batch):
         y = batch['mask']
-        output = self(x)
-        backbone_feat,logits = output['backbone_features'],output['out']
+        backbone_feat, logits = output['backbone_features'], output['out']
         out_soft = nn.functional.softmax(logits, dim=1)
-        preds = nn.functional.softmax(logits, dim=1).argmax(1)
         ce_loss = self.loss(logits, y)
         loss = ce_loss
         if self.cfg.MODEL.DC_loss:
@@ -325,6 +297,32 @@ class Base(pl.LightningModule):
                 loss = loss + self.ABL_loss(logits, y)
             if self.cfg.MODEL.LOVASZ_loss:
                 loss = loss + lovasz_softmax(out_soft, y, ignore=255)
+        if self.MODEL.CBL_loss:
+            loss = loss + 2.0 * self.CBL_loss(output,y,self.model.classifier.weight,self.model.classifier.bias)
+        return loss
+
+    def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
+        if self.cfg.MODEL.uda:
+            loss = self.uda_train(batch)
+        else:
+            x = batch['img']
+            y = batch['mask']
+            output = self(x)
+
+            loss = self.compute_loss(output,batch)
+
+        self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
+        self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
+        return loss
+
+
+    def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
+        x = batch['img']
+        y = batch['mask']
+        output = self(x)
+        backbone_feat,logits = output['backbone_features'],output['out']
+        preds = nn.functional.softmax(logits, dim=1).argmax(1)
+        loss = self.compute_loss(output,batch)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
