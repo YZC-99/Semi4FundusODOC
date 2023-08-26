@@ -147,8 +147,11 @@ class CBL(nn.Module):
             self.same_class_number_extractor_weight = self.same_class_number_extractor_weight.to(er_input.device)
         # print(self.same_class_number_extractor_weight)
         same_class_extractor = NeighborExtractor5(256)
+        # TODO
+        same_class_extractor = same_class_extractor.to(er_input.device)
         same_class_extractor.same_class_extractor.weight.data = self.same_class_extractor_weight
         same_class_number_extractor = NeighborExtractor5(1)
+        same_class_number_extractor = same_class_number_extractor.to(er_input.device)
         same_class_number_extractor.same_class_extractor.weight.data = self.same_class_number_extractor_weight
 
         try:
