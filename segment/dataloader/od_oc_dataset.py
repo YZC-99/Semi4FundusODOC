@@ -145,6 +145,7 @@ class SemiDataset(Dataset):
         img, mask = hflip(img, mask, p=0.5)
         img, mask = random_rotate(img, mask)
         img, mask = random_translate(img, mask)
+
         img, mask = resize(img, mask, self.size)
 
         # strong augmentation on unlabeled images
