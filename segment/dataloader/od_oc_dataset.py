@@ -141,11 +141,11 @@ class SemiDataset(Dataset):
             fname = os.path.basename(id.split(' ')[1])
             mask = get_labels(self.task, os.path.join(self.pseudo_mask_path, fname))
         # basic augmentation on all training images
-        img, mask = resize(img, mask, self.size)
         # img, mask = crop(img, mask, self.size)
         img, mask = hflip(img, mask, p=0.5)
         img, mask = random_rotate(img, mask)
         img, mask = random_translate(img, mask)
+        img, mask = resize(img, mask, self.size)
 
         # strong augmentation on unlabeled images
         if (self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids) and self.aug :
