@@ -106,7 +106,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
-    simple_Profiler = SimpleProfiler(dirpath=setup_callback.logdir)
+    simple_Profiler = SimpleProfiler(dirpath=setup_callback.logdir,filename="perf_logs")
     if dist.is_initialized() and dist.get_rank() == 0:
         os.makedirs(setup_callback.logdir, exist_ok=True)
     logger = TensorBoardLogger(save_dir=str(setup_callback.logdir))
