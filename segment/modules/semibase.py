@@ -439,8 +439,7 @@ class Base(pl.LightningModule):
         self.log("val/OD_rm_OC_dice", od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
                  on_epoch=True, sync_dist=True, rank_zero_only=True)
 
-        self.log("sum_scores", oc_dice+oc_miou+od_dice+od_miou, prog_bar=True, logger=False, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+
 
     def test_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
