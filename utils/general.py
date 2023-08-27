@@ -11,7 +11,7 @@ from typing import Tuple, List, Dict, ClassVar
 
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint, Callback
-from lightning.pytorch.profilers import SimpleProfiler, AdvancedProfiler
+from pytorch_lightning.profilers import SimpleProfiler,AdvancedProfiler
 from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger
 import torch.distributed as dist
 from .callback import *
