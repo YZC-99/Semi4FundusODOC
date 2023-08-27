@@ -42,6 +42,33 @@ def hflip(img, mask, p=0.5):
         mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
     return img, mask
 
+def add_salt_pepper_noise(img,mask,noise_level=0.02):
+    img_array = np.array(img)
+
+    h, w, _ = img_array.shape
+    num_pixels = int(h * w * noise_level)
+
+    # Add salt noise
+    salt_coords = [np.random.randint(0, i - 1, num_pixels) for i in (h, w)]
+    img_array[salt_coords[0], salt_coords[1], :] = 255
+
+    # Add pepper noise
+    pepper_coords = [np.random.randint(0, i - 1, num_pixels) for i in (h, w)]
+    img_array[pepper_coords[0], pepper_coords[1], :] = 0
+
+    noisy_img = Image.fromarray(img_array)
+
+    return noisy_img,mask
+
+def random_scale(img, mask, min_scale=0.8, max_scale=1.2):
+    scale_factor = random.uniform(min_scale, max_scale)
+    new_width = int(img.width * scale_factor)
+    new_height = int(img.height * scale_factor)
+
+    scaled_img = img.resize((new_width, new_height), Image.BILINEAR)
+    scaled_mask = mask.resize((new_width, new_height), Image.NEAREST)
+
+    return scaled_img, scaled_mask
 
 def random_rotate(img, mask, max_rotation_angle=90):
     rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)

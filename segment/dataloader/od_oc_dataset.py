@@ -1,6 +1,7 @@
 import torch
 
-from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout,dist_transform,random_rotate,random_translate
+from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout,dist_transform
+from segment.dataloader.transform import random_rotate,random_translate,add_salt_pepper_noise,random_scale
 import cv2
 import math
 import os
@@ -145,6 +146,9 @@ class SemiDataset(Dataset):
         img, mask = hflip(img, mask, p=0.5)
         img, mask = random_rotate(img, mask)
         img, mask = random_translate(img, mask)
+        img, mask = add_salt_pepper_noise(img, mask)
+        img, mask = random_scale(img, mask)
+
 
         img, mask = resize(img, mask, self.size)
 
