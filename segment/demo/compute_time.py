@@ -32,12 +32,12 @@ cbl = CBL(num_classes)
 fast_cbl = Fast_CBL(num_classes)
 faster_cbl = Faster_CBL(num_classes)
 abl = ABL()
-loss_dict = {'cbl':cbl,'fast_cbl':fast_cbl,'faster_cbl':faster_cbl,'abl':abl}
+# loss_dict = {'initcbl':cbl,'cbl':cbl,'fast_cbl':fast_cbl,'faster_cbl':faster_cbl,'abl':abl}
+loss_dict = {'initcbl':cbl,'cbl':cbl,'cbl1':cbl,'cbl2':cbl,'abl':abl}
 
 model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
-model = model_zoo['deeplabv3plus']('resnet50',num_classes)
+model = model_zoo['deeplabv3plus']('resnet50', num_classes)
 model.cuda()
-
 
 for k,v in loss_dict.items():
     start_time_forward = time.time()
@@ -46,8 +46,12 @@ for k,v in loss_dict.items():
     forward_time = (end_time_forward - start_time_forward) * 1000
     print("Forward Pass Time:", forward_time, "ms")
     start_time_loss = time.time()
-    if 'cbl' in k:
+    if k == 'cbl':
         loss = cbl(outputs,label,model.classifier.weight,model.classifier.bias)
+    elif k == 'fast_cbl':
+        loss = fast_cbl(outputs, label, model.classifier.weight, model.classifier.bias)
+    elif k == 'faster_cbl':
+        loss = faster_cbl(outputs, label, model.classifier.weight, model.classifier.bias)
     else:
         loss = abl(outputs['out'],label)
     end_time_loss = time.time()
@@ -61,18 +65,3 @@ for k,v in loss_dict.items():
     print("{} Backward Pass Time:".format(k), backward_time, "ms")
     print("{}_loss:{}".format(k,loss))
     print('=========================================================')
-'''
-Forward Pass Time: 2542.095422744751 ms
-er move: cuda:0
-cbl Loss Calculation Time: 39.426565170288086 ms
-cbl Backward Pass Time: 210.09016036987305 ms
-=========================================================
-Forward Pass Time: 11.162281036376953 ms
-fast_cbl Loss Calculation Time: 105.67617416381836 ms
-fast_cbl Backward Pass Time: 42.58561134338379 ms
-=========================================================
-Forward Pass Time: 28.81336212158203 ms
-abl Loss Calculation Time: 61.90204620361328 ms
-abl Backward Pass Time: 16.92652702331543 ms
-=========================================================
-'''

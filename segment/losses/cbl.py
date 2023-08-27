@@ -512,6 +512,8 @@ class Fast_CBL(nn.Module):
 
     def forward(self, outputs, gt_sem=None, conv_seg_weight=None, conv_seg_bias=None):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
+        print(gt_sem.size())
+        print(gt_sem_boundary.size())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         loss_A2PN = self.context_loss(
             outputs['out_fuse'],
@@ -546,15 +548,6 @@ class Faster_CBL(nn.Module):
         # self.same_class_extractor_weight.requires_grad(False)
         self.same_class_number_extractor_weight = base_weight
         self.same_class_number_extractor_weight = torch.FloatTensor(self.same_class_number_extractor_weight)
-
-        '''
-        本质就是计算论文中的公式（14）
-
-       er_input: 从输入的形式来看，out['mask_features'],貌似是一个latent features,是的，它就是一个高维的features
-       seg_label：应该就是正常的ground truth
-       gt_boundary_seg：这里应该是通过某种方式计算出来的boundary的ground truth
-       kernel_size=5：计算邻近像素的矩阵大小，根据论文原论述可知，这里应该是采用一个中空的固定卷积。
-       '''
 
     def context_loss(self, er_input, seg_label, gt_boundary_seg, kernel_size=5):
         seg_label = F.interpolate(seg_label.unsqueeze(1).float(), size=er_input.shape[2:], mode='nearest').long()
@@ -727,6 +720,7 @@ class Faster_CBL(nn.Module):
 
     def forward(self, outputs, gt_sem=None, conv_seg_weight=None, conv_seg_bias=None):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
+
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         loss_A2PN = self.context_loss(
             outputs['out_fuse'],

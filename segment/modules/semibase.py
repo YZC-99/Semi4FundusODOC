@@ -80,8 +80,8 @@ class Base(pl.LightningModule):
             frequency_list = torch.log(cls_num_list)
             self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list)
         if cfg.MODEL.CBL_loss:
-            self.CBL_loss = Faster_CBL(self.num_classes)
-            # self.CBL_loss = CBL(self.num_classes)
+            # self.CBL_loss = Faster_CBL(self.num_classes)
+            self.CBL_loss = CBL(self.num_classes)
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
