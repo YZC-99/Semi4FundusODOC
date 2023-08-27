@@ -6,7 +6,7 @@ MODEL:
   crop_size: 512
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  CBL_loss: [2.0,0.1,0.5]
+  CBL_loss: [2.0,0.1,0.0]
   loss:
     target: torch.nn.CrossEntropyLoss
 

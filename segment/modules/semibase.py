@@ -79,9 +79,9 @@ class Base(pl.LightningModule):
             cls_num_list = torch.tensor([200482,42736,18925])
             frequency_list = torch.log(cls_num_list)
             self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list)
-        if cfg.MODEL.CBL_loss:
+        if cfg.MODEL.CBL_loss is not None:
             # self.CBL_loss = Faster_CBL(self.num_classes)
-            self.CBL_loss = CBL(self.num_classes)
+            self.CBL_loss = CBL(self.num_classes,cfg.MODEL.CBL_loss)
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
@@ -299,7 +299,7 @@ class Base(pl.LightningModule):
             if self.cfg.MODEL.LOVASZ_loss:
                 loss = loss + lovasz_softmax(out_soft, y, ignore=255)
         if self.cfg.MODEL.CBL_loss:
-            loss = loss + 2.0 * self.CBL_loss(output,y,self.model.classifier.weight,self.model.classifier.bias)
+            loss = loss + self.CBL_loss(output,y,self.model.classifier.weight,self.model.classifier.bias)
         return loss
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:

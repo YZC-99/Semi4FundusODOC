@@ -28,12 +28,12 @@ class NeighborExtractor5(nn.Module):
         return output
 
 class CBL(nn.Module):
-    def __init__(self,num_classes = 2):
+    def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5]):
         super(CBL,self).__init__()
 
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
-
+        self.weights = weights
         base_weight = np.array([[1, 1, 1, 1, 1],
                                 [1, 1, 1, 1, 1],
                                 [1, 1, 0, 1, 1],
@@ -270,10 +270,6 @@ class CBL(nn.Module):
     def forward(self, outputs,gt_sem = None,conv_seg_weight = None,conv_seg_bias = None):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
-        loss_A2PN = self.context_loss(
-                    outputs['out_fuse'],
-                    seg_label=gt_sem,
-                    gt_boundary_seg=gt_sem_boundary)
         er_loss = self.er_loss4Semantic(
                    outputs['out_fuse'],
                    seg_label=gt_sem,
@@ -283,7 +279,16 @@ class CBL(nn.Module):
                    conv_seg_bias = conv_seg_bias
                )
         loss_A2C_SCE,loss_A2C_pair = er_loss[0],er_loss[1]
-        return 0.5 * loss_A2PN + 0.1 * loss_A2C_SCE + loss_A2C_pair
+        if self.weights[2] == 0.0:
+            return self.weights[0] * (self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
+        else:
+            loss_A2PN = self.context_loss(
+                        outputs['out_fuse'],
+                        seg_label=gt_sem,
+                        gt_boundary_seg=gt_sem_boundary)
+            return self.weights[0] * (self.weights[2] * loss_A2PN + self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
+
+
 
 
 # 解决了context计算瓶颈问题
@@ -306,21 +311,13 @@ class Fast_CBL(nn.Module):
         self.same_class_number_extractor_weight = base_weight
         self.same_class_number_extractor_weight = torch.FloatTensor(self.same_class_number_extractor_weight)
 
-        '''
-        本质就是计算论文中的公式（14）
-
-       er_input: 从输入的形式来看，out['mask_features'],貌似是一个latent features,是的，它就是一个高维的features
-       seg_label：应该就是正常的ground truth
-       gt_boundary_seg：这里应该是通过某种方式计算出来的boundary的ground truth
-       kernel_size=5：计算邻近像素的矩阵大小，根据论文原论述可知，这里应该是采用一个中空的固定卷积。
-       '''
-
     def context_loss(self, er_input, seg_label, gt_boundary_seg, kernel_size=5):
         seg_label = F.interpolate(seg_label.unsqueeze(1).float(), size=er_input.shape[2:], mode='nearest').long()
         gt_boundary_seg = F.interpolate(gt_boundary_seg.unsqueeze(1).float(), size=er_input.shape[2:],
                                         mode='nearest').long()
 
         context_loss_final = torch.tensor(0.0, device=er_input.device)
+        context_loss = torch.tensor(0.0, device=er_input.device)
 
         gt_b = gt_boundary_seg
         gt_b[gt_b == 255] = 0
@@ -332,39 +329,50 @@ class Fast_CBL(nn.Module):
                                                                                                                   1, 2)
 
         b, c, h, w = er_input.shape
+        scale_num = b
 
-        # 预先计算 position_shift_list
-        position_shift_list = [(ki, kj) for ki in range(kernel_size) for kj in range(kernel_size) if
-                               ki != kj != (kernel_size // 2)]
-
-        # 将循环向量化
         cal_mask = (gt_b > 0).bool()
-        position = torch.where(gt_b)
-        position_mask = ((kernel_size // 2) <= position[0]) & (position[0] <= (h - 1 - (kernel_size // 2))) & \
-                        ((kernel_size // 2) <= position[1]) & (position[1] <= (w - 1 - (kernel_size // 2)))
-        position_selected = (position[0][position_mask], position[1][position_mask])
+        scale_num -= (cal_mask.sum(dim=[1, 2]) < 1).sum()
 
-        # 在循环外部使用 position_shift_list
+        position = torch.where(gt_b)
+        position_mask = ((kernel_size // 2) <= position[2]) * (position[2] <= (h - 1 - (kernel_size // 2))) * \
+                        ((kernel_size // 2) <= position[3]) * (position[3] <= (w - 1 - (kernel_size // 2)))
+
+        position_selected = (
+        position[0][position_mask], position[1][position_mask], position[2][position_mask], position[3][position_mask])
+        position_shift_list = []
+
+        for ki in range(kernel_size):
+            for kj in range(kernel_size):
+                if ki == kj == (kernel_size // 2):
+                    continue
+                position_shift_list.append((position_selected[2] + ki - (kernel_size // 2),
+                                            position_selected[3] + kj - (kernel_size // 2)))
+
         context_loss_pi = torch.tensor(0.0, device=er_input.device)
+
         for pi in range(len(position_shift_list)):
-            er_input_selected = er_input[:, :, position_selected[0], position_selected[1]]
-            er_input_shifted = er_input[:, :, position_shift_list[pi][0], position_shift_list[pi][1]]
+            er_input_selected = er_input[position_selected]
+            er_input_shifted = er_input[position_selected[0], :, position_shift_list[pi][0], position_shift_list[pi][1]]
 
             boudary_simi = F.cosine_similarity(er_input_selected, er_input_shifted, dim=0)
 
-            seg_label_selected = seg_label_one_hot[:, :, position_selected[0], position_selected[1]]
-            seg_label_shifted = seg_label_one_hot[:, :, position_shift_list[pi][0], position_shift_list[pi][1]]
+            seg_label_selected = seg_label_one_hot[position_selected]
+            seg_label_shifted = seg_label_one_hot[position_selected[0], :, position_shift_list[pi][0],
+                                position_shift_list[pi][1]]
             boudary_simi_label = torch.sum(seg_label_selected * seg_label_shifted, dim=0)
 
-            context_loss_pi += F.mse_loss(boudary_simi, boudary_simi_label.float())
+            context_loss_pi = context_loss_pi + F.mse_loss(boudary_simi, boudary_simi_label.float())
 
-        context_loss = context_loss_pi / len(position_shift_list)
-        context_loss = context_loss / cal_mask.sum().item()
+        context_loss += (context_loss_pi / len(position_shift_list))
+
+        context_loss = context_loss / scale_num
 
         if torch.isnan(context_loss):
             return context_loss_final
         else:
             return context_loss
+
     def er_loss4Semantic(self, er_input, seg_label, seg_logit, gt_boundary_seg, conv_seg_weight, conv_seg_bias):
         shown_class = list(seg_label.unique())
         pred_label = seg_logit.max(dim=1)[1]

@@ -33,7 +33,7 @@ fast_cbl = Fast_CBL(num_classes)
 faster_cbl = Faster_CBL(num_classes)
 abl = ABL()
 # loss_dict = {'initcbl':cbl,'cbl':cbl,'fast_cbl':fast_cbl,'faster_cbl':faster_cbl,'abl':abl}
-loss_dict = {'initcbl':cbl,'cbl':cbl,'cbl1':cbl,'cbl2':cbl,'abl':abl}
+loss_dict = {'cbl':cbl,'abl':abl,'fast_cbl':fast_cbl,}
 
 model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
 model = model_zoo['deeplabv3plus']('resnet50', num_classes)

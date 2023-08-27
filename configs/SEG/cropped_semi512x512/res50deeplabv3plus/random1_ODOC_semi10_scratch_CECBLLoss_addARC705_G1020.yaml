@@ -7,7 +7,7 @@ MODEL:
   epochs: 300
   lr: 0.002 # 0.004/16*batch_size
   stage1_ckpt_path: 'experiments/SEG/cropped_sup512x512/random1_ODOC_sup10_DCBDFCLoss/ckpt/epoch=445-val_OD_dice=0.920649.ckpt'
-  CBL_loss: True
+  CBL_loss: [2.0,0.1,0.5]
   loss:
     target: torch.nn.CrossEntropyLoss
 
