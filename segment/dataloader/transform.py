@@ -43,6 +43,29 @@ def hflip(img, mask, p=0.5):
     return img, mask
 
 
+def random_rotate(img, mask, max_rotation_angle=90):
+    rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
+
+    rotated_img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
+    rotated_mask = mask.rotate(rotation_angle, resample=Image.NEAREST, expand=True)
+
+    return rotated_img, rotated_mask
+
+def random_translate(img, mask, max_translate_percent=0.15):
+    img_width, img_height = img.size
+    translate_x = random.uniform(-max_translate_percent, max_translate_percent) * img_width
+    translate_y = random.uniform(-max_translate_percent, max_translate_percent) * img_height
+
+    translated_img = img.transform(
+        img.size, Image.AFFINE, (1, 0, translate_x, 0, 1, translate_y)
+    )
+
+    translated_mask = mask.transform(
+        mask.size, Image.AFFINE, (1, 0, translate_x, 0, 1, translate_y)
+    )
+
+    return translated_img, translated_mask
+
 def normalize(img, mask=None):
     """
     :param img: PIL image

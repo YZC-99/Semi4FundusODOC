@@ -1,6 +1,6 @@
 import torch
 
-from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout,dist_transform
+from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout,dist_transform,random_rotate,random_translate
 import cv2
 import math
 import os
@@ -144,6 +144,8 @@ class SemiDataset(Dataset):
         img, mask = resize(img, mask, self.size)
         # img, mask = crop(img, mask, self.size)
         img, mask = hflip(img, mask, p=0.5)
+        img, mask = random_rotate(img, mask, p=0.5)
+        img, mask = random_translate(img, mask, p=0.5)
 
         # strong augmentation on unlabeled images
         if (self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids) and self.aug :
@@ -157,7 +159,7 @@ class SemiDataset(Dataset):
                     img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
                 img = transforms.RandomGrayscale(p=0.2)(img)
                 img = blur(img, p=0.5)
-                img, mask = cutout(img, mask, p=0.5)
+                # img, mask = cutout(img, mask, p=0.5)
             if self.aug.strong.ColorJitter:
                 img = transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)(img)
             if self.aug.strong.RandomGrayscale:

@@ -85,7 +85,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         monitor="val_OD_dice",
         mode="max",
         save_top_k=1,
-        save_last=False,
+        save_last=True,
         verbose=False,
     )
     on_best_OCmIoU = ModelCheckpoint(
@@ -106,6 +106,16 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
+
+    on_best_sum_scores = ModelCheckpoint(
+        dirpath=setup_callback.ckptdir,
+        filename="{epoch}-{val_OC_dice:.6f}-{val_OD_mIoU:.6f}-{val_OD_dice:.6f}-{val_OC_mIoU:.6f}",
+        monitor="sum_scores",
+        mode="max",
+        save_top_k=1,
+        save_last=True,
+        verbose=False,
+    )
     Profiler = SimpleProfiler(filename="perf_logs")
     if dist.is_initialized() and dist.get_rank() == 0:
         os.makedirs(setup_callback.logdir, exist_ok=True)
@@ -115,7 +125,8 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
-        return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
+        # return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
+        return [on_best_sum_scores,logger_img_callback], logger,Profiler
     return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
 
 
