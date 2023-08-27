@@ -12,7 +12,7 @@ from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
-from segment.losses.cbl import CBL
+from segment.losses.cbl import CBL,Faster_CBL
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -80,7 +80,8 @@ class Base(pl.LightningModule):
             frequency_list = torch.log(cls_num_list)
             self.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list)
         if cfg.MODEL.CBL_loss:
-            self.CBL_loss = CBL(self.num_classes)
+            self.CBL_loss = Faster_CBL(self.num_classes)
+            # self.CBL_loss = CBL(self.num_classes)
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(

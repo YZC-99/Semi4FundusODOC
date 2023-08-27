@@ -286,6 +286,7 @@ if __name__ == '__main__':
     from torch.backends import cudnn
     import os
     import random
+    import time
 
     cudnn.benchmark = False
     cudnn.deterministic = True
@@ -299,16 +300,15 @@ if __name__ == '__main__':
     np.random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
 
-    n, c, h, w = 1, 2, 512, 512
+    n, c, h, w = 4, 2, 512, 512
 
-    mask_path = './cropped_mask.png'
-    gt_array = np.array(Image.open(mask_path))
-    gt = torch.from_numpy(gt_array).long().unsqueeze(0).cuda()
-    # gt[gt > 0] = 1
-    # gt = torch.zeros((n, h, w)).cuda()
-    # gt[0, 5] = 1
-    # gt[0, 50] = 1
+    gt = torch.zeros((n, h, w)).cuda()
+    gt[0, 50] = 1
     logits = torch.randn((n, c, h, w)).cuda()
 
     abl = ABL()
-    print(abl(logits, gt))
+    start_time = time.time()
+    loss = abl(logits, gt)
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(execution_time) #2.4
