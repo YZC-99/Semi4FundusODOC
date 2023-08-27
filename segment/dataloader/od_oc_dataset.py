@@ -144,8 +144,8 @@ class SemiDataset(Dataset):
         img, mask = resize(img, mask, self.size)
         # img, mask = crop(img, mask, self.size)
         img, mask = hflip(img, mask, p=0.5)
-        img, mask = random_rotate(img, mask, p=0.5)
-        img, mask = random_translate(img, mask, p=0.5)
+        img, mask = random_rotate(img, mask)
+        img, mask = random_translate(img, mask)
 
         # strong augmentation on unlabeled images
         if (self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids) and self.aug :
