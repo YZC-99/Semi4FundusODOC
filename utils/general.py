@@ -106,7 +106,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
-    simple_Profiler = SimpleProfiler(dirpath=setup_callback.logdir,filename="perf_logs")
+    Profiler = AdvancedProfiler(filename="perf_logs")
     if dist.is_initialized() and dist.get_rank() == 0:
         os.makedirs(setup_callback.logdir, exist_ok=True)
     logger = TensorBoardLogger(save_dir=str(setup_callback.logdir))
@@ -115,8 +115,8 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
-        return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,simple_Profiler
-    return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,simple_Profiler
+        return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
+    return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
 
 
 def get_config_from_file(config_file: str) -> Dict:
