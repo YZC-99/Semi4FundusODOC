@@ -91,7 +91,7 @@ if __name__ == '__main__':
         model = Base(cfg.MODEL.model,cfg.MODEL.backbone,cfg.MODEL.NUM_CLASSES,cfg,loss_config)
     model.learning_rate = cfg.MODEL.lr / args.num_gpus
     # Setup callbacks
-    callbacks, logger = setup_callbacks(exp_config, config)
+    callbacks, logger,simple_Profiler = setup_callbacks(exp_config, config)
 
 
 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                          strategy="ddp" if args.num_nodes > 1 or args.num_gpus > 1 else None,
                          accumulate_grad_batches=exp_config.update_every,
                          logger=logger,
-                         profiler='simple',
+                         profiler= simple_Profiler,
                          )
 
     # Train

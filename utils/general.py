@@ -11,6 +11,7 @@ from typing import Tuple, List, Dict, ClassVar
 
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint, Callback
+from lightning.pytorch.profilers import SimpleProfiler, AdvancedProfiler
 from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger
 import torch.distributed as dist
 from .callback import *
@@ -105,7 +106,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
-
+    simple_Profiler = SimpleProfiler(dirpath=setup_callback.logdir)
     if dist.is_initialized() and dist.get_rank() == 0:
         os.makedirs(setup_callback.logdir, exist_ok=True)
     logger = TensorBoardLogger(save_dir=str(setup_callback.logdir))
@@ -115,7 +116,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
         return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger
-    return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger
+    return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,simple_Profiler
 
 
 def get_config_from_file(config_file: str) -> Dict:
