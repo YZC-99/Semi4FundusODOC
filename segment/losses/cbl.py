@@ -3,12 +3,11 @@
 """
 MaskFormer criterion.
 """
-from segment.losses.info_nce_dist import InfoNceDist
+from segment.losses.info_nce import info_nce_loss
 import torch
 import torch.nn.functional as F
 from torch import nn
 import numpy as np
-from PIL import Image
 
 class NeighborExtractor5(nn.Module):
     def __init__(self, input_channel):
@@ -436,9 +435,8 @@ class CCBL(nn.Module):
                 0).unsqueeze(-1)
 
             ######### 计算contrast loss #########
-            info_nce = InfoNceDist().to(er_input.device)
             feats_n = torch.cat([pre_class_correct_forward_feat.unsqueeze(1), post_class_correct_forward_feat.unsqueeze(1)], dim=1)
-            nce_loss = info_nce(origin_mse_pixel_feat,class_correct_forward_feat,feats_n)
+            nce_loss = info_nce_loss(origin_mse_pixel_feat,class_correct_forward_feat,feats_n)
             contrast_loss_total = contrast_loss_total + nce_loss
             ####################################
 
