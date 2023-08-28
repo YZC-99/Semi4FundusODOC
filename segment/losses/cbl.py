@@ -382,8 +382,8 @@ class CCBL(nn.Module):
             # er_input 乘当前类的mask，就把所有不是当前类的像素置为0了
             # 获得当前类别的像素点周围邻居的特征，注意：这里的特征对应的像素点不一定预测正确，但取出的全是gt中当前类别周围全部的邻居###
             now_neighbor_feat = same_class_extractor(er_input * now_class_mask.unsqueeze(1))
-            pre_neighbor_feat = same_class_extractor(er_input * pre_class_mask.unsqueeze(1))
-            post_neighbor_feat = same_class_extractor(er_input * post_class_mask.unsqueeze(1))
+            # pre_neighbor_feat = same_class_extractor(er_input * pre_class_mask.unsqueeze(1))
+            # post_neighbor_feat = same_class_extractor(er_input * post_class_mask.unsqueeze(1))
             ###############################################################################
 
             ###############################################################################
@@ -399,8 +399,8 @@ class CCBL(nn.Module):
             ###############################################################################
             # 下面是获得当前类的每个像素邻居中同属当前点的像素个数
             now_class_num_in_neigh = same_class_number_extractor(now_class_mask.unsqueeze(1).float())
-            pre_class_num_in_neigh = same_class_number_extractor(pre_class_mask.unsqueeze(1).float())
-            post_class_num_in_neigh = same_class_number_extractor(post_class_mask.unsqueeze(1).float())
+            # pre_class_num_in_neigh = same_class_number_extractor(pre_class_mask.unsqueeze(1).float())
+            # post_class_num_in_neigh = same_class_number_extractor(post_class_mask.unsqueeze(1).float())
             ###############################################################################
 
             ###############################################################################
@@ -444,9 +444,9 @@ class CCBL(nn.Module):
             #############################这里是我额外加的，为了计算对比学习####################
             # 他们都可以被看做是now的负样本对特征
             # 把他们邻居的特征，和定义上的正样本邻居的特征的均值都算出来
-            pre_class_forward_feat = pre_neighbor_feat / (pre_class_num_in_neigh + 1e-5)
+            # pre_class_forward_feat = pre_neighbor_feat / (pre_class_num_in_neigh + 1e-5)
             pre_class_correct_forward_feat = pre_correct_neighbor_feat / (pre_correct_class_num_in_neigh + 1e-5)
-            post_class_forward_feat = post_neighbor_feat / (post_class_num_in_neigh + 1e-5)
+            # post_class_forward_feat = post_neighbor_feat / (post_class_num_in_neigh + 1e-5)
             post_class_correct_forward_feat = post_correct_neighbor_feat / (post_correct_class_num_in_neigh + 1e-5)
             ############################################################################
 
