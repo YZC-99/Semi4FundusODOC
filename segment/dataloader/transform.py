@@ -78,7 +78,7 @@ def random_rotate(img, mask, p=0.5, max_rotation_angle=90):
         img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
         mask = mask.rotate(rotation_angle, resample=Image.NEAREST, expand=True)
 
-        return img, mask
+    return img, mask
 
 def random_translate(img, mask, p=0.5, max_translate_percent=0.15):
     if random.random() < p:
