@@ -3,6 +3,7 @@
 """
 MaskFormer criterion.
 """
+from segment.losses.info_nce_dist import InfoNceDist
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -361,6 +362,7 @@ class CCBL(nn.Module):
         # er_input = er_input.permute(0,2,3,1)
         neigh_classfication_loss_total = torch.tensor(0.0, device=er_input.device)
         close2neigh_loss_total = torch.tensor(0.0, device=er_input.device)
+        contrast_loss_total = torch.tensor(0.0, device=er_input.device)
         cal_class_num = len(shown_class)
         for i in range(len(shown_class)):
             # 获取当前类别的label掩膜，获取另外两个类别的label mask
@@ -420,16 +422,26 @@ class CCBL(nn.Module):
             class_correct_forward_feat = now_correct_neighbor_feat / (now_correct_class_num_in_neigh + 1e-5)
 
             #############################这里是我额外加的，为了计算对比学习
+            # 他们都可以被看做是now的负样本对特征
             pre_class_forward_feat = pre_neighbor_feat / (pre_class_num_in_neigh + 1e-5)
             pre_class_correct_forward_feat = pre_correct_neighbor_feat / (pre_correct_class_num_in_neigh + 1e-5)
             post_class_forward_feat = post_neighbor_feat / (post_class_num_in_neigh + 1e-5)
             post_class_correct_forward_feat = post_correct_neighbor_feat / (post_correct_class_num_in_neigh + 1e-5)
             ####################################
 
+
             # 选择出参与erloss计算的像素的原始特征
             # origin_pixel_feat = er_input.permute(0,2,3,1)[pixel_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
             origin_mse_pixel_feat = er_input.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1, 0).unsqueeze(
                 0).unsqueeze(-1)
+
+            ######### 计算contrast loss #########
+            info_nce = InfoNceDist().to(er_input.device)
+            feats_n = torch.cat([pre_class_correct_forward_feat.unsqueeze(1), post_class_correct_forward_feat.unsqueeze(1)], dim=1)
+            nce_loss = info_nce(origin_mse_pixel_feat,class_correct_forward_feat,feats_n)
+            contrast_loss_total = contrast_loss_total + nce_loss
+            ####################################
+
             # 选择出参与loss计算的像素的邻居平均特征
             neigh_pixel_feat = class_forward_feat.permute(0, 2, 3, 1)[pixel_cal_mask].permute(1, 0).unsqueeze(
                 0).unsqueeze(-1)
@@ -444,20 +456,23 @@ class CCBL(nn.Module):
                                                    weight=conv_seg_weight.to(neigh_pixel_feat.dtype).detach(),
                                                    bias=conv_seg_bias.to(neigh_pixel_feat.dtype).detach())
             # 为邻居平均特征的分类loss产生GT，即当前类中像素的邻居（因为都是同属当前类的邻居）的标签也是当前类
-            # 因此乘shown_class[i]
+            # 因此乘shown_class[i]，为什么要使用torch.ones呢?
+            # 答：获取到一个(1,d,1)的且全是1tensor，然后乘以当前类别，就得到标签
             gt_for_neigh_output = shown_class[i] * torch.ones((1, neigh_pixel_feat_prediction.shape[2], 1)).to(
                 er_input.device).long()
             # 对应原论文公式（11）
             # neigh_pixel_feat_prediction:float32   gt_for_neigh_output:float32
-
+            # 刚才得到的gt就用来监督neigh_pixel_feat_prediction，这里的neigh_pixel_feat_prediction其实就是logits
             neigh_classfication_loss = F.cross_entropy(neigh_pixel_feat_prediction, gt_for_neigh_output.long())
             # 当前点的像素 要向周围同类像素的平均特征靠近
             # close2neigh_loss = F.mse_loss(origin_pixel_feat, neigh_pixel_feat.detach())
+            # 获得邻居中当前类别且类别是正确的特征
             neigh_mse_pixel_feat_prediction = F.conv2d(neigh_mse_pixel_feat,
                                                        weight=conv_seg_weight.to(neigh_pixel_feat.dtype).detach(),
                                                        bias=conv_seg_bias.to(neigh_pixel_feat.dtype).detach())
             gt_for_neigh_mse_output = shown_class[i] * torch.ones((1, neigh_mse_pixel_feat_prediction.shape[2], 1)).to(
                 er_input.device).long()
+            # 这里为什么要再算一次ce呢？估计是他们没有重叠的部分，所以上一次的计算不涉及这一次的
             neigh_classfication_loss = neigh_classfication_loss + F.cross_entropy(neigh_mse_pixel_feat_prediction,
                                                                                   gt_for_neigh_mse_output.long())
 
@@ -485,7 +500,10 @@ class CCBL(nn.Module):
         neigh_classfication_loss_total = neigh_classfication_loss_total / cal_class_num
         # 对应原论文公式 （10）
         close2neigh_loss_total = close2neigh_loss_total / cal_class_num
-        return neigh_classfication_loss_total, close2neigh_loss_total
+
+        # 我的新对比损失：
+        contrast_loss_total = contrast_loss_total / cal_class_num
+        return neigh_classfication_loss_total, close2neigh_loss_total,contrast_loss_total
 
     def gt2boundary(self, gt, ignore_label=-1,boundary_width = 5):  # gt NHW
         gt_ud = gt[:, boundary_width:, :] - gt[:, :-boundary_width, :]  # NHW
@@ -523,15 +541,10 @@ class CCBL(nn.Module):
             conv_seg_weight = conv_seg_weight,
             conv_seg_bias = conv_seg_bias
         )
-        loss_A2C_SCE,loss_A2C_pair = er_loss[0],er_loss[1]
-        if self.weights[2] == 0.0:
-            return self.weights[0] * (self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
-        else:
-            loss_A2PN = self.context_loss(
-                outputs['out_fuse'],
-                seg_label=gt_sem,
-                gt_boundary_seg=gt_sem_boundary)
-            return self.weights[0] * (self.weights[2] * loss_A2PN + self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
+        loss_A2C_SCE,loss_A2C_pair,contrast_loss = er_loss[0],er_loss[1],er_loss[2]
+
+
+        return self.weights[0] * (self.weights[2] * contrast_loss + self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
 
 
 
