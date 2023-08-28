@@ -1,8 +1,8 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 500
-  lr: 0.0005 # 0.004/16*batch_size
+  epochs: 200
+  lr: 0.01 # 0.004/16*batch_size
   crop_size: 512
   backbone: 'resnet50'
   model: 'deeplabv3plus'
