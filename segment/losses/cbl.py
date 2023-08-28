@@ -307,7 +307,7 @@ class CBL(nn.Module):
 
 class CCBL(nn.Module):
     def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5]):
-        super(CBL,self).__init__()
+        super(CCBL,self).__init__()
 
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
