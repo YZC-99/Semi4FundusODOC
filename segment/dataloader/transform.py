@@ -42,7 +42,7 @@ def hflip(img, mask, p=0.5):
         mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
     return img, mask
 
-def add_salt_pepper_noise(img,mask,noise_level=0.02, p=0.5):
+def add_salt_pepper_noise(img,mask, p=0.5,noise_level=0.02):
     if random.random() < p:
         img_array = np.array(img)
 
@@ -60,7 +60,7 @@ def add_salt_pepper_noise(img,mask,noise_level=0.02, p=0.5):
         img = Image.fromarray(img_array)
     return img,mask
 
-def random_scale(img, mask, min_scale=0.8, max_scale=1.2, p=0.5):
+def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
     if random.random() < p:
         scale_factor = random.uniform(min_scale, max_scale)
         new_width = int(img.width * scale_factor)
@@ -71,7 +71,7 @@ def random_scale(img, mask, min_scale=0.8, max_scale=1.2, p=0.5):
 
     return img, mask
 
-def random_rotate(img, mask, max_rotation_angle=90, p=0.5):
+def random_rotate(img, mask, p=0.5, max_rotation_angle=90):
     if random.random() < p:
         rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
 
@@ -80,7 +80,7 @@ def random_rotate(img, mask, max_rotation_angle=90, p=0.5):
 
         return img, mask
 
-def random_translate(img, mask, max_translate_percent=0.15, p=0.5):
+def random_translate(img, mask, p=0.5, max_translate_percent=0.15):
     if random.random() < p:
         img_width, img_height = img.size
         translate_x = random.uniform(-max_translate_percent, max_translate_percent) * img_width
