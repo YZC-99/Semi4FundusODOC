@@ -493,7 +493,7 @@ class CCBL(nn.Module):
             neigh_classfication_loss_total = neigh_classfication_loss_total + neigh_classfication_loss
             close2neigh_loss_total = close2neigh_loss_total + close2neigh_loss
         if cal_class_num == 0:
-            return neigh_classfication_loss_total, close2neigh_loss_total
+            return neigh_classfication_loss_total, close2neigh_loss_total,contrast_loss_total
         # 对应原论文公式（11）
         neigh_classfication_loss_total = neigh_classfication_loss_total / cal_class_num
         # 对应原论文公式 （10）
