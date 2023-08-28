@@ -144,10 +144,10 @@ class SemiDataset(Dataset):
         # basic augmentation on all training images
         # img, mask = crop(img, mask, self.size)
         img, mask = hflip(img, mask, p=0.5)
-        img, mask = random_rotate(img, mask, p=0.5)
-        img, mask = random_translate(img, mask, p=0.5)
-        img, mask = add_salt_pepper_noise(img, mask, p=0.5)
-        img, mask = random_scale(img, mask, p=0.5)
+        img, mask = random_rotate(img, mask,max_rotation_angle=90, p=0.5)
+        img, mask = random_translate(img, mask,max_translate_percent=0.15,  p=0.5)
+        img, mask = add_salt_pepper_noise(img, mask,noise_level=0.02, p=0.5)
+        img, mask = random_scale(img, mask,max_scale=1.2, p=0.5)
 
 
         img, mask = resize(img, mask, self.size)
