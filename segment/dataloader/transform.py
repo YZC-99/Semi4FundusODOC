@@ -42,56 +42,59 @@ def hflip(img, mask, p=0.5):
         mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
     return img, mask
 
-def add_salt_pepper_noise(img,mask,noise_level=0.02):
-    img_array = np.array(img)
+def add_salt_pepper_noise(img,mask,noise_level=0.02, p=0.5):
+    if random.random() < p:
+        img_array = np.array(img)
 
-    h, w, _ = img_array.shape
-    num_pixels = int(h * w * noise_level)
+        h, w, _ = img_array.shape
+        num_pixels = int(h * w * noise_level)
 
-    # Add salt noise
-    salt_coords = [np.random.randint(0, i - 1, num_pixels) for i in (h, w)]
-    img_array[salt_coords[0], salt_coords[1], :] = 255
+        # Add salt noise
+        salt_coords = [np.random.randint(0, i - 1, num_pixels) for i in (h, w)]
+        img_array[salt_coords[0], salt_coords[1], :] = 255
 
-    # Add pepper noise
-    pepper_coords = [np.random.randint(0, i - 1, num_pixels) for i in (h, w)]
-    img_array[pepper_coords[0], pepper_coords[1], :] = 0
+        # Add pepper noise
+        pepper_coords = [np.random.randint(0, i - 1, num_pixels) for i in (h, w)]
+        img_array[pepper_coords[0], pepper_coords[1], :] = 0
 
-    noisy_img = Image.fromarray(img_array)
+        img = Image.fromarray(img_array)
+    return img,mask
 
-    return noisy_img,mask
+def random_scale(img, mask, min_scale=0.8, max_scale=1.2, p=0.5):
+    if random.random() < p:
+        scale_factor = random.uniform(min_scale, max_scale)
+        new_width = int(img.width * scale_factor)
+        new_height = int(img.height * scale_factor)
 
-def random_scale(img, mask, min_scale=0.8, max_scale=1.2):
-    scale_factor = random.uniform(min_scale, max_scale)
-    new_width = int(img.width * scale_factor)
-    new_height = int(img.height * scale_factor)
+        img = img.resize((new_width, new_height), Image.BILINEAR)
+        mask = mask.resize((new_width, new_height), Image.NEAREST)
 
-    scaled_img = img.resize((new_width, new_height), Image.BILINEAR)
-    scaled_mask = mask.resize((new_width, new_height), Image.NEAREST)
+    return img, mask
 
-    return scaled_img, scaled_mask
+def random_rotate(img, mask, max_rotation_angle=90, p=0.5):
+    if random.random() < p:
+        rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
 
-def random_rotate(img, mask, max_rotation_angle=90):
-    rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
+        img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
+        mask = mask.rotate(rotation_angle, resample=Image.NEAREST, expand=True)
 
-    rotated_img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
-    rotated_mask = mask.rotate(rotation_angle, resample=Image.NEAREST, expand=True)
+        return img, mask
 
-    return rotated_img, rotated_mask
+def random_translate(img, mask, max_translate_percent=0.15, p=0.5):
+    if random.random() < p:
+        img_width, img_height = img.size
+        translate_x = random.uniform(-max_translate_percent, max_translate_percent) * img_width
+        translate_y = random.uniform(-max_translate_percent, max_translate_percent) * img_height
 
-def random_translate(img, mask, max_translate_percent=0.15):
-    img_width, img_height = img.size
-    translate_x = random.uniform(-max_translate_percent, max_translate_percent) * img_width
-    translate_y = random.uniform(-max_translate_percent, max_translate_percent) * img_height
+        img = img.transform(
+            img.size, Image.AFFINE, (1, 0, translate_x, 0, 1, translate_y)
+        )
 
-    translated_img = img.transform(
-        img.size, Image.AFFINE, (1, 0, translate_x, 0, 1, translate_y)
-    )
+        mask = mask.transform(
+            mask.size, Image.AFFINE, (1, 0, translate_x, 0, 1, translate_y)
+        )
 
-    translated_mask = mask.transform(
-        mask.size, Image.AFFINE, (1, 0, translate_x, 0, 1, translate_y)
-    )
-
-    return translated_img, translated_mask
+    return img, mask
 
 def normalize(img, mask=None):
     """
