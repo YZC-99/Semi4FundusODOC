@@ -12,7 +12,7 @@ from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
-from segment.losses.cbl import CBL,CCBL
+from segment.losses.cbl import CBL,CCBL,CEpair_CBL
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -84,6 +84,8 @@ class Base(pl.LightningModule):
             self.CBL_loss = CBL(self.num_classes,cfg.MODEL.CBL_loss)
         if cfg.MODEL.CCBL_loss is not None:
             self.CCBL_loss = CCBL(self.num_classes,cfg.MODEL.CCBL_loss)
+        if cfg.MODEL.Pairwise_CBL_loss is not None:
+            self.Pairwise_CBL_loss = CEpair_CBL(self.num_classes,cfg.MODEL.Pairwise_CBL_loss)
 
         if cfg.MODEL.logitsTransform:
             self.confidence_layer = nn.Sequential(
@@ -304,6 +306,8 @@ class Base(pl.LightningModule):
             loss = loss + self.CBL_loss(output,y,self.model.classifier.weight,self.model.classifier.bias)
         if self.cfg.MODEL.CCBL_loss:
             loss = loss + self.CCBL_loss(output, y, self.model.classifier.weight, self.model.classifier.bias)
+        if self.cfg.MODEL.Pairwise_CBL_loss:
+            loss = loss + self.Pairwise_CBL_loss(output, y, self.model.classifier.weight, self.model.classifier.bias)
         return loss
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:

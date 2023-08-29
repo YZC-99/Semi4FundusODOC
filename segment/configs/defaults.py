@@ -18,6 +18,7 @@ _C.MODEL.FC_loss = False
 _C.MODEL.ABL_loss = False
 _C.MODEL.CBL_loss = None
 _C.MODEL.CCBL_loss = None
+_C.MODEL.Pairwise_CBL_loss = None
 _C.MODEL.LOVASZ_loss = False
 _C.MODEL.Teacher_Student = False
 _C.MODEL.Teacher_pretrined = True
