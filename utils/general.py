@@ -73,7 +73,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     logger = TensorBoardLogger(save_dir=str(setup_callback.logdir))
 
 
-    ckpt_path = logger.log_dir / 'ckpt'
+    ckpt_path = os.path.join(logger.log_dir,'ckpt')
     on_best_ODmIoU = ModelCheckpoint(
         dirpath = ckpt_path,
         filename="{epoch}-{val_OD_mIoU:.6f}",
