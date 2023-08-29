@@ -83,7 +83,7 @@ class Base(pl.LightningModule):
             # self.CBL_loss = Faster_CBL(self.num_classes)
             self.CBL_loss = CBL(self.num_classes,cfg.MODEL.CBL_loss)
         if cfg.MODEL.ContrastCenterCBL_loss is not None:
-            self.ContrastCenterCBL_loss = ContrastCenterCBL(self.num_classes,cfg.MODEL.CCBL_loss)
+            self.ContrastCenterCBL_loss = ContrastCenterCBL(self.num_classes,cfg.MODEL.ContrastCenterCBL_loss)
         if cfg.MODEL.Pairwise_CBL_loss is not None:
             self.Pairwise_CBL_loss = CEpair_CBL(self.num_classes,cfg.MODEL.Pairwise_CBL_loss)
 
