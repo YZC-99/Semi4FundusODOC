@@ -70,7 +70,10 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         os.makedirs(basedir, exist_ok=True)
 
     setup_callback = SetupCallback(config, exp_config, basedir)
-    ckpt_path = setup_callback.ckptdir
+    logger = TensorBoardLogger(save_dir=str(setup_callback.logdir))
+
+
+    ckpt_path = logger.log_dir / 'ckpt'
     on_best_ODmIoU = ModelCheckpoint(
         dirpath = ckpt_path,
         filename="{epoch}-{val_OD_mIoU:.6f}",
@@ -112,7 +115,6 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     Profiler = SimpleProfiler(filename="perf_logs")
     if dist.is_initialized() and dist.get_rank() == 0:
         os.makedirs(setup_callback.logdir, exist_ok=True)
-    logger = TensorBoardLogger(save_dir=str(setup_callback.logdir))
     # csv_logger = CSVLogger(str(setup_callback.logdir), 'results.csv')
     logger_img_callback = ImageLogger(exp_config.batch_frequency, exp_config.max_images)
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
