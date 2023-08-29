@@ -9,6 +9,7 @@ from scipy.ndimage import distance_transform_edt as distance
 # can find here: https://github.com/CoinCheung/pytorch-loss/blob/af876e43218694dc8599cc4711d9a5c5e043b1b2/label_smooth.py
 from segment.losses.label_smooth import LabelSmoothSoftmaxCEV1 as LSSCE
 from segment.losses.korniadt import distance_transform
+from segment.losses.korniadt.distance_transform import DistanceTransform
 from torchvision import transforms
 from functools import partial
 from operator import itemgetter
@@ -87,11 +88,18 @@ class ABL(nn.Module):
         dtm(x) = 0; x in segmentation boundary
                  inf|x-y|; x in segmentation
         """
+        dist_trans = DistanceTransform(kernel_size = 3,h = 0.35).to(img_gt.device)
+        # if len(out_shape) == 5:  # B,C,H,W,D
+        #     fg_dtm = torch.cat([distance_transform(1 - img_gt[b].float(), kernel_size=kernel_size).unsqueeze(0) \
+        #                         for b in range(out_shape[0])], axis=0)
+        # else:
+        #     fg_dtm = distance_transform(1 - img_gt.float(), kernel_size=kernel_size)
+
         if len(out_shape) == 5:  # B,C,H,W,D
-            fg_dtm = torch.cat([distance_transform(1 - img_gt[b].float(), kernel_size=kernel_size).unsqueeze(0) \
+            fg_dtm = torch.cat([dist_trans(1 - img_gt[b].float()).unsqueeze(0) \
                                 for b in range(out_shape[0])], axis=0)
         else:
-            fg_dtm = distance_transform(1 - img_gt.float(), kernel_size=kernel_size)
+            fg_dtm = dist_trans(1 - img_gt.float())
 
         fg_dtm[~torch.isfinite(fg_dtm)] = kernel_size
         return fg_dtm
