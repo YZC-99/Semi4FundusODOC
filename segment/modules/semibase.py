@@ -12,7 +12,7 @@ from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
-from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL
+from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL,ContrastPixelCBL
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
@@ -84,6 +84,8 @@ class Base(pl.LightningModule):
             self.CBL_loss = CBL(self.num_classes,cfg.MODEL.CBL_loss)
         if cfg.MODEL.ContrastCenterCBL_loss is not None:
             self.ContrastCenterCBL_loss = ContrastCenterCBL(self.num_classes,cfg.MODEL.ContrastCenterCBL_loss)
+        if cfg.MODEL.ContrastPixelCBL_loss is not None:
+            self.ContrastPixelCBL_loss = ContrastPixelCBL(self.num_classes, cfg.MODEL.ContrastPixelCBL_loss)
         if cfg.MODEL.Pairwise_CBL_loss is not None:
             self.Pairwise_CBL_loss = CEpair_CBL(self.num_classes,cfg.MODEL.Pairwise_CBL_loss)
 
@@ -153,6 +155,36 @@ class Base(pl.LightningModule):
             logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
             out['out'] = logits
         return out
+
+    def compute_loss(self,output,batch):
+        y = batch['mask']
+        backbone_feat, logits = output['backbone_features'], output['out']
+        out_soft = nn.functional.softmax(logits, dim=1)
+        ce_loss = self.loss(logits, y)
+        loss = ce_loss
+        if self.cfg.MODEL.DC_loss:
+            loss = ce_loss + self.Dice_loss(out_soft, y)
+        if self.cfg.MODEL.BD_loss:
+            dist = batch['boundary']
+            loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft, dist)
+        if self.cfg.MODEL.FC_loss:
+            loss = loss + self.FC_loss(logits, y)
+        if self.cfg.MODEL.ABL_loss:
+            if self.ABL_loss(logits, y) is not None:
+                loss = loss + self.ABL_loss(logits, y)
+            if self.cfg.MODEL.LOVASZ_loss:
+                loss = loss + lovasz_softmax(out_soft, y, ignore=255)
+        if self.cfg.MODEL.CBL_loss:
+            loss = loss + self.CBL_loss(output,y,self.model.classifier.weight,self.model.classifier.bias)
+        if self.cfg.MODEL.ContrastCenterCBL_loss:
+            loss = loss + self.ContrastCenterCBL_loss(output, y, self.model.classifier.weight, self.model.classifier.bias)
+        if self.cfg.MODEL.ContrastPixelCBL_loss:
+            loss = loss + self.ContrastPixelCBL_loss(output, y, self.model.classifier.weight,
+                                                      self.model.classifier.bias)
+        if self.cfg.MODEL.Pairwise_CBL_loss:
+            loss = loss + self.Pairwise_CBL_loss(output, y, self.model.classifier.weight, self.model.classifier.bias)
+        return loss
+
 
     def gray2rgb(self,y,predict):
         # Convert labels and predictions to color images.
@@ -284,31 +316,6 @@ class Base(pl.LightningModule):
         self.training_dice_score = torchmetrics.Dice(num_classes=self.cfg.MODEL.NUM_CLASSES,average='macro').to(self.device)
         self.training_jaccard = torchmetrics.JaccardIndex(num_classes=self.cfg.MODEL.NUM_CLASSES,task='binary' if self.cfg.MODEL.NUM_CLASSES ==  2 else 'multiclass').to(self.device)
 
-    def compute_loss(self,output,batch):
-        y = batch['mask']
-        backbone_feat, logits = output['backbone_features'], output['out']
-        out_soft = nn.functional.softmax(logits, dim=1)
-        ce_loss = self.loss(logits, y)
-        loss = ce_loss
-        if self.cfg.MODEL.DC_loss:
-            loss = ce_loss + self.Dice_loss(out_soft, y)
-        if self.cfg.MODEL.BD_loss:
-            dist = batch['boundary']
-            loss = 0.5 * loss + 0.5 * self.BD_loss(out_soft, dist)
-        if self.cfg.MODEL.FC_loss:
-            loss = loss + self.FC_loss(logits, y)
-        if self.cfg.MODEL.ABL_loss:
-            if self.ABL_loss(logits, y) is not None:
-                loss = loss + self.ABL_loss(logits, y)
-            if self.cfg.MODEL.LOVASZ_loss:
-                loss = loss + lovasz_softmax(out_soft, y, ignore=255)
-        if self.cfg.MODEL.CBL_loss:
-            loss = loss + self.CBL_loss(output,y,self.model.classifier.weight,self.model.classifier.bias)
-        if self.cfg.MODEL.ContrastCenterCBL_loss:
-            loss = loss + self.ContrastCenterCBL_loss(output, y, self.model.classifier.weight, self.model.classifier.bias)
-        if self.cfg.MODEL.Pairwise_CBL_loss:
-            loss = loss + self.Pairwise_CBL_loss(output, y, self.model.classifier.weight, self.model.classifier.bias)
-        return loss
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
         if self.cfg.MODEL.uda:

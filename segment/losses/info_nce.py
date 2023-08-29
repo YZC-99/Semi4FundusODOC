@@ -21,6 +21,8 @@ def info_nce_loss(now_feat,p_feat,n_feats):
 
     return nll
 
+# def info_nce_loss(now_feat,p_feat,n_feats):
+
 
 if __name__ == '__main__':
     now_feat = torch.randn(4,512,64,64)

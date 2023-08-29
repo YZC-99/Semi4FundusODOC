@@ -602,6 +602,30 @@ class ContrastPixelCBL(nn.Module):
         self.same_class_number_extractor_weight = base_weight
         self.same_class_number_extractor_weight = torch.FloatTensor(self.same_class_number_extractor_weight)
 
+    def get_neigh(self,input,kernel_size = 3,pad = 1):
+        b, c, h, w = input.size()
+        input = torch.arange(1, b * c * h * w + 1).reshape(b, c, h, w).float()
+        input_d = input.permute(0, 2, 3, 1)
+        image_d = torch.nn.functional.pad(input_d, (0, 0, pad, pad, pad, pad, 0, 0), mode='constant')  # N(H+2)(W+2)C
+        for i in range(pad):
+            j = i + 1
+            image_d[:, 0 + i, :, :] = image_d[:, 1 + j, :, :]  # N(H+2)(W+2)C
+            image_d[:, -1 - i, :, :] = image_d[:, -2 - j, :, :]  # N(H+2)(W+2)C
+            image_d[:, :, 0 + i, :] = image_d[:, :, 1 + j, :]  # N(H+2)(W+2)C
+            image_d[:, :, -1 - i, :] = image_d[:, :, -2 - j, :]  # N(H+2)(W+2)C
+
+        image_d = image_d.permute(0, 3, 1, 2)
+        unfolded = F.unfold(image_d, kernel_size=kernel_size)  # (b,c*l,h*w) l是滑动步数
+        unfolded_re = unfolded.view(b, c, -1, h, w)  # (b,c,l,h,w)
+        unfolded_re = unfolded_re.permute(2, 0, 1, 3, 4)  # (l,b,c,h,w)
+        # 因为不需要和自己算，所以需要将自己置零
+        unfolded_re[kernel_size * kernel_size // 2, ...] = 0
+        # 使用input_image 与 unfolded_re相乘就能得到它自己和邻居的乘积求和，当然，乘积只是举例
+        # input_image(b,c,h,w)   unfolded_re(l,b,c,h,w)
+        # 希望输出为(b,c,h,w)
+        # result = torch.einsum('bchw,lbchw->bchw',[input,unfolded_re])
+        return unfolded_re
+
     def er_loss4Semantic(self, er_input, seg_label, seg_logit, gt_boundary_seg,conv_seg_weight,conv_seg_bias):
         shown_class = list(seg_label.unique())
         pred_label = seg_logit.max(dim=1)[1]
@@ -759,12 +783,18 @@ class ContrastPixelCBL(nn.Module):
             # feat_p = neigh_mse_pixel_feat
             # 正样本是当前类别邻居的特征均值，这些均值后续不一定会被分类正确
             feat_p = neigh_pixel_feat
-            # 负样本是其他类别的平均特征，这里需要修改的点：
-            # 负样本不应该是一个均值，而是一个个的单独样本，且这些样本应当满足以下条件
-            # 1.不属于当前类别
+            # 负样本是其他类别的的特征，邻居全给弄过来了
+            now_feat = er_input * now_class_mask.unsqueeze(1)#:仅获得当前类别的特征
+            pre_feat = er_input * pre_class_mask.unsqueeze(1)#:仅获得前一类别的特征
+            post_feat = er_input * post_class_mask.unsqueeze(1)#:仅获得后一类别的特征
 
-            feats_n = torch.cat(
-                [pre_neigh_mse_pixel_feat.unsqueeze(1), post_neigh_mse_pixel_feat.unsqueeze(1)], dim=1)
+            now_and_pre_feat = now_feat + pre_feat #:获得当前特征和之前一个类别的特征
+            now_and_post_feat = now_feat + post_feat #:获得当前特征和后一个类别的特征
+
+            pre_feats_neigh_for_now = self.get_neigh(now_and_pre_feat,kernel_size=5,pad = 2)
+            # 返回的就是当前特征像素点周围的post 类别的特征，是负样本 lbchw
+            post_feats_neigh_for_now = self.get_neigh(now_and_post_feat,kernel_size=5,pad = 2)
+            feats_n = torch.cat([pre_feats_neigh_for_now, post_feats_neigh_for_now], dim=0) #(L,B,C,H,W)
 
             nce_loss = info_nce_loss(origin_mse_pixel_feat,feat_p,feats_n)
             contrast_loss_total = contrast_loss_total + nce_loss
