@@ -33,8 +33,9 @@ class SetupCallback(Callback):
     def on_fit_start(self, trainer: pl.trainer.Trainer, pl_module: pl.LightningModule) -> None:
         if trainer.global_rank == 0:
             # Create logdirs and save configs
+            self.ckptdir = pl_module.logger.log_dir / 'ckpt'
             os.makedirs(self.logdir, exist_ok=True)
-            # os.makedirs(self.ckptdir, exist_ok=True)
+            os.makedirs(self.ckptdir, exist_ok=True)
             os.makedirs(self.prototypes, exist_ok=True)
             os.makedirs(self.pseudo, exist_ok=True)
 

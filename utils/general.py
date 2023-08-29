@@ -70,7 +70,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         os.makedirs(basedir, exist_ok=True)
 
     setup_callback = SetupCallback(config, exp_config, basedir)
-    ckpt_path = os.path.join(setup_callback.logger.log_dir,'ckpt')
+    ckpt_path = setup_callback.ckptdir
     on_best_ODmIoU = ModelCheckpoint(
         dirpath = ckpt_path,
         filename="{epoch}-{val_OD_mIoU:.6f}",
