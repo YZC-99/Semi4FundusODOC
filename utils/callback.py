@@ -133,8 +133,7 @@ class ImageLogger(Callback):
                 images[k] = images[k][:N].detach().cpu()
                 if self.clamp:
                     images[k] = images[k].clamp(0, 1)
-            # self.log_local(pl_module.logger.save_dir, split, images,
-            #                pl_module.global_step, pl_module.current_epoch, batch_idx)
+
             self.log_local(pl_module.logger.log_dir, split, images,
                            pl_module.global_step, pl_module.current_epoch, batch_idx)
 
