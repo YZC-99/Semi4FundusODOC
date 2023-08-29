@@ -24,7 +24,7 @@ class SetupCallback(Callback):
     def __init__(self, config: OmegaConf, exp_config: OmegaConf, basedir: Path, logdir: str = "logs", ckptdir:str = "ckpt") -> None:
         super().__init__()
         self.logdir = basedir / logdir
-        self.ckptdir = basedir / ckptdir
+        # self.ckptdir = basedir / ckptdir
         self.prototypes = basedir / 'prototypes'
         self.pseudo = basedir / 'pseudo_masks'
         self.config = config
@@ -34,7 +34,7 @@ class SetupCallback(Callback):
         if trainer.global_rank == 0:
             # Create logdirs and save configs
             os.makedirs(self.logdir, exist_ok=True)
-            os.makedirs(self.ckptdir, exist_ok=True)
+            # os.makedirs(self.ckptdir, exist_ok=True)
             os.makedirs(self.prototypes, exist_ok=True)
             os.makedirs(self.pseudo, exist_ok=True)
 
@@ -133,8 +133,9 @@ class ImageLogger(Callback):
                 images[k] = images[k][:N].detach().cpu()
                 if self.clamp:
                     images[k] = images[k].clamp(0, 1)
-
-            self.log_local(pl_module.logger.save_dir, split, images,
+            # self.log_local(pl_module.logger.save_dir, split, images,
+            #                pl_module.global_step, pl_module.current_epoch, batch_idx)
+            self.log_local(pl_module.logger.log_dir, split, images,
                            pl_module.global_step, pl_module.current_epoch, batch_idx)
 
             logger_log_images = self.logger_log_images.get(logger, lambda *args, **kwargs: None)
