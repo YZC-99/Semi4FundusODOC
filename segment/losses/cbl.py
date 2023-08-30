@@ -1062,7 +1062,7 @@ class ContrastPixelCBL(nn.Module):
             whole_neigh_feat = self.get_neigh(er_input, kernel_size=5, pad=2).to(er_input.device) # (L,B,C,H,W)
             # 可以根据now_class_mask获得当前类别的坐标，从而直接取出它们的邻居和本身 (B,H,W)
             # whole_neigh_feat.permute(1,3,4,0,2)  (B,H,W,L,C)
-            # ~.permute(1, 0) (num,L,C) 这里的num就是当前在boundary的类别邻居以及它本身在内的特征,但不知道哪些是正样本，哪些是负样本
+            # .permute(1, 0) (num,L,C) 这里的num就是当前在boundary的类别邻居以及它本身在内的特征,但不知道哪些是正样本，哪些是负样本
             # 可以对该特征的gt也做同样的操作,这样就能拿到gt的unfold了,
             now_class_and_neigh_feat = whole_neigh_feat.permute(1,3,4,0,2)[pixel_cal_mask] # (num,L,C)
             now_class_and_neigh_label = whole_neigh_label.permute(1,3,4,0,2)[pixel_cal_mask] # (num,L,C)
@@ -1094,13 +1094,6 @@ class ContrastPixelCBL(nn.Module):
 
             #这里获取的特征不是全尺寸的
             # 负样本是其他类别的的特征，邻居全给弄过来了
-            # now_feat = er_input * now_class_mask.unsqueeze(1)#:仅获得当前类别的特征
-            # pre_feat = er_input * pre_class_mask.unsqueeze(1)#:仅获得前一类别的特征
-            # post_feat = er_input * post_class_mask.unsqueeze(1)#:仅获得后一类别的特征
-            #
-            # now_and_pre_feat = now_feat + pre_feat #:获得当前特征和之前一个类别的特征
-            # now_and_post_feat = now_feat + post_feat #:获得当前特征和后一个类别的特征
-
 
             # 邻居平均特征也要能够正确分类，且用同样的分类器才行
             # 这个地方可以试试不detach掉的
