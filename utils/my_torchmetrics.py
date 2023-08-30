@@ -5,6 +5,20 @@ import torch.nn.functional as F
 import torchmetrics
 
 
+def gt2boundary(gt, ignore_label=-1):  # gt NHW
+    gt_ud = gt[:, 1:, :] - gt[:, :-1, :]  # NHW
+    gt_lr = gt[:, :, 1:] - gt[:, :, :-1]
+    gt_ud = torch.nn.functional.pad(gt_ud, [0, 0, 0, 1, 0, 0], mode='constant', value=0) != 0
+    gt_lr = torch.nn.functional.pad(gt_lr, [0, 1, 0, 0, 0, 0], mode='constant', value=0) != 0
+    gt_combine = gt_lr + gt_ud
+    del gt_lr
+    del gt_ud
+
+    # set 'ignore area' to all boundary
+    gt_combine += (gt == ignore_label)
+
+    return gt_combine > 0
+
 def mask_to_boundary(mask, boundary_size=3, dilation_ratio=0.02):
     h, w = mask.shape
     img_diag = np.sqrt(h ** 2 + w ** 2)

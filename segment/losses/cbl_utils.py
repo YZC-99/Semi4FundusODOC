@@ -24,3 +24,17 @@ def get_neigh(self, input, kernel_size=3, pad=1):
     # 希望输出为(b,c,h,w)
     # result = torch.einsum('bchw,lbchw->bchw',[input,unfolded_re])
     return unfolded_re
+
+def gt2boundary(gt, ignore_label=-1,boundary_width = 5):  # gt NHW
+    gt_ud = gt[:, boundary_width:, :] - gt[:, :-boundary_width, :]  # NHW
+    gt_lr = gt[:, :, boundary_width:] - gt[:, :, :-boundary_width]
+    gt_ud = torch.nn.functional.pad(gt_ud, [0, 0, 0, boundary_width, 0, 0], mode='constant', value=0) != 0
+    gt_lr = torch.nn.functional.pad(gt_lr, [0, boundary_width, 0, 0, 0, 0], mode='constant', value=0) != 0
+    gt_combine = gt_lr + gt_ud
+    del gt_lr
+    del gt_ud
+
+    # set 'ignore area' to all boundary
+    gt_combine += (gt == ignore_label)
+
+    return gt_combine > 0
