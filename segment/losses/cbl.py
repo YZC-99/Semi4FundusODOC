@@ -604,7 +604,7 @@ class ContrastPixelCBL(nn.Module):
 
     def get_neigh(self,input,kernel_size = 3,pad = 1):
         b, c, h, w = input.size()
-        input = torch.arange(1, b * c * h * w + 1).reshape(b, c, h, w).float()
+        input = input.reshape(b, c, h, w).float()
         input_d = input.permute(0, 2, 3, 1)
         image_d = torch.nn.functional.pad(input_d, (0, 0, pad, pad, pad, pad, 0, 0), mode='constant')  # N(H+2)(W+2)C
         for i in range(pad):
@@ -619,11 +619,13 @@ class ContrastPixelCBL(nn.Module):
         unfolded_re = unfolded.view(b, c, -1, h, w)  # (b,c,l,h,w)
         unfolded_re = unfolded_re.permute(2, 0, 1, 3, 4)  # (l,b,c,h,w)
         # 因为不需要和自己算，所以需要将自己置零
-        unfolded_re[kernel_size * kernel_size // 2, ...] = 0
+        # unfolded_re[kernel_size * kernel_size // 2, ...] = 0
         # 使用input_image 与 unfolded_re相乘就能得到它自己和邻居的乘积求和，当然，乘积只是举例
         # input_image(b,c,h,w)   unfolded_re(l,b,c,h,w)
         # 希望输出为(b,c,h,w)
         # result = torch.einsum('bchw,lbchw->bchw',[input,unfolded_re])
+        if c == 1:
+            return unfolded_re.long()
         return unfolded_re
 
     def er_loss4Semantic(self, er_input, seg_label, seg_logit, gt_boundary_seg,conv_seg_weight,conv_seg_bias):
@@ -786,37 +788,46 @@ class ContrastPixelCBL(nn.Module):
             # 全尺寸的
             feat_p = class_forward_feat
 
-            #############这里获取的特征是全尺寸的,但是这样创建新的tensor后导致显存爆炸了
-            # 找到非0元素的位置
-            origin_contrast_nonzero_indices = torch.nonzero(pixel_mse_cal_mask.unsqueeze(1) * 1, as_tuple=True)
-            now_nonzero_indices = torch.nonzero(now_class_mask.unsqueeze(1),as_tuple=True)
-            pre_nonzero_indices = torch.nonzero(pre_class_mask.unsqueeze(1),as_tuple=True)
-            post_nonzero_indices = torch.nonzero(post_class_mask.unsqueeze(1),as_tuple=True)
-            # 创建一个全0张量用于存储结果
-            # origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to('cpu')
-            # now_feat_HW = torch.zeros_like(er_input).to('cpu')
-            # pre_feat_HW = torch.zeros_like(er_input).to('cpu')
-            # post_feat_HW = torch.zeros_like(er_input).to('cpu')
-            origin_contrast_pixel_feat_HW = torch.zeros_like(er_input, memory_format=torch.contiguous_format).to(er_input.device)
-            now_feat_HW = torch.zeros_like(er_input, memory_format=torch.contiguous_format).to(er_input.device).detach()
-            pre_feat_HW = torch.zeros_like(er_input, memory_format=torch.contiguous_format).to(er_input.device).detach()
-            post_feat_HW = torch.zeros_like(er_input, memory_format=torch.contiguous_format).to(er_input.device).detach()
-            # 逐步处理数据，避免不必要的中间张量创建
-            origin_contrast_pixel_feat_HW[origin_contrast_nonzero_indices[0], :, origin_contrast_nonzero_indices[2], origin_contrast_nonzero_indices[3]] = er_input[origin_contrast_nonzero_indices[0],
-                                                                                          :, origin_contrast_nonzero_indices[2],
-                                                                                          origin_contrast_nonzero_indices[3]]
-            now_feat_HW[now_nonzero_indices[0], :, now_nonzero_indices[2], now_nonzero_indices[3]] = er_input[now_nonzero_indices[0],
-                                                                                          :, now_nonzero_indices[2],
-                                                                                          now_nonzero_indices[3]]
-            pre_feat_HW[pre_nonzero_indices[0], :, pre_nonzero_indices[2], pre_nonzero_indices[3]] = er_input[pre_nonzero_indices[0],
-                                                                                          :, pre_nonzero_indices[2],
-                                                                                          pre_nonzero_indices[3]]
-            post_feat_HW[post_nonzero_indices[0], :, post_nonzero_indices[2], post_nonzero_indices[3]] = er_input[post_nonzero_indices[0],
-                                                                                          :, post_nonzero_indices[2],
-                                                                                          post_nonzero_indices[3]]
-            now_and_pre_feat_HW = now_feat_HW + pre_feat_HW
-            now_and_post_feat_HW = now_feat_HW + post_feat_HW
-            ###########################################
+            #### 新的解决方案：测试
+            # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
+            whole_neigh_label = self.get_neigh(seg_label, kernel_size=5, pad=2).to(er_input.device) # (L,B,C,H,W)
+            whole_neigh_feat = self.get_neigh(er_input, kernel_size=5, pad=2).to(er_input.device) # (L,B,C,H,W)
+            # 可以根据now_class_mask获得当前类别的坐标，从而直接取出它们的邻居和本身 (B,H,W)
+            # whole_neigh_feat.permute(1,3,4,0,2)  (B,H,W,L,C)
+            # ~.permute(1, 0) (num,L,C) 这里的num就是当前在boundary的类别邻居以及它本身在内的特征,但不知道哪些是正样本，哪些是负样本
+            # 可以对该特征的gt也做同样的操作,这样就能拿到gt的unfold了,
+            now_class_and_neigh_feat = whole_neigh_feat.permute(1,3,4,0,2)[pixel_cal_mask] # (num,L,C)
+            now_class_and_neigh_label = whole_neigh_label.permute(1,3,4,0,2)[pixel_cal_mask] # (num,L,C)
+            # now_class_and_neigh_label的第一维度就是存储的类别标签
+            # 计算对比损失的正样本是当前类别特征邻居的均值，负样本就是非当前类别的
+            # 不妨将now_class_and_neigh_label转为one_hot (num,L,3),3代表的是类别
+            # one_hot_now_class_and_neigh_label[:,:,0]，就拿到了第一个类别的标签
+
+
+            one_hot_now_class_and_neigh_label = F.one_hot(now_class_and_neigh_label.squeeze(),num_classes = 3)
+            # anchor_class =
+            now_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[i].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
+            pre_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i - 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
+            post_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i + 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
+
+            # 这种情况下得到的则是128*25*256的矩阵
+            now_class_v1 = now_class_and_neigh_feat * one_hot_now_class_and_neigh_label[:, :, shown_class[i].long()].unsqueeze(-1)
+            anchor = now_class_v1[:,now_class_v1.size()[1] // 2,:].unsqueeze(0)# 1*128*256
+            now_class_v1[:,now_class_v1.size()[1] // 2,:] = 0 # 将自己置零
+            # 计算当前类别邻居的feature均值
+            contrast_positive = now_class_v1.mean(dim = 1,keepdim=True).permute(1,0,2) # 1,128,256 代表128个像素，有一个256维度的中心
+            # 因为负样本之间没有重叠，所以可以相加
+            pre_class_v1 = (now_class_and_neigh_feat * one_hot_now_class_and_neigh_label[:, :, shown_class[(i - 1) % len(shown_class)].long()].unsqueeze(-1)).permute(1,0,2)
+            post_class_v1 =(now_class_and_neigh_feat * one_hot_now_class_and_neigh_label[:, :,shown_class[(i + 1) % len(shown_class)].long()].unsqueeze(-1)).permute(1,0,2)
+            contrast_negative = pre_class_v1 + post_class_v1 # (25,128,256)
+
+
+            # (1,N,D),(1,N,D),(25,N,D)
+            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative,er_input.device)
+            contrast_loss_total = contrast_loss_total + nce_loss
+            ####################################
+
+
 
             ##############这里获取的特征不是全尺寸的
             # 负样本是其他类别的的特征，邻居全给弄过来了
@@ -827,15 +838,6 @@ class ContrastPixelCBL(nn.Module):
             # now_and_pre_feat = now_feat + pre_feat #:获得当前特征和之前一个类别的特征
             # now_and_post_feat = now_feat + post_feat #:获得当前特征和后一个类别的特征
             #######################
-
-            pre_feats_neigh_for_now = self.get_neigh(now_and_pre_feat_HW,kernel_size=5,pad = 2)
-            # 返回的就是当前特征像素点周围的post 类别的特征，是负样本 lbchw
-            post_feats_neigh_for_now = self.get_neigh(now_and_post_feat_HW,kernel_size=5,pad = 2)
-            feats_n = torch.cat([pre_feats_neigh_for_now, post_feats_neigh_for_now], dim=0).to(er_input.device) #(L,B,C,H,W)
-            # BCHW,BCHW,LBCHW
-            nce_loss = pixel_info_nce_loss(origin_contrast_pixel_feat_HW,feat_p,feats_n,er_input.device)
-            contrast_loss_total = contrast_loss_total + nce_loss
-            ####################################
 
 
             # 邻居平均特征也要能够正确分类，且用同样的分类器才行
