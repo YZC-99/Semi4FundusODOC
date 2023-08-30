@@ -1398,7 +1398,10 @@ class ContrastPixelCBLV2(nn.Module):
             pre_neigh_mse_pixel_feat = pre_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
             post_neigh_mse_pixel_feat = post_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
 
-            ######### 计算contrast loss #########
+            ######### 计算contrast loss
+
+            # feat_p = class_forward_feat
+
             #### 新的解决方案：测试
             # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
             whole_neigh_label = self.get_neigh(seg_label, kernel_size=5, pad=2).to(er_input.device) # (L,B,C,H,W)
