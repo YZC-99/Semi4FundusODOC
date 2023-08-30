@@ -6,9 +6,9 @@ now_feat：原始的特征
 p_feat:正样本邻居的特征均值
 n_feats：负样本邻居的特征均值
 '''
-def info_nce_loss(now_feat,p_feat,n_feats):
+def info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
     # BDHW BDHW BNDHW
-    temperature = 0.1
+
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 
     # 计算余弦相似度
@@ -21,11 +21,9 @@ def info_nce_loss(now_feat,p_feat,n_feats):
 
     return nll
 
-def pixel_info_nce_loss(now_feat,p_feat,n_feats,device):
+def pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
     # BDHW BDHW BNDHW
-    temperature = 0.1
     # 计算的时候再放入gpu
-    # now_feat = now_feat.to(device)
 
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 

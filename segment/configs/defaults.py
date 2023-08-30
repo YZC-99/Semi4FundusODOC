@@ -19,6 +19,7 @@ _C.MODEL.ABL_loss = False
 _C.MODEL.CBL_loss = None
 _C.MODEL.ContrastCenterCBL_loss = None
 _C.MODEL.ContrastPixelCBL_loss = None
+_C.MODEL.ContrastPixelCorrectCBL_loss = None
 _C.MODEL.Pairwise_CBL_loss = None
 _C.MODEL.LOVASZ_loss = False
 _C.MODEL.Teacher_Student = False
