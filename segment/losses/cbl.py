@@ -1329,10 +1329,6 @@ class ContrastPixelCBLV2(nn.Module):
             # 获得当前类别周围邻居是预测正确的邻居特征，这里面的特征一定是预测正确的
             now_correct_neighbor_feat = same_class_extractor(
                 er_input * (now_class_mask * now_pred_class_mask).unsqueeze(1))
-            # pre_correct_neighbor_feat = same_class_extractor(
-            #     er_input * (pre_class_mask * pre_pred_class_mask).unsqueeze(1))
-            # post_correct_neighbor_feat = same_class_extractor(
-            #     er_input * (post_class_mask * post_pred_class_mask).unsqueeze(1))
             ###############################################################################
 
             ###############################################################################
@@ -1394,7 +1390,7 @@ class ContrastPixelCBLV2(nn.Module):
 
             # 计算contrast loss
             # 不理解这句为什么会对反向传播起到作用
-            feat_p = class_forward_feat
+            feat_p_xxx = class_forward_feat
 
             #### 新的解决方案：测试
             # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
