@@ -786,7 +786,7 @@ class ContrastPixelCBL(nn.Module):
             # 全尺寸的
             feat_p = class_forward_feat
 
-            #############这里获取的特征是全尺寸的
+            #############这里获取的特征是全尺寸的,但是这样创建新的tensor后导致显存爆炸了
             # 找到非0元素的位置
             origin_contrast_nonzero_indices = torch.nonzero(pixel_mse_cal_mask.unsqueeze(1) * 1, as_tuple=True)
             now_nonzero_indices = torch.nonzero(now_class_mask.unsqueeze(1),as_tuple=True)
@@ -798,9 +798,9 @@ class ContrastPixelCBL(nn.Module):
             # pre_feat_HW = torch.zeros_like(er_input).to('cpu')
             # post_feat_HW = torch.zeros_like(er_input).to('cpu')
             origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to(er_input.device)
-            now_feat_HW = torch.zeros_like(er_input).to(er_input.device)
-            pre_feat_HW = torch.zeros_like(er_input).to(er_input.device)
-            post_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            now_feat_HW = torch.zeros_like(er_input).to(er_input.device).detach()
+            pre_feat_HW = torch.zeros_like(er_input).to(er_input.device).detach()
+            post_feat_HW = torch.zeros_like(er_input).to(er_input.device).detach()
             # 逐步处理数据，避免不必要的中间张量创建
             origin_contrast_pixel_feat_HW[origin_contrast_nonzero_indices[0], :, origin_contrast_nonzero_indices[2], origin_contrast_nonzero_indices[3]] = er_input[origin_contrast_nonzero_indices[0],
                                                                                           :, origin_contrast_nonzero_indices[2],
