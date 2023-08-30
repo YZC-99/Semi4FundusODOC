@@ -734,9 +734,9 @@ class ContrastPixelCBL(nn.Module):
                     edge_mask.bool() * pre_class_mask.bool() * pre_pred_class_mask.bool()).detach()
             post_pixel_cal_mask = (post_correct_class_num_in_neigh.squeeze(1) >= 1) * (
                     edge_mask.bool() * post_class_mask.bool() * post_pred_class_mask.bool()).detach()
-            # if pixel_cal_mask.sum() < 1 or pixel_mse_cal_mask.sum() < 1 or pre_pixel_cal_mask.sum() < 1 or post_pixel_cal_mask.sum() < 1:
-            #     cal_class_num = cal_class_num - 1
-            #     continue
+            if pixel_cal_mask.sum() < 1 or pixel_mse_cal_mask.sum() < 1 or pre_pixel_cal_mask.sum() < 1 or post_pixel_cal_mask.sum() < 1:
+                cal_class_num = cal_class_num - 1
+                continue
 
             # 这里是把同类别的邻居特征做平均，这里的邻居是指gt中认为是同一类的邻居，但这些特征不一定都是预测准确的
             class_forward_feat = now_neighbor_feat / (now_class_num_in_neigh + 1e-5)
