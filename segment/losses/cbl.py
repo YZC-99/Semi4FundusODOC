@@ -793,30 +793,23 @@ class ContrastPixelCBL(nn.Module):
             pre_nonzero_indices = torch.nonzero(pre_class_mask.unsqueeze(1),as_tuple=True)
             post_nonzero_indices = torch.nonzero(post_class_mask.unsqueeze(1),as_tuple=True)
             # 创建一个全0张量用于存储结果
-            origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to(er_input.device)
-            now_feat_HW = torch.zeros_like(er_input).to(er_input.device)
-            pre_feat_HW = torch.zeros_like(er_input).to(er_input.device)
-            post_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to('cpu')
+            now_feat_HW = torch.zeros_like(er_input).to('cpu')
+            pre_feat_HW = torch.zeros_like(er_input).to('cpu')
+            post_feat_HW = torch.zeros_like(er_input).to('cpu')
             # 逐步处理数据，避免不必要的中间张量创建
-            for idxs, target in [(origin_contrast_nonzero_indices, origin_contrast_pixel_feat_HW),
-                                 (now_nonzero_indices, now_feat_HW),
-                                 (pre_nonzero_indices, pre_feat_HW),
-                                 (post_nonzero_indices, post_feat_HW)]:
-                batch_idxs, _, row_idxs, col_idxs = idxs
-                target[batch_idxs, :, row_idxs, col_idxs] = er_input[batch_idxs, :, row_idxs, col_idxs]
-
-            # origin_contrast_pixel_feat_HW[origin_contrast_nonzero_indices[0], :, origin_contrast_nonzero_indices[2], origin_contrast_nonzero_indices[3]] = er_input[origin_contrast_nonzero_indices[0],
-            #                                                                               :, origin_contrast_nonzero_indices[2],
-            #                                                                               origin_contrast_nonzero_indices[3]]
-            # now_feat_HW[now_nonzero_indices[0], :, now_nonzero_indices[2], now_nonzero_indices[3]] = er_input[now_nonzero_indices[0],
-            #                                                                               :, now_nonzero_indices[2],
-            #                                                                               now_nonzero_indices[3]]
-            # pre_feat_HW[pre_nonzero_indices[0], :, pre_nonzero_indices[2], pre_nonzero_indices[3]] = er_input[pre_nonzero_indices[0],
-            #                                                                               :, pre_nonzero_indices[2],
-            #                                                                               pre_nonzero_indices[3]]
-            # post_feat_HW[post_nonzero_indices[0], :, post_nonzero_indices[2], post_nonzero_indices[3]] = er_input[post_nonzero_indices[0],
-            #                                                                               :, post_nonzero_indices[2],
-            #                                                                               post_nonzero_indices[3]]
+            origin_contrast_pixel_feat_HW[origin_contrast_nonzero_indices[0], :, origin_contrast_nonzero_indices[2], origin_contrast_nonzero_indices[3]] = er_input[origin_contrast_nonzero_indices[0],
+                                                                                          :, origin_contrast_nonzero_indices[2],
+                                                                                          origin_contrast_nonzero_indices[3]]
+            now_feat_HW[now_nonzero_indices[0], :, now_nonzero_indices[2], now_nonzero_indices[3]] = er_input[now_nonzero_indices[0],
+                                                                                          :, now_nonzero_indices[2],
+                                                                                          now_nonzero_indices[3]]
+            pre_feat_HW[pre_nonzero_indices[0], :, pre_nonzero_indices[2], pre_nonzero_indices[3]] = er_input[pre_nonzero_indices[0],
+                                                                                          :, pre_nonzero_indices[2],
+                                                                                          pre_nonzero_indices[3]]
+            post_feat_HW[post_nonzero_indices[0], :, post_nonzero_indices[2], post_nonzero_indices[3]] = er_input[post_nonzero_indices[0],
+                                                                                          :, post_nonzero_indices[2],
+                                                                                          post_nonzero_indices[3]]
             now_and_pre_feat_HW = now_feat_HW + pre_feat_HW
             now_and_post_feat_HW = now_feat_HW + post_feat_HW
             ###########################################
