@@ -978,10 +978,6 @@ class ContrastPixelCBL(nn.Module):
             # 获得当前类别周围邻居是预测正确的邻居特征，这里面的特征一定是预测正确的
             now_correct_neighbor_feat = same_class_extractor(
                 er_input * (now_class_mask * now_pred_class_mask).unsqueeze(1))
-            pre_correct_neighbor_feat = same_class_extractor(
-                er_input * (pre_class_mask * pre_pred_class_mask).unsqueeze(1))
-            post_correct_neighbor_feat = same_class_extractor(
-                er_input * (post_class_mask * post_pred_class_mask).unsqueeze(1))
             #----------------------------------------------------------------------------------
 
             #----------------------------------------------------------------------------------
@@ -1026,15 +1022,6 @@ class ContrastPixelCBL(nn.Module):
             class_forward_feat = now_neighbor_feat / (now_class_num_in_neigh + 1e-5)
             # 与上一个不同，这里取得邻居特征都是预测正确得
             class_correct_forward_feat = now_correct_neighbor_feat / (now_correct_class_num_in_neigh + 1e-5)
-
-            # --------------------------这里是我额外加的，为了计算对比学习--------------------------
-            # 他们都可以被看做是now的负样本对特征
-            # 把他们邻居的特征，和定义上的正样本邻居的特征的均值都算出来
-            # pre_class_forward_feat = pre_neighbor_feat / (pre_class_num_in_neigh + 1e-5)
-            pre_class_correct_forward_feat = pre_correct_neighbor_feat / (pre_correct_class_num_in_neigh + 1e-5)
-            # post_class_forward_feat = post_neighbor_feat / (post_class_num_in_neigh + 1e-5)
-            post_class_correct_forward_feat = post_correct_neighbor_feat / (post_correct_class_num_in_neigh + 1e-5)
-            #----------------------------------------------------------------------------------
 
             # 选择出参与erloss计算的像素的原始特征，哪些像素是要参与到计算中得呢？
             # pixel_mse_cal_mask是指：当前类别在边界上得像素，而且该像素是被模型预测对
