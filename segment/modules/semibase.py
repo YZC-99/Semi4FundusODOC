@@ -12,7 +12,9 @@ from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
-from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL,ContrastPixelCBL
+from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL
+# from segment.losses.cbl import ContrastPixelCBL
+from segment.losses.cbl import ContrastPixelCBLV2 as ContrastPixelCBL
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
