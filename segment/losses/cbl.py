@@ -954,29 +954,27 @@ class ContrastPixelCBL(nn.Module):
         contrast_loss_total = torch.tensor(0.0, device=er_input.device)
         cal_class_num = len(shown_class)
         for i in range(len(shown_class)):
-            ###############################################################################
+            #----------------------------------------------------------------------------------
             # 获取当前类别的label掩膜，获取另外两个类别的label mask
             now_class_mask = seg_label_one_hot[:, shown_class[i].long(), :, :]
             pre_class_mask = seg_label_one_hot[:, shown_class[(i - 1) % len(shown_class)].long(), :, :]
             post_class_mask = seg_label_one_hot[:, shown_class[(i + 1) % len(shown_class)].long(), :, :]
-            ###############################################################################
+            #----------------------------------------------------------------------------------
 
-            ###############################################################################
+            #----------------------------------------------------------------------------------
             # 获取当前类别预测的掩膜以及其他类别的掩膜
             now_pred_class_mask = pred_label_one_hot[:, shown_class[i].long(), :, :]
             pre_pred_class_mask = pred_label_one_hot[:, shown_class[(i - 1) % len(shown_class)].long(), :, :]
             post_pred_class_mask = pred_label_one_hot[:, shown_class[(i + 1) % len(shown_class)].long(), :, :]
-            ###############################################################################
+            #----------------------------------------------------------------------------------
 
-            ###############################################################################
+            #----------------------------------------------------------------------------------
             # er_input 乘当前类的mask，就把所有不是当前类的像素置为0了
             # 获得当前类别的像素点周围邻居的特征，注意：这里的特征对应的像素点不一定预测正确，但取出的全是gt中当前类别周围全部的邻居###
             now_neighbor_feat = same_class_extractor(er_input * now_class_mask.unsqueeze(1))
-            # pre_neighbor_feat = same_class_extractor(er_input * pre_class_mask.unsqueeze(1))
-            # post_neighbor_feat = same_class_extractor(er_input * post_class_mask.unsqueeze(1))
-            ###############################################################################
+            #----------------------------------------------------------------------------------
 
-            ###############################################################################
+            #----------------------------------------------------------------------------------
             # 获得当前类别周围邻居是预测正确的邻居特征，这里面的特征一定是预测正确的
             now_correct_neighbor_feat = same_class_extractor(
                 er_input * (now_class_mask * now_pred_class_mask).unsqueeze(1))
@@ -984,16 +982,14 @@ class ContrastPixelCBL(nn.Module):
                 er_input * (pre_class_mask * pre_pred_class_mask).unsqueeze(1))
             post_correct_neighbor_feat = same_class_extractor(
                 er_input * (post_class_mask * post_pred_class_mask).unsqueeze(1))
-            ###############################################################################
+            #----------------------------------------------------------------------------------
 
-            ###############################################################################
+            #----------------------------------------------------------------------------------
             # 下面是获得当前类的每个像素邻居中同属当前点的像素个数
             now_class_num_in_neigh = same_class_number_extractor(now_class_mask.unsqueeze(1).float())
-            # pre_class_num_in_neigh = same_class_number_extractor(pre_class_mask.unsqueeze(1).float())
-            # post_class_num_in_neigh = same_class_number_extractor(post_class_mask.unsqueeze(1).float())
-            ###############################################################################
+            #----------------------------------------------------------------------------------
 
-            ###############################################################################
+            #----------------------------------------------------------------------------------
             # 获取邻居中为正样本的邻居个数，也就是说即是当前像素的类别，又被预测正确的
             now_correct_class_num_in_neigh = same_class_number_extractor(
                 (now_class_mask * now_pred_class_mask).unsqueeze(1).float())
@@ -1001,10 +997,10 @@ class ContrastPixelCBL(nn.Module):
                 (pre_class_mask * pre_pred_class_mask).unsqueeze(1).float())
             post_correct_class_num_in_neigh = same_class_number_extractor(
                 (post_class_mask * post_pred_class_mask).unsqueeze(1).float())
-            ###############################################################################
+            #----------------------------------------------------------------------------------
 
 
-            ################### er loss的计算过程 ###############################
+            #--------------------- er loss的计算过程------------------------------------
             # 需要得到 可以参与er loss 计算的像素
             # 一个像素若要参与er loss计算，需要具备：
             # 1.邻居中具有同属当前类的像素:now_class_num_in_neigh
@@ -1031,23 +1027,19 @@ class ContrastPixelCBL(nn.Module):
             # 与上一个不同，这里取得邻居特征都是预测正确得
             class_correct_forward_feat = now_correct_neighbor_feat / (now_correct_class_num_in_neigh + 1e-5)
 
-            #############################这里是我额外加的，为了计算对比学习####################
+            # --------------------------这里是我额外加的，为了计算对比学习--------------------------
             # 他们都可以被看做是now的负样本对特征
             # 把他们邻居的特征，和定义上的正样本邻居的特征的均值都算出来
             # pre_class_forward_feat = pre_neighbor_feat / (pre_class_num_in_neigh + 1e-5)
             pre_class_correct_forward_feat = pre_correct_neighbor_feat / (pre_correct_class_num_in_neigh + 1e-5)
             # post_class_forward_feat = post_neighbor_feat / (post_class_num_in_neigh + 1e-5)
             post_class_correct_forward_feat = post_correct_neighbor_feat / (post_correct_class_num_in_neigh + 1e-5)
-            ############################################################################
-
+            #----------------------------------------------------------------------------------
 
             # 选择出参与erloss计算的像素的原始特征，哪些像素是要参与到计算中得呢？
             # pixel_mse_cal_mask是指：当前类别在边界上得像素，而且该像素是被模型预测对
-            # origin_pixel_feat = er_input.permute(0,2,3,1)[pixel_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
             origin_mse_pixel_feat = er_input.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1, 0).unsqueeze(
                 0).unsqueeze(-1)
-
-
 
             # 选择出在gt上的邻居的平均特征
             neigh_pixel_feat = class_forward_feat.permute(0, 2, 3, 1)[pixel_cal_mask].permute(1, 0).unsqueeze(
@@ -1056,25 +1048,15 @@ class ContrastPixelCBL(nn.Module):
             neigh_mse_pixel_feat = class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
                                                                                                               0).unsqueeze(
                 0).unsqueeze(-1)
-            pre_neigh_mse_pixel_feat = pre_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
-                                                                                                              0).unsqueeze(
-                0).unsqueeze(-1)
-            post_neigh_mse_pixel_feat = post_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
-                                                                                                              0).unsqueeze(
-                0).unsqueeze(-1)
 
-            ######### 计算contrast loss #########
+
+            #------------ 计算contrast loss -------------------
             # 计算contrast loss应该要使用origin_mse_pixel_feat (1,256,n1,n2)
             # postive的特征也应该遵循同样的形状
             # 因此post_class_correct_forward_feat也应该形状与它一样(1,256,n1,n2)
             # 正样本是当前类别邻居的特征均值，这些均值后续一定会被分类正确
-            # feat_p = neigh_mse_pixel_feat
-            # 正样本是当前类别邻居的特征均值，这些均值后续不一定会被分类正确
-            # feat_p = neigh_pixel_feat
-            # 全尺寸的
-            feat_p = class_forward_feat
 
-            #### 新的解决方案：测试
+            # 新的解决方案：测试
             # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
             whole_neigh_label = self.get_neigh(seg_label, kernel_size=5, pad=2).to(er_input.device) # (L,B,C,H,W)
             whole_neigh_feat = self.get_neigh(er_input, kernel_size=5, pad=2).to(er_input.device) # (L,B,C,H,W)
@@ -1091,10 +1073,6 @@ class ContrastPixelCBL(nn.Module):
 
 
             one_hot_now_class_and_neigh_label = F.one_hot(now_class_and_neigh_label.squeeze(),num_classes = 3)
-            # anchor_class =
-            now_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[i].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
-            pre_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i - 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
-            post_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i + 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
 
             # 这种情况下得到的则是128*25*256的矩阵
             now_class_v1 = now_class_and_neigh_feat * one_hot_now_class_and_neigh_label[:, :, shown_class[i].long()].unsqueeze(-1)
@@ -1111,11 +1089,10 @@ class ContrastPixelCBL(nn.Module):
             # (1,N,D),(1,N,D),(25,N,D)
             nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative,er_input.device)
             contrast_loss_total = contrast_loss_total + nce_loss
-            ####################################
 
 
 
-            ##############这里获取的特征不是全尺寸的
+            #这里获取的特征不是全尺寸的
             # 负样本是其他类别的的特征，邻居全给弄过来了
             # now_feat = er_input * now_class_mask.unsqueeze(1)#:仅获得当前类别的特征
             # pre_feat = er_input * pre_class_mask.unsqueeze(1)#:仅获得前一类别的特征
@@ -1123,7 +1100,6 @@ class ContrastPixelCBL(nn.Module):
             #
             # now_and_pre_feat = now_feat + pre_feat #:获得当前特征和之前一个类别的特征
             # now_and_post_feat = now_feat + post_feat #:获得当前特征和后一个类别的特征
-            #######################
 
 
             # 邻居平均特征也要能够正确分类，且用同样的分类器才行
