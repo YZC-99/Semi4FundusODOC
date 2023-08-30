@@ -3,7 +3,7 @@
 """
 MaskFormer criterion.
 """
-from segment.losses.info_nce import info_nce_loss
+from segment.losses.info_nce import info_nce_loss,pixel_info_nce_loss
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -734,9 +734,9 @@ class ContrastPixelCBL(nn.Module):
                     edge_mask.bool() * pre_class_mask.bool() * pre_pred_class_mask.bool()).detach()
             post_pixel_cal_mask = (post_correct_class_num_in_neigh.squeeze(1) >= 1) * (
                     edge_mask.bool() * post_class_mask.bool() * post_pred_class_mask.bool()).detach()
-            if pixel_cal_mask.sum() < 1 or pixel_mse_cal_mask.sum() < 1 or pre_pixel_cal_mask.sum() < 1 or post_pixel_cal_mask.sum() < 1:
-                cal_class_num = cal_class_num - 1
-                continue
+            # if pixel_cal_mask.sum() < 1 or pixel_mse_cal_mask.sum() < 1 or pre_pixel_cal_mask.sum() < 1 or post_pixel_cal_mask.sum() < 1:
+            #     cal_class_num = cal_class_num - 1
+            #     continue
 
             # 这里是把同类别的邻居特征做平均，这里的邻居是指gt中认为是同一类的邻居，但这些特征不一定都是预测准确的
             class_forward_feat = now_neighbor_feat / (now_class_num_in_neigh + 1e-5)
@@ -782,21 +782,53 @@ class ContrastPixelCBL(nn.Module):
             # 正样本是当前类别邻居的特征均值，这些均值后续一定会被分类正确
             # feat_p = neigh_mse_pixel_feat
             # 正样本是当前类别邻居的特征均值，这些均值后续不一定会被分类正确
-            feat_p = neigh_pixel_feat
+            # feat_p = neigh_pixel_feat
+            # 全尺寸的
+            feat_p = class_forward_feat
+
+            #############这里获取的特征是全尺寸的
+            # 找到非0元素的位置
+            origin_contrast_nonzero_indices = torch.nonzero(pixel_mse_cal_mask.unsqueeze(1) * 1, as_tuple=True)
+            now_nonzero_indices = torch.nonzero(now_class_mask.unsqueeze(1),as_tuple=True)
+            pre_nonzero_indices = torch.nonzero(pre_class_mask.unsqueeze(1),as_tuple=True)
+            post_nonzero_indices = torch.nonzero(post_class_mask.unsqueeze(1),as_tuple=True)
+            # 创建一个全0张量用于存储结果
+            origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            now_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            pre_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            post_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            origin_contrast_pixel_feat_HW[origin_contrast_nonzero_indices[0], :, origin_contrast_nonzero_indices[2], origin_contrast_nonzero_indices[3]] = er_input[origin_contrast_nonzero_indices[0],
+                                                                                          :, origin_contrast_nonzero_indices[2],
+                                                                                          origin_contrast_nonzero_indices[3]]
+            now_feat_HW[now_nonzero_indices[0], :, now_nonzero_indices[2], now_nonzero_indices[3]] = er_input[now_nonzero_indices[0],
+                                                                                          :, now_nonzero_indices[2],
+                                                                                          now_nonzero_indices[3]]
+            pre_feat_HW[pre_nonzero_indices[0], :, pre_nonzero_indices[2], pre_nonzero_indices[3]] = er_input[pre_nonzero_indices[0],
+                                                                                          :, pre_nonzero_indices[2],
+                                                                                          pre_nonzero_indices[3]]
+            post_feat_HW[post_nonzero_indices[0], :, post_nonzero_indices[2], post_nonzero_indices[3]] = er_input[post_nonzero_indices[0],
+                                                                                          :, post_nonzero_indices[2],
+                                                                                          post_nonzero_indices[3]]
+            now_and_pre_feat_HW = now_feat_HW + pre_feat_HW
+            now_and_post_feat_HW = now_feat_HW + post_feat_HW
+            ###########################################
+
+            ##############这里获取的特征不是全尺寸的
             # 负样本是其他类别的的特征，邻居全给弄过来了
-            now_feat = er_input * now_class_mask.unsqueeze(1)#:仅获得当前类别的特征
-            pre_feat = er_input * pre_class_mask.unsqueeze(1)#:仅获得前一类别的特征
-            post_feat = er_input * post_class_mask.unsqueeze(1)#:仅获得后一类别的特征
+            # now_feat = er_input * now_class_mask.unsqueeze(1)#:仅获得当前类别的特征
+            # pre_feat = er_input * pre_class_mask.unsqueeze(1)#:仅获得前一类别的特征
+            # post_feat = er_input * post_class_mask.unsqueeze(1)#:仅获得后一类别的特征
+            #
+            # now_and_pre_feat = now_feat + pre_feat #:获得当前特征和之前一个类别的特征
+            # now_and_post_feat = now_feat + post_feat #:获得当前特征和后一个类别的特征
+            #######################
 
-            now_and_pre_feat = now_feat + pre_feat #:获得当前特征和之前一个类别的特征
-            now_and_post_feat = now_feat + post_feat #:获得当前特征和后一个类别的特征
-
-            pre_feats_neigh_for_now = self.get_neigh(now_and_pre_feat,kernel_size=5,pad = 2)
+            pre_feats_neigh_for_now = self.get_neigh(now_and_pre_feat_HW,kernel_size=5,pad = 2)
             # 返回的就是当前特征像素点周围的post 类别的特征，是负样本 lbchw
-            post_feats_neigh_for_now = self.get_neigh(now_and_post_feat,kernel_size=5,pad = 2)
-            feats_n = torch.cat([pre_feats_neigh_for_now, post_feats_neigh_for_now], dim=0) #(L,B,C,H,W)
-
-            nce_loss = info_nce_loss(origin_mse_pixel_feat,feat_p,feats_n)
+            post_feats_neigh_for_now = self.get_neigh(now_and_post_feat_HW,kernel_size=5,pad = 2)
+            feats_n = torch.cat([pre_feats_neigh_for_now, post_feats_neigh_for_now], dim=0).to(er_input.device) #(L,B,C,H,W)
+            # BCHW,BCHW,LBCHW
+            nce_loss = pixel_info_nce_loss(origin_contrast_pixel_feat_HW,feat_p,feats_n)
             contrast_loss_total = contrast_loss_total + nce_loss
             ####################################
 
@@ -1191,7 +1223,7 @@ if __name__ == '__main__':
     from segment.losses.abl import ABL
     import time
     num_classes = 3
-    ccbl = ContrastCenterCBL(num_classes)
+    ccbl = ContrastPixelCBL(num_classes)
     outputs = {'out_fuse':torch.randn(4,256,64,64).to('cuda'),
                'out_classifier':torch.randn(4,3,64,64).to('cuda')
                }

@@ -21,6 +21,21 @@ def info_nce_loss(now_feat,p_feat,n_feats):
 
     return nll
 
+def pixel_info_nce_loss(now_feat,p_feat,n_feats):
+    # BDHW BDHW BNDHW
+    temperature = 0.1
+    cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
+
+    # 计算余弦相似度
+    cos_similarities = F.cosine_similarity(now_feat.unsqueeze(0), n_feats, dim=0) / temperature
+    cos_sim_n = torch.logsumexp(cos_similarities, dim=1)
+
+    nll = -cos_sim_p + cos_sim_n
+
+    nll = nll.mean()
+
+    return nll
+
 # def info_nce_loss(now_feat,p_feat,n_feats):
 
 
