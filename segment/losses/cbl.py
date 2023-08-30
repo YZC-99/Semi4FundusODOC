@@ -1395,8 +1395,8 @@ class ContrastPixelCBLV2(nn.Module):
             neigh_pixel_feat = class_forward_feat.permute(0, 2, 3, 1)[pixel_cal_mask].permute(1, 0).unsqueeze(0).unsqueeze(-1)
             # 选择出被分类正确的的邻居的平均特征
             neigh_mse_pixel_feat = class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
-            pre_neigh_mse_pixel_feat = pre_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
-            post_neigh_mse_pixel_feat = post_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
+            # pre_neigh_mse_pixel_feat = pre_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
+            # post_neigh_mse_pixel_feat = post_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,0).unsqueeze(0).unsqueeze(-1)
 
             # 计算contrast loss
             # 不理解这句为什么会对反向传播起到作用
