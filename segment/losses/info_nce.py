@@ -21,10 +21,12 @@ def info_nce_loss(now_feat,p_feat,n_feats):
 
     return nll
 
-def pixel_info_nce_loss(now_feat,p_feat,n_feats):
+def pixel_info_nce_loss(now_feat,p_feat,n_feats,device):
     # BDHW BDHW BNDHW
     temperature = 0.1
     # 计算的时候再放入gpu
+    # now_feat = now_feat.to(device)
+
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 
     # 计算余弦相似度

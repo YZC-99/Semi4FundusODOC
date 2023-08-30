@@ -793,10 +793,14 @@ class ContrastPixelCBL(nn.Module):
             pre_nonzero_indices = torch.nonzero(pre_class_mask.unsqueeze(1),as_tuple=True)
             post_nonzero_indices = torch.nonzero(post_class_mask.unsqueeze(1),as_tuple=True)
             # 创建一个全0张量用于存储结果
-            origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to('cpu')
-            now_feat_HW = torch.zeros_like(er_input).to('cpu')
-            pre_feat_HW = torch.zeros_like(er_input).to('cpu')
-            post_feat_HW = torch.zeros_like(er_input).to('cpu')
+            # origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to('cpu')
+            # now_feat_HW = torch.zeros_like(er_input).to('cpu')
+            # pre_feat_HW = torch.zeros_like(er_input).to('cpu')
+            # post_feat_HW = torch.zeros_like(er_input).to('cpu')
+            origin_contrast_pixel_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            now_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            pre_feat_HW = torch.zeros_like(er_input).to(er_input.device)
+            post_feat_HW = torch.zeros_like(er_input).to(er_input.device)
             # 逐步处理数据，避免不必要的中间张量创建
             origin_contrast_pixel_feat_HW[origin_contrast_nonzero_indices[0], :, origin_contrast_nonzero_indices[2], origin_contrast_nonzero_indices[3]] = er_input[origin_contrast_nonzero_indices[0],
                                                                                           :, origin_contrast_nonzero_indices[2],
@@ -829,7 +833,7 @@ class ContrastPixelCBL(nn.Module):
             post_feats_neigh_for_now = self.get_neigh(now_and_post_feat_HW,kernel_size=5,pad = 2)
             feats_n = torch.cat([pre_feats_neigh_for_now, post_feats_neigh_for_now], dim=0).to(er_input.device) #(L,B,C,H,W)
             # BCHW,BCHW,LBCHW
-            nce_loss = pixel_info_nce_loss(origin_contrast_pixel_feat_HW,feat_p,feats_n)
+            nce_loss = pixel_info_nce_loss(origin_contrast_pixel_feat_HW,feat_p,feats_n,er_input.device)
             contrast_loss_total = contrast_loss_total + nce_loss
             ####################################
 
