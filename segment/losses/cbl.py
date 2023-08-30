@@ -761,8 +761,6 @@ class ContrastPixelCBL(nn.Module):
             origin_mse_pixel_feat = er_input.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1, 0).unsqueeze(
                 0).unsqueeze(-1)
 
-
-
             # 选择出在gt上的邻居的平均特征
             neigh_pixel_feat = class_forward_feat.permute(0, 2, 3, 1)[pixel_cal_mask].permute(1, 0).unsqueeze(
                 0).unsqueeze(-1)
@@ -770,12 +768,12 @@ class ContrastPixelCBL(nn.Module):
             neigh_mse_pixel_feat = class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
                                                                                                               0).unsqueeze(
                 0).unsqueeze(-1)
-            # pre_neigh_mse_pixel_feat = pre_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
-            #                                                                                                   0).unsqueeze(
-            #     0).unsqueeze(-1)
-            # post_neigh_mse_pixel_feat = post_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
-            #                                                                                                   0).unsqueeze(
-            #     0).unsqueeze(-1)
+            pre_neigh_mse_pixel_feat = pre_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
+                                                                                                              0).unsqueeze(
+                0).unsqueeze(-1)
+            post_neigh_mse_pixel_feat = post_class_correct_forward_feat.permute(0, 2, 3, 1)[pixel_mse_cal_mask].permute(1,
+                                                                                                              0).unsqueeze(
+                0).unsqueeze(-1)
 
             ######### 计算contrast loss #########
             # 计算contrast loss应该要使用origin_mse_pixel_feat (1,256,n1,n2)
@@ -786,6 +784,8 @@ class ContrastPixelCBL(nn.Module):
             # 正样本是当前类别邻居的特征均值，这些均值后续不一定会被分类正确
             # feat_p = neigh_pixel_feat
             # 全尺寸的
+            feat_p = class_forward_feat
+
             #### 新的解决方案：测试
             # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
             whole_neigh_label = self.get_neigh(seg_label, kernel_size=5, pad=2).to(er_input.device) # (L,B,C,H,W)
@@ -804,9 +804,9 @@ class ContrastPixelCBL(nn.Module):
 
             one_hot_now_class_and_neigh_label = F.one_hot(now_class_and_neigh_label.squeeze(),num_classes = 3)
             # anchor_class =
-            # now_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[i].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
-            # pre_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i - 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
-            # post_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i + 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
+            now_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[i].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
+            pre_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i - 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
+            post_class = now_class_and_neigh_feat[one_hot_now_class_and_neigh_label[:,:,shown_class[(i + 1) % len(shown_class)].long()].bool()].reshape(-1,now_class_and_neigh_feat.size()[-1])
 
             # 这种情况下得到的则是128*25*256的矩阵
             now_class_v1 = now_class_and_neigh_feat * one_hot_now_class_and_neigh_label[:, :, shown_class[i].long()].unsqueeze(-1)
