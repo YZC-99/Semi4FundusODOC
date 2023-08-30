@@ -1145,7 +1145,7 @@ class ContrastPixelCBLV2(nn.Module):
 
 
             # (1,N,D),(1,N,D),(25,N,D)
-            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative,er_input.device)
+            nce_loss = pixel_info_nce_loss(anchor,contrast_positive.detach(),contrast_negative.detach(),er_input.device)
             contrast_loss_total = contrast_loss_total + nce_loss
             ####################################
 
