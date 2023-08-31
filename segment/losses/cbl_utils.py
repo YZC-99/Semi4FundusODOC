@@ -1,9 +1,9 @@
 import torch
 import torch.nn.functional as F
 
-def get_neigh(self, input, kernel_size=3, pad=1):
+def get_neigh(input, kernel_size=3, pad=1):
     b, c, h, w = input.size()
-    input = torch.arange(1, b * c * h * w + 1).reshape(b, c, h, w).float()
+    input = input.reshape(b, c, h, w).float()
     input_d = input.permute(0, 2, 3, 1)
     image_d = torch.nn.functional.pad(input_d, (0, 0, pad, pad, pad, pad, 0, 0), mode='constant')  # N(H+2)(W+2)C
     for i in range(pad):
