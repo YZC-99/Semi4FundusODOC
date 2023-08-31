@@ -1853,7 +1853,7 @@ class FastContrastCrossPixelCorrectCBL(nn.Module):
         for i in range(len(shown_class)):
             now_class_mask = seg_label_one_hot[:, shown_class[i].long(), :, :]
             # now_class_num_in_neigh = same_class_number_extractor(now_class_mask.unsqueeze(1).float())
-            now_class_num_in_neigh = same_class_number_extractor(now_class_mask.unsqueeze(1))
+            now_class_num_in_neigh = same_class_number_extractor(now_class_mask.unsqueeze(1).double())
             pixel_cal_mask = (now_class_num_in_neigh.squeeze(1) >= 1) * (
                     edge_mask.bool() * now_class_mask.bool()).detach()
 
