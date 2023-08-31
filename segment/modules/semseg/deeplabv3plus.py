@@ -79,8 +79,8 @@ class DeepLabV3Plus(BaseNet):
                                   nn.Dropout(0.1, False))
 
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
-        if Isdysample:
-            self.Isdysample = Isdysample
+        self.Isdysample = Isdysample
+        if self.Isdysample:
             self.dysample = DySample(in_channels=nclass, scale=4,style='lp', groups=3)
 
     def base_forward(self, x):
