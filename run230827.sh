@@ -13,5 +13,5 @@
 #CUDA_VISIBLE_DEVICES=2 python main.py -ng 1 --config SEG/cropped_sup512x512/random1_ODOC_sup10_CEPairwiseCBLLoss &
 
 #dong in:内蒙A区 / 093机 c6d2118f3c-09af340d
-CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config SEG/cropped_sup512x512/random1_ODOC_sup10_CEFastCrossContrastCorrectPixelCBLLoss
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config SEG/cropped_sup512x512/random1_ODOC_sup10_CECrossContrastCorrectPixelCBLLoss.yaml
 
