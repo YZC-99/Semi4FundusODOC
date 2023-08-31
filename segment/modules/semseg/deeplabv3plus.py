@@ -81,7 +81,7 @@ class DeepLabV3Plus(BaseNet):
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
         if Isdysample:
             self.Isdysample = Isdysample
-            self.dysample = DySample(in_channels=nclass, scale=8,style='lp', groups=3)
+            self.dysample = DySample(in_channels=nclass, scale=4,style='lp', groups=3)
 
     def base_forward(self, x):
         h, w = x.shape[-2:]
