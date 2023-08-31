@@ -1814,7 +1814,7 @@ class FastContrastCrossPixelCorrectCBL(nn.Module):
     改进的目标是：希望周围的local center应该是分类正确的，而不应该带有分类失败的样本
     '''
     def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5]):
-        super(FastContrastPixelCorrectCBL,self).__init__()
+        super(FastContrastCrossPixelCorrectCBL,self).__init__()
 
         self.get_neigh = get_neigh
         self.gt2boundary = gt2boundary
