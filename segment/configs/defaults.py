@@ -22,6 +22,7 @@ _C.MODEL.ContrastPixelCBL_loss = None
 _C.MODEL.ContrastPixelCorrectCBL_loss = None
 _C.MODEL.Pairwise_CBL_loss = None
 _C.MODEL.LOVASZ_loss = False
+_C.MODEL.Isdysample = False
 _C.MODEL.Teacher_Student = False
 _C.MODEL.Teacher_pretrined = True
 _C.MODEL.Student_pretrined = False

@@ -60,7 +60,7 @@ class Base(pl.LightningModule):
         self.num_classes = num_classes
         if model == 'deeplabv3plus':
             self.backbone = backbone
-            self.model = DeepLabV3Plus(self.backbone,self.num_classes)
+            self.model = DeepLabV3Plus(self.backbone,self.num_classes,Isdysample=cfg.MODEL.Isdysample)
         if model == 'deeplabv2':
             self.backbone = backbone
             self.model = DeepLabV2(self.backbone,self.num_classes)

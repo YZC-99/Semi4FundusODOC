@@ -3,6 +3,7 @@ from segment.modules.semseg.base import BaseNet
 import torch
 from torch import nn
 import torch.nn.functional as F
+from segment.modules.nn.dysapmle import DySample
 
 class DualDeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass):
@@ -56,7 +57,7 @@ class DualDeepLabV3Plus(BaseNet):
 
 
 class DeepLabV3Plus(BaseNet):
-    def __init__(self, backbone, nclass):
+    def __init__(self, backbone, nclass,Isdysample = False):
         super(DeepLabV3Plus, self).__init__(backbone)
 
         low_level_channels = self.backbone.channels[0]
@@ -78,6 +79,9 @@ class DeepLabV3Plus(BaseNet):
                                   nn.Dropout(0.1, False))
 
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
+        if Isdysample:
+            self.Isdysample = Isdysample
+            self.dysample = DySample(in_channels=nclass, scale=8,style='lp', groups=3)
 
     def base_forward(self, x):
         h, w = x.shape[-2:]
@@ -92,7 +96,10 @@ class DeepLabV3Plus(BaseNet):
         out = torch.cat([c1, c4], dim=1)
         out_fuse = self.fuse(out)
         out_classifier = self.classifier(out_fuse)
-        out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
+        if self.Isdysample:
+            out = self.dysample(out_classifier)
+        else:
+            out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
 
         return {'out':out,
                 'out_classifier':out_classifier,
