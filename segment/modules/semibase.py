@@ -13,7 +13,7 @@ from segment.losses.seg.dice_loss import DiceLoss
 from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
 from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL
-from segment.losses.cbl import ContrastPixelCBL,ContrastPixelCorrectCBL
+from segment.losses.cbl import ContrastPixelCBL,ContrastPixelCorrectCBL,FastContrastCrossPixelCorrectCBL
 # from segment.losses.cbl import ContrastPixelCBLV2 as ContrastPixelCBL
 from segment.losses.lovasz_loss import lovasz_softmax
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
@@ -90,6 +90,8 @@ class Base(pl.LightningModule):
             self.ContrastPixelCBL_loss = ContrastPixelCBL(self.num_classes, cfg.MODEL.ContrastPixelCBL_loss)
         if cfg.MODEL.ContrastPixelCorrectCBL_loss is not None:
             self.ContrastPixelCorrectCBL_loss = ContrastPixelCorrectCBL(self.num_classes, cfg.MODEL.ContrastPixelCorrectCBL_loss)
+        if cfg.MODEL.FastContrastCrossPixelCorrectCBL_loss is not None:
+            self.FastContrastCrossPixelCorrectCBL_loss = FastContrastCrossPixelCorrectCBL(self.num_classes, cfg.MODEL.FastContrastCrossPixelCorrectCBL_loss)
 
 
         if cfg.MODEL.Pairwise_CBL_loss is not None:
@@ -190,6 +192,9 @@ class Base(pl.LightningModule):
         if self.cfg.MODEL.ContrastPixelCorrectCBL_loss:
             loss = loss + self.ContrastPixelCorrectCBL_loss(output, y, self.model.classifier.weight,
                                                       self.model.classifier.bias)
+        if self.cfg.MODEL.FastContrastCrossPixelCorrectCBL_loss:
+            loss = loss + self.FastContrastCrossPixelCorrectCBL_loss(output, y, self.model.classifier.weight,
+                                                            self.model.classifier.bias)
         if self.cfg.MODEL.Pairwise_CBL_loss:
             loss = loss + self.Pairwise_CBL_loss(output, y, self.model.classifier.weight, self.model.classifier.bias)
         return loss

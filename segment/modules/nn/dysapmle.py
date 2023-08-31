@@ -83,6 +83,15 @@ class DySample(nn.Module):
 
 
 if __name__ == '__main__':
-    x = torch.rand(2, 3, 64, 64)
-    dys = DySample(in_channels=3, scale=8,style='lp', groups=3)
-    print(dys(x).shape)
+    # x = torch.rand(2, 3, 64, 64)
+    # dys = DySample(in_channels=3, scale=8,style='lp', groups=3)
+    # print(dys(x).shape)
+    a = torch.arange(4*16).reshape(1, 4, 4, 4)
+    a_shuffled = F.pixel_shuffle(a, 2)
+    a_unshuffled = F.pixel_unshuffle(a,2)
+    print("a")
+    print(a.size())
+    print("a_shuffled")
+    print(a_shuffled.size())
+    print("a_unshuffled")
+    print(a_unshuffled.size())
