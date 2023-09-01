@@ -113,8 +113,8 @@ class Base(pl.LightningModule):
             output = self(x)
             loss = self.compute_loss(self,output,batch)
 
-        self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
-        self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
+        self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,)
+        self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,)
         return loss
 
 
@@ -131,10 +131,10 @@ class Base(pl.LightningModule):
         loss = outputs['val_loss']
         self.log("val/loss", loss, prog_bar=False, logger=True, on_step=False, on_epoch=True,
                       sync_dist=True,
-                      rank_zero_only=True)
+                      )
         self.log("val_loss", loss, prog_bar=True, logger=False, on_step=False, on_epoch=True,
                       sync_dist=True,
-                      rank_zero_only=True)
+                      )
         self.step_end_compute_update_metrics(self, outputs)
 
     def on_validation_epoch_end(self) -> None:
