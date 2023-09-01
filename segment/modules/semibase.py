@@ -56,13 +56,13 @@ class Base(pl.LightningModule):
         self.init_from_ckpt = init_from_ckpt
 
         self.loss = initialize_from_config(loss)
+        
         init_loss(self)
         init_metrics(self)
 
-        self.compute_loss = compute_loss
-        self.uda_train = uda_train
-
-        self.gray2rgb = gray2rgb
+        # compute_loss = compute_loss
+        # uda_train = uda_train
+        # gray2rgb = gray2rgb
 
 
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
@@ -104,13 +104,13 @@ class Base(pl.LightningModule):
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
         if self.cfg.MODEL.uda:
-            loss = self.uda_train(batch)
+            loss = uda_train(batch)
         else:
             x = batch['img']
             y = batch['mask']
             output = self(x)
 
-            loss = self.compute_loss(output,batch)
+            loss = compute_loss(output,batch)
 
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,rank_zero_only=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,rank_zero_only=True)
@@ -123,7 +123,7 @@ class Base(pl.LightningModule):
         output = self(x)
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
-        loss = self.compute_loss(output,batch)
+        loss = compute_loss(output,batch)
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
@@ -385,8 +385,8 @@ class Base(pl.LightningModule):
             tgt_out = torch.nn.functional.softmax(tgt_out,dim=1)
             tgt_predict = tgt_out.argmax(1)
 
-            src_predict_color, tgt_predict_color = self.gray2rgb(src_predict, tgt_predict)
-            src_y_color, tgt_y_color = self.gray2rgb(src_label, tgt_label)
+            src_predict_color, tgt_predict_color = gray2rgb(src_predict, tgt_predict)
+            src_y_color, tgt_y_color = gray2rgb(src_label, tgt_label)
 
             log["src_image"] = src_input
             log["src_label"] = src_y_color
@@ -400,7 +400,7 @@ class Base(pl.LightningModule):
             out = self(x)['out']
             out = torch.nn.functional.softmax(out,dim=1)
             predict = out.argmax(1)
-            y_color,predict_color = self.gray2rgb(y,predict)
+            y_color,predict_color = gray2rgb(y,predict)
             log["image"] = x
             log["label"] = y_color
             log["predict"] = predict_color
