@@ -153,11 +153,9 @@ def init_metrics(pl_module: pl.LightningModule):
         pl_module.od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
 
 
-def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs,tag):
+def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
 
-    loss, preds, y = outputs['loss'], outputs['preds'], outputs['y']
-    pl_module.log("{}/loss".format(tag), loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,
-             rank_zero_only=True)
+    preds, y = outputs['preds'], outputs['y']
     # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
     # 背景的指标不必计算
     # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0

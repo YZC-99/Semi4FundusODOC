@@ -128,7 +128,12 @@ class Base(pl.LightningModule):
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
-        self.step_end_compute_update_metrics(self, outputs,'val')
+        loss = outputs['val_loss']
+        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True,
+                      sync_dist=True,
+                      rank_zero_only=True)
+
+        self.step_end_compute_update_metrics(self, outputs)
 
     def on_validation_epoch_end(self) -> None:
         self.epoch_end_show_metrics(self,'val')
