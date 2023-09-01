@@ -23,7 +23,8 @@ from torchviz import make_dot
 class SetupCallback(Callback):
     def __init__(self, config: OmegaConf, exp_config: OmegaConf, basedir: Path, logdir: str = "logs", ckptdir:str = "ckpt") -> None:
         super().__init__()
-        self.logdir = basedir / logdir
+        # self.logdir = basedir / logdir
+        self.logdir = basedir
         # self.ckptdir = basedir / ckptdir
         self.prototypes = basedir / 'prototypes'
         self.pseudo = basedir / 'pseudo_masks'
