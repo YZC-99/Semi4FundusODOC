@@ -117,7 +117,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         monitor="val_loss",
         mode="min",
         save_top_k=1,
-        save_last=False,
+        save_last=True,
         verbose=False,
     )
 
