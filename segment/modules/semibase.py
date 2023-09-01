@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 from utils.general import initialize_from_config
 from utils.my_torchmetrics import BoundaryIoU
 
-from segment.modules.pyl_utils import init_from_ckpt,init_loss,init_metrics,compute_loss,uda_train,gray2rgb
+from segment.modules.pyl_utils import *
 
 
 class Base(pl.LightningModule):
@@ -64,6 +64,10 @@ class Base(pl.LightningModule):
         self.uda_train = uda_train
         self.gray2rgb = gray2rgb
 
+        self.step_end_compute_update_metrics = step_end_compute_update_metrics
+        self.epoch_end_show_metrics = epoch_end_show_metrics
+
+
 
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
@@ -87,8 +91,6 @@ class Base(pl.LightningModule):
             logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
             out['out'] = logits
         return out
-
-
 
 
     def on_train_start(self) -> None:
@@ -126,119 +128,10 @@ class Base(pl.LightningModule):
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):
-        loss,preds,y = outputs['val_loss'],outputs['preds'],outputs['y']
-        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
-        # 背景的指标不必计算
-        # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
-        od_preds = copy.deepcopy(preds)
-        od_y = copy.deepcopy(y)
-        od_preds[od_preds != 1] = 0
-        od_y[od_y != 1] = 0
-
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_preds = copy.deepcopy(preds)
-            oc_y = copy.deepcopy(y)
-            oc_preds[oc_preds != 2] = 0
-            oc_preds[oc_preds != 0] = 1
-            oc_y[oc_y != 2] = 0
-            oc_y[oc_y != 0] = 1
-            self.val_oc_dice_score.update(oc_preds, oc_y)
-            self.val_oc_withB_dice_score.update(oc_preds, oc_y)
-            self.val_oc_multiclass_jaccard.update(oc_preds, oc_y)
-            self.val_oc_binary_jaccard.update(oc_preds, oc_y)
-            self.val_oc_binary_boundary_jaccard.update(oc_preds, oc_y)
-            self.val_oc_multiclass_boundary_jaccard.update(oc_preds, oc_y)
-
-            #计算 od_cover_oc
-            od_cover_gt = od_y + oc_y
-            od_cover_gt[od_cover_gt > 0] = 1
-            od_cover_preds = od_preds + oc_preds
-            od_cover_preds[od_cover_preds > 0] = 1
-
-            self.val_od_dice_score.update(od_cover_preds,od_cover_gt)
-            self.val_od_withB_dice_score.update(od_cover_preds,od_cover_gt)
-            self.val_od_multiclass_jaccard.update(od_cover_preds,od_cover_gt)
-            self.val_od_binary_jaccard.update(od_cover_preds,od_cover_gt)
-            self.val_od_binary_boundary_jaccard.update(od_cover_preds, od_cover_gt)
-            self.val_od_multiclass_boundary_jaccard.update(od_cover_preds, od_cover_gt)
-
-
-        self.val_od_rmOC_dice_score.update(od_preds, od_y)
-        self.val_od_rmOC_jaccard.update(od_preds, od_y)
+        self.step_end_compute_update_metrics(self, outputs,'val')
 
     def on_validation_epoch_end(self) -> None:
-        od_miou = self.val_od_multiclass_jaccard.compute()
-        od_iou = self.val_od_binary_jaccard.compute()
-        od_biou = self.val_od_binary_boundary_jaccard.compute()
-        od_mbiou = self.val_od_multiclass_boundary_jaccard.compute()
-
-        od_dice = self.val_od_dice_score.compute()
-        od_withBdice = self.val_od_withB_dice_score.compute()
-
-        self.val_od_multiclass_jaccard.reset()
-        self.val_od_binary_jaccard.reset()
-        self.val_od_dice_score.reset()
-        self.val_od_withB_dice_score.reset()
-
-        self.log("val_OD_IoU", od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_OD_BIoU", od_biou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_OD_mBIoU", od_mbiou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_OD_mIoU", od_miou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        self.log("val_OD_dice",od_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val_OD_withBdice",od_withBdice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        self.log("val/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_BIoU", od_biou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_mBIoU", od_mbiou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_mIoU", od_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_dice", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("val/OD_withBdice", od_withBdice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-
-        # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
-
-        oc_miou = self.val_oc_multiclass_jaccard.compute()
-        oc_iou = self.val_oc_binary_jaccard.compute()
-        oc_biou = self.val_oc_binary_boundary_jaccard.compute()
-        oc_mbiou = self.val_oc_multiclass_boundary_jaccard.compute()
-        oc_dice = self.val_oc_dice_score.compute()
-        oc_withBdice = self.val_oc_withB_dice_score.compute()
-        self.val_oc_multiclass_jaccard.reset()
-        self.val_oc_binary_jaccard.reset()
-        self.val_oc_dice_score.reset()
-        self.val_oc_withB_dice_score.reset()
-
-        self.log("val_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_OC_BIoU", oc_biou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_OC_mBIoU", oc_mbiou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_OC_mIoU", oc_miou, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_OC_dice", oc_dice, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_OC_withBdice", oc_withBdice, prog_bar=True, logger=False, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-
-        self.log("val/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OC_BIoU", oc_biou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OC_mBIoU", oc_mbiou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OC_mIoU", oc_miou, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OC_dice", oc_dice, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OC_withBdice", oc_withBdice, prog_bar=False, logger=True, on_step=False,on_epoch=True, sync_dist=True, rank_zero_only=True)
-
-
-        od_rm_oc_iou = self.val_od_rmOC_jaccard.compute()
-        od_rm_oc_dice = self.val_od_rmOC_dice_score.compute()
-        self.val_od_rmOC_jaccard.reset()
-        self.val_od_rmOC_dice_score.reset()
-        self.log("val_OD_rm_OC_IoU", od_rm_oc_iou, prog_bar=True, logger=False, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_OD_rm_OC_dice", od_rm_oc_dice, prog_bar=True, logger=False, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OD_rm_OC_IoU", od_rm_oc_iou, prog_bar=False, logger=True, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("val/OD_rm_OC_dice", od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-
-
+        self.epoch_end_show_metrics(self,'val')
 
     def test_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
@@ -249,98 +142,10 @@ class Base(pl.LightningModule):
         return {'preds':preds,'y':y}
 
     def test_step_end(self, outputs):
-        preds,y = outputs['preds'],outputs['y']
-        # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
-        # 背景的指标不必计算
-        # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
-        od_preds = copy.deepcopy(preds)
-        od_y = copy.deepcopy(y)
-        od_preds[od_preds != 1] = 0
-        od_y[od_y != 1] = 0
-
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_preds = copy.deepcopy(preds)
-            oc_y = copy.deepcopy(y)
-            oc_preds[oc_preds != 2] = 0
-            oc_preds[oc_preds != 0] = 1
-            oc_y[oc_y != 2] = 0
-            oc_y[oc_y != 0] = 1
-            self.test_oc_dice_score.update(oc_preds, oc_y)
-            self.test_oc_jaccard.update(oc_preds, oc_y)
-
-            #计算 od_cover_oc
-            od_cover_gt = od_y + oc_y
-            od_cover_gt[od_cover_gt > 0] = 1
-
-            od_cover_preds = od_preds + oc_preds
-            od_cover_preds[od_cover_preds > 0] = 1
-            self.test_od_coverOC_dice_score.update(od_cover_preds,od_cover_gt)
-            self.test_oc_jaccard.update(od_cover_preds,od_cover_gt)
-
-
-        self.test_od_dice_score.update(od_preds, od_y)
-        self.test_od_jaccard.update(od_preds, od_y)
-
-        self.test_mean_dice_score.update(preds, y)
-        self.test_mean_jaccard.update(preds, y)
+        self.step_end_compute_update_metrics(self, outputs, 'test')
 
     def on_test_epoch_end(self) -> None:
-        od_iou = self.test_od_jaccard.compute()
-        od_dice = self.test_od_dice_score.compute()
-        self.log("test_OD_IoU", od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test_OD_dice_score",od_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/OD_IoU", od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/OD_dice_score", od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        self.log("test_Mean_bg_IoU", self.test_mean_jaccard.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test_Mean_bg_dice_score", self.test_mean_dice_score.compute(), prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/Mean_bg_IoU", self.test_mean_jaccard.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-        self.log("test/Mean_bg_dice_score", self.test_mean_dice_score.compute(), prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,rank_zero_only=True)
-
-        m_iou = od_iou
-        m_dice = od_dice
-        # 每一次testidation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
-        self.test_mean_dice_score.reset()
-        self.test_mean_jaccard.reset()
-        self.test_od_dice_score.reset()
-        self.test_od_jaccard.reset()
-        if self.cfg.MODEL.NUM_CLASSES == 3:
-            oc_iou = self.test_oc_jaccard.compute()
-            oc_dice = self.test_oc_dice_score.compute()
-            self.log("test_OC_IoU", oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test_OC_dice_score", oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OC_IoU", oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OC_dice_score", oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.test_oc_dice_score.reset()
-            self.test_oc_jaccard.reset()
-            m_iou = (od_iou + oc_iou)/2
-            m_dice = (od_dice + oc_dice)/2
-
-            od_cover_oc_iou = self.test_od_coverOC_jaccard.compute()
-            od_cover_oc_dice = self.test_od_coverOC_dice_score.compute()
-            self.log("test_OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test_OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=True, logger=False, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OD_cover_OC_IoU", od_cover_oc_iou, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.log("test/OD_cover_OC_dice_score", od_cover_oc_dice, prog_bar=False, logger=True, on_step=False,
-                     on_epoch=True, sync_dist=True, rank_zero_only=True)
-            self.test_od_coverOC_dice_score.reset()
-            self.test_od_coverOC_jaccard.reset()
-
-        self.log("test_mIoU", m_iou, prog_bar=True, logger=False, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("test/mIoU", m_iou, prog_bar=False, logger=True, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("test_mDice", m_dice, prog_bar=True, logger=False, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
-        self.log("test/mDice", m_dice, prog_bar=False, logger=True, on_step=False,
-                 on_epoch=True, sync_dist=True, rank_zero_only=True)
+        self.epoch_end_show_metrics(self, 'test')
 
     def setup(self, stage: str):
         if stage == 'fit':
@@ -372,7 +177,6 @@ class Base(pl.LightningModule):
 
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
         log = dict()
-
         if isinstance(batch,tuple):
             src, tgt = batch
             src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']

@@ -88,36 +88,6 @@ def init_loss(pl_module: pl.LightningModule):
         )
         pl_module.logit_scale = nn.Parameter(torch.ones(1, pl_module.num_classes, 1, 1))
         pl_module.logit_bias = nn.Parameter(torch.zeros(1, pl_module.num_classes, 1, 1))
-
-def init_metrics(pl_module: pl.LightningModule):
-    '''
-    - 这里计算dice有几个注意事项，如果计算二分类的dice时，num_classes=2，则返回的是正负样本的dice均值
-    如果num_classes=1，则返回的是正样本的dice，但此时需要手动调整multiclass=False
-
-    - 计算iou也有同样的事项需要注意：如果二分类任务的时候，num_classes=2，且task='binary'，那么此时计算的是正样本的iou。
-    如果num_classes=2，且task='multiclass'，则计算的是正负样本的iou的总和取均值
-
-    配置文件中的v2是指dice开了multiclass=True
-    配置文件中的v3是指dice开了multiclass=False
-    '''
-    pl_module.val_od_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
-    pl_module.val_od_withB_dice_score = Dice(num_classes=2, average='macro').to(pl_module.device)
-    pl_module.val_od_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
-    pl_module.val_od_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(pl_module.device)
-    pl_module.val_od_binary_boundary_jaccard = BoundaryIoU(num_classes=2, task='binary').to(pl_module.device)
-    pl_module.val_od_multiclass_boundary_jaccard = BoundaryIoU(num_classes=2, task='multiclass').to(pl_module.device)
-
-    if pl_module.cfg.MODEL.NUM_CLASSES == 3:
-        pl_module.val_oc_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
-        pl_module.val_oc_withB_dice_score = Dice(num_classes=2, average='macro').to(pl_module.device)
-        pl_module.val_oc_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
-        pl_module.val_oc_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(pl_module.device)
-        pl_module.val_oc_binary_boundary_jaccard = BoundaryIoU(num_classes=2, task='binary').to(pl_module.device)
-        pl_module.val_oc_multiclass_boundary_jaccard = BoundaryIoU(num_classes=2, task='multiclass').to(pl_module.device)
-
-        pl_module.val_od_rmOC_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
-        pl_module.val_od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
-
 def compute_loss(pl_module: pl.LightningModule,output,batch):
     y = batch['mask']
     backbone_feat, logits = output['backbone_features'], output['out']
@@ -153,13 +123,177 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         loss = loss + pl_module.Pairwise_CBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
     return loss
 
+def init_metrics(pl_module: pl.LightningModule):
+    '''
+    - 这里计算dice有几个注意事项，如果计算二分类的dice时，num_classes=2，则返回的是正负样本的dice均值
+    如果num_classes=1，则返回的是正样本的dice，但此时需要手动调整multiclass=False
 
-def uda_train(pl_module: pl.LightningModule,batch):
+    - 计算iou也有同样的事项需要注意：如果二分类任务的时候，num_classes=2，且task='binary'，那么此时计算的是正样本的iou。
+    如果num_classes=2，且task='multiclass'，则计算的是正负样本的iou的总和取均值
+
+    配置文件中的v2是指dice开了multiclass=True
+    配置文件中的v3是指dice开了multiclass=False
+    '''
+    pl_module.od_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
+    pl_module.od_withB_dice_score = Dice(num_classes=2, average='macro').to(pl_module.device)
+    pl_module.od_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
+    pl_module.od_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(pl_module.device)
+    pl_module.od_binary_boundary_jaccard = BoundaryIoU(num_classes=2, task='binary').to(pl_module.device)
+    pl_module.od_multiclass_boundary_jaccard = BoundaryIoU(num_classes=2, task='multiclass').to(pl_module.device)
+
+    if pl_module.cfg.MODEL.NUM_CLASSES == 3:
+        pl_module.oc_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
+        pl_module.oc_withB_dice_score = Dice(num_classes=2, average='macro').to(pl_module.device)
+        pl_module.oc_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
+        pl_module.oc_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(pl_module.device)
+        pl_module.oc_binary_boundary_jaccard = BoundaryIoU(num_classes=2, task='binary').to(pl_module.device)
+        pl_module.oc_multiclass_boundary_jaccard = BoundaryIoU(num_classes=2, task='multiclass').to(pl_module.device)
+
+        pl_module.od_rmOC_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
+        pl_module.od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
+
+
+def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs,tag):
+
+    loss, preds, y = outputs['loss'], outputs['preds'], outputs['y']
+    pl_module.log("{}/loss".format(tag), loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
+    # 背景的指标不必计算
+    # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
+    od_preds = copy.deepcopy(preds)
+    od_y = copy.deepcopy(y)
+    od_preds[od_preds != 1] = 0
+    od_y[od_y != 1] = 0
+
+    if pl_module.cfg.MODEL.NUM_CLASSES == 3:
+        oc_preds = copy.deepcopy(preds)
+        oc_y = copy.deepcopy(y)
+        oc_preds[oc_preds != 2] = 0
+        oc_preds[oc_preds != 0] = 1
+        oc_y[oc_y != 2] = 0
+        oc_y[oc_y != 0] = 1
+        pl_module.oc_dice_score.update(oc_preds, oc_y)
+        pl_module.oc_withB_dice_score.update(oc_preds, oc_y)
+        pl_module.oc_multiclass_jaccard.update(oc_preds, oc_y)
+        pl_module.oc_binary_jaccard.update(oc_preds, oc_y)
+        pl_module.oc_binary_boundary_jaccard.update(oc_preds, oc_y)
+        pl_module.oc_multiclass_boundary_jaccard.update(oc_preds, oc_y)
+
+        # 计算 od_cover_oc
+        od_cover_gt = od_y + oc_y
+        od_cover_gt[od_cover_gt > 0] = 1
+        od_cover_preds = od_preds + oc_preds
+        od_cover_preds[od_cover_preds > 0] = 1
+
+        pl_module.od_dice_score.update(od_cover_preds, od_cover_gt)
+        pl_module.od_withB_dice_score.update(od_cover_preds, od_cover_gt)
+        pl_module.od_multiclass_jaccard.update(od_cover_preds, od_cover_gt)
+        pl_module.od_binary_jaccard.update(od_cover_preds, od_cover_gt)
+        pl_module.od_binary_boundary_jaccard.update(od_cover_preds, od_cover_gt)
+        pl_module.od_multiclass_boundary_jaccard.update(od_cover_preds, od_cover_gt)
+
+    pl_module.od_rmOC_dice_score.update(od_preds, od_y)
+    pl_module.od_rmOC_jaccard.update(od_preds, od_y)
+
+def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
+    od_miou = pl_module.od_multiclass_jaccard.compute()
+    od_iou = pl_module.od_binary_jaccard.compute()
+    od_biou = pl_module.od_binary_boundary_jaccard.compute()
+    od_mbiou = pl_module.od_multiclass_boundary_jaccard.compute()
+
+    od_dice = pl_module.od_dice_score.compute()
+    od_withBdice = pl_module.od_withB_dice_score.compute()
+
+    pl_module.od_multiclass_jaccard.reset()
+    pl_module.od_binary_jaccard.reset()
+    pl_module.od_dice_score.reset()
+    pl_module.od_withB_dice_score.reset()
+
+    pl_module.log("{}_OD_IoU".format(tag), od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OD_BIoU".format(tag), od_biou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OD_mBIoU".format(tag), od_mbiou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OD_mIoU".format(tag), od_miou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+
+    pl_module.log("{}_OD_dice".format(tag), od_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OD_withBdice".format(tag), od_withBdice, prog_bar=True, logger=False, on_step=False, on_epoch=True,
+             sync_dist=True, rank_zero_only=True)
+
+    pl_module.log("{}/OD_IoU".format(tag), od_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OD_BIoU".format(tag), od_biou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OD_mBIoU".format(tag), od_mbiou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OD_mIoU".format(tag), od_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OD_dice".format(tag), od_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OD_withBdice".format(tag), od_withBdice, prog_bar=False, logger=True, on_step=False, on_epoch=True,
+             sync_dist=True, rank_zero_only=True)
+
+    # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
+
+    oc_miou = pl_module.oc_multiclass_jaccard.compute()
+    oc_iou = pl_module.oc_binary_jaccard.compute()
+    oc_biou = pl_module.oc_binary_boundary_jaccard.compute()
+    oc_mbiou = pl_module.oc_multiclass_boundary_jaccard.compute()
+    oc_dice = pl_module.oc_dice_score.compute()
+    oc_withBdice = pl_module.oc_withB_dice_score.compute()
+    pl_module.oc_multiclass_jaccard.reset()
+    pl_module.oc_binary_jaccard.reset()
+    pl_module.oc_dice_score.reset()
+    pl_module.oc_withB_dice_score.reset()
+
+    pl_module.log("{}_OC_IoU".format(tag), oc_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OC_BIoU".format(tag), oc_biou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OC_mBIoU".format(tag), oc_mbiou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OC_mIoU".format(tag), oc_miou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OC_dice".format(tag), oc_dice, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}_OC_withBdice".format(tag), oc_withBdice, prog_bar=True, logger=False, on_step=False, on_epoch=True,
+             sync_dist=True, rank_zero_only=True)
+
+    pl_module.log("{}/OC_IoU".format(tag), oc_iou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OC_BIoU".format(tag), oc_biou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OC_mBIoU".format(tag), oc_mbiou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OC_mIoU".format(tag), oc_miou, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OC_dice".format(tag), oc_dice, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True,
+             rank_zero_only=True)
+    pl_module.log("{}/OC_withBdice".format(tag), oc_withBdice, prog_bar=False, logger=True, on_step=False, on_epoch=True,
+             sync_dist=True, rank_zero_only=True)
+
+    od_rm_oc_iou = pl_module.od_rmOC_jaccard.compute()
+    od_rm_oc_dice = pl_module.od_rmOC_dice_score.compute()
+    pl_module.od_rmOC_jaccard.reset()
+    pl_module.od_rmOC_dice_score.reset()
+    pl_module.log("{}_OD_rm_OC_IoU".format(tag), od_rm_oc_iou, prog_bar=True, logger=False, on_step=False,
+             on_epoch=True, sync_dist=True, rank_zero_only=True)
+    pl_module.log("{}_OD_rm_OC_dice".format(tag), od_rm_oc_dice, prog_bar=True, logger=False, on_step=False,
+             on_epoch=True, sync_dist=True, rank_zero_only=True)
+    pl_module.log("{}/OD_rm_OC_IoU".format(tag), od_rm_oc_iou, prog_bar=False, logger=True, on_step=False,
+             on_epoch=True, sync_dist=True, rank_zero_only=True)
+    pl_module.log("{}/OD_rm_OC_dice".format(tag), od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
+             on_epoch=True, sync_dist=True, rank_zero_only=True)
+
+def uda_train(pl_module: pl.LightningModule, batch):
         src, tgt = batch
         src_input, src_label, tgt_input, tgt_label = src['img'], src['mask'], tgt['img'], tgt['mask']
 
         pcl_criterion = PrototypeContrastiveLoss(pl_module.cfg)
-
 
         # 源域图片的大小
         src_size = src_input.shape[-2:]
@@ -216,8 +350,10 @@ def uda_train(pl_module: pl.LightningModule,batch):
         if pl_module.cfg.SOLVER.MULTI_LEVEL:
             _, _, Hs_out, Ws_out = src_out.size()
             _, _, Ht_out, Wt_out = tgt_out.size()
-            src_out = src_out.permute(0, 2, 3, 1).contiguous().view(B * Hs_out * Ws_out, pl_module.cfg.MODEL.NUM_CLASSES)
-            tgt_out = tgt_out.permute(0, 2, 3, 1).contiguous().view(B * Ht_out * Wt_out, pl_module.cfg.MODEL.NUM_CLASSES)
+            src_out = src_out.permute(0, 2, 3, 1).contiguous().view(B * Hs_out * Ws_out,
+                                                                    pl_module.cfg.MODEL.NUM_CLASSES)
+            tgt_out = tgt_out.permute(0, 2, 3, 1).contiguous().view(B * Ht_out * Wt_out,
+                                                                    pl_module.cfg.MODEL.NUM_CLASSES)
 
             src_out_mask = src_label.unsqueeze(0).permute(0, 2, 3, 1).contiguous().view(B * Hs_out * Ws_out, )
             tgt_pseudo_label = F.interpolate(tgt_mask.unsqueeze(0).float(), size=(Ht_out, Wt_out),
@@ -243,6 +379,7 @@ def uda_train(pl_module: pl.LightningModule,batch):
             loss = loss_sup + pl_module.cfg.SOLVER.LAMBDA_FEAT * loss_feat
 
         return loss
+
 
 def gray2rgb(pl_module: pl.LightningModule,y,predict):
     # Convert labels and predictions to color images.
