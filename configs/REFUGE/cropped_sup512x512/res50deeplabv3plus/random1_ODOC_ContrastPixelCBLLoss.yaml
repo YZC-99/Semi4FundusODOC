@@ -1,0 +1,43 @@
+MODEL:
+  sup: False
+  NUM_CLASSES: 3
+  epochs: 200
+  lr: 0.001 # 0.004/16*batch_size
+  backbone: 'resnet50'
+  model: 'deeplabv3plus'
+  ContrastPixelCBL_loss: [2.0,0.1,0.05]
+  loss:
+    target: torch.nn.CrossEntropyLoss
+
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 8
+        num_workers: 4
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'cropped_sup'
+                root: './data/fundus_datasets/od_oc/REFUGE/'
+                labeled_id_path: 'dataset/REFUGE/cropped_sup/training.txt'
+                size: 512
+                mode: 'train'
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'REFUGE/cropped_sup'
+                root: './data/fundus_datasets/od_oc/REFUGE/'
+                size: 512
+                mode: 'val'
+        test:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+              task: 'od_oc'
+              name: 'REFUGE/cropped_sup'
+              root: './data/fundus_datasets/od_oc/REFUGE/'
+              size: 512
+              mode: 'test'
