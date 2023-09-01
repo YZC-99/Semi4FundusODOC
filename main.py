@@ -47,6 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_frequency', type=int, default=10000)
     parser.add_argument('-m', '--max_images', type=int, default=1)
     parser.add_argument('--limit_val_batches', type=int, default=8)
+    parser.add_argument('-v','--check_val_every_n_epoch', type=int, default=1)
     args = parser.parse_args()
 
     # Set random seed
@@ -162,6 +163,7 @@ if __name__ == '__main__':
                          accumulate_grad_batches=exp_config.update_every,
                          logger=logger,
                          profiler= simple_Profiler,
+                         check_val_every_n_epoch= args.check_val_every_n_epoch,
                          )
 
     # Train
