@@ -65,7 +65,7 @@ class Base(pl.LightningModule):
             self.backbone = backbone
             self.model = DeepLabV2(self.backbone,self.num_classes)
         if model == 'unet':
-            self.model = UNet(in_channels=self.num_classes)
+            self.model = UNet(self.num_classes)
 
         self.loss = initialize_from_config(loss)
         if cfg.MODEL.ABL_loss:
