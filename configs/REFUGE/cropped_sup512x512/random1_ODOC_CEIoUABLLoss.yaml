@@ -6,7 +6,8 @@ MODEL:
   crop_size: 512
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.05]
+  ABL_loss: True
+  LOVASZ_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -14,15 +15,15 @@ MODEL:
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
-        batch_size: 8
+        batch_size: 16
         num_workers: 8
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'cropped_semi/random1/10'
-                root: './data/fundus_datasets/od_oc/SEG/'
-                labeled_id_path: 'dataset/SEG/cropped_semi/random1/10/labeled.txt'
+                name: 'cropped_sup'
+                root: './data/fundus_datasets/od_oc/REFUGE/'
+                labeled_id_path: 'dataset/REFUGE/cropped_sup/training.txt'
                 size: 512
                 mode: 'train'
 
@@ -30,15 +31,15 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'SEG/cropped_semi/random1'
-                root: './data/fundus_datasets/od_oc/SEG/'
+                name: 'REFUGE/cropped_sup'
+                root: './data/fundus_datasets/od_oc/REFUGE/'
                 size: 512
                 mode: 'val'
         test:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
               task: 'od_oc'
-              name: 'SEG/cropped_sup/random1'
-              root: './data/fundus_datasets/od_oc/SEG/'
+              name: 'REFUGE/cropped_sup'
+              root: './data/fundus_datasets/od_oc/REFUGE/'
               size: 512
               mode: 'test'
