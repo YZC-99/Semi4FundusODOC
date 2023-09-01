@@ -12,7 +12,7 @@ from typing import Tuple, List, Dict, ClassVar
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint, Callback
 from pytorch_lightning.profilers import SimpleProfiler,AdvancedProfiler
-from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger
+from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger,CSVLogger
 import torch.distributed as dist
 from .callback import *
 from yacs.config import CfgNode
@@ -110,6 +110,16 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
+    # val_loss
+    on_min_val_loss = ModelCheckpoint(
+        dirpath = ckpt_path,
+        filename="{epoch}-{val_OD_dice:.6f}-{val_OD_mIoU:.6f}-{val_OC_dice:.6f}-{val_OC_mIoU:.6f}",
+        monitor="val_loss",
+        mode="min",
+        save_top_k=1,
+        save_last=False,
+        verbose=False,
+    )
 
 
     Profiler = SimpleProfiler(filename="perf_logs")
@@ -120,7 +130,8 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
-        return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
+        # return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
+        return [setup_callback,on_min_val_loss,logger_img_callback], logger,Profiler
     return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
 
 
