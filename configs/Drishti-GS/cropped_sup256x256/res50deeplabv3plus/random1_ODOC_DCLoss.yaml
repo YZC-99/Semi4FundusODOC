@@ -1,7 +1,7 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 200
+  epochs: 150
   lr: 0.001 # 0.004/16*batch_size
   backbone: 'resnet50'
   model: 'deeplabv3plus'
@@ -13,7 +13,7 @@ MODEL:
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
-        batch_size: 16
+        batch_size: 8
         num_workers: 4
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
