@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
 from torch.distributions import kl_divergence
+from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 
 from functions import vq, vq_st
 
@@ -274,13 +275,89 @@ class GatedPixelCNN(nn.Module):
                     probs.multinomial(1).squeeze().data
                 )
         return x
+
+
+class ResVectorQuantizedVAE(nn.Module):
+    def __init__(self,backbone, input_dim=3, dim=512, K=512):
+        super().__init__()
+        self.input_layer = nn.Conv2d(input_dim,input_dim*3,3,padding=1)
+        backbones = {"resnet18":resnet18,"resnet34":resnet34, "resnet50":resnet50, "resnet101":resnet101}
+        self.encoder = backbones[backbone]
+        self.encoder.conv1.in_channels = input_dim
+
+        self.codebook = VQEmbedding(K, dim)
+
+        self.decoder = nn.Sequential(
+            ResBlock(dim),
+            ResBlock(dim),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(dim, dim, 4, 2, 1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(dim, dim, 4, 2, 1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(dim, dim, 4, 2, 1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(dim, dim, 4, 2, 1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(dim, dim, 4, 2, 1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(True),
+        )
+        self.output_layer = nn.Sequential(
+            nn.Conv2d(dim, input_dim, 4, 2, 1),
+            nn.Tanh()
+        )
+
+
+    def encode(self, x):
+        z_e_x = self.encoder(x)
+        latents = self.codebook(z_e_x)
+        return latents
+
+    def decode(self, latents):
+        z_q_x = self.codebook.embedding(latents).permute(0, 3, 1, 2)  # (B, D, H, W)
+        x_tilde = self.decoder(z_q_x)
+        return x_tilde
+
+    def forward(self, x):
+        if x.shape[1] == 1:
+            x = self.input_layer(x)
+        z_e_x1,z_e_x2,z_e_x3,z_e_x4 = self.encoder.base_forward(x)
+        z_q_x_st, z_q_x = self.codebook.straight_through(z_e_x4)
+        x_logits = self.decoder(z_q_x_st)
+        x_tilde = self.output_layer(x_logits)
+        return {"x_tilde":x_tilde,
+                "x_logits":x_logits,
+                "z_e_x":z_e_x4,
+                "z_q_x":z_q_x,
+                }
+
 if __name__ == '__main__':
-    num_channels = 3
-    hidden_size = 256
-    z_dim = 128
-    vqvae = VectorQuantizedVAE(num_channels,hidden_size,z_dim)
-    input = torch.randn(2,3,512,512)
-    out = vqvae(input)
+    num_channels = 1
+    hidden_size = 512
+    z_dim = 16
+    input = torch.randn(2,num_channels,512,512)
+
+    resvqvae = ResVectorQuantizedVAE(num_channels,hidden_size,z_dim)
+
+    out = resvqvae(input)
     print(out[0].size())
     print(out[1].size())
-    print(out[2].size())
+    # print(out[2].size())
+    # vqvae = VectorQuantizedVAE(num_channels,hidden_size,z_dim)
+    #
+    # res34 = resnet34()
+
+    # res34_out = res34.base_forward(input)
+    # print(out[0].size())
+    # print(out[1].size())
+    # print(out[2].size())
+    # print("res")
+    # print(res34_out[0].size())
+    # print(res34_out[1].size())
+    # print(res34_out[2].size())
+    # print(res34_out[3].size())
