@@ -120,5 +120,5 @@ class Base(pl.LightningModule):
         # colored_image = colormap(normalized_out.cpu())  # 归一化到 [0, 1] 范围
 
         log["label"] = y_color
-        log["predict"] = normalized_out * 255
+        log["predict"] = normalized_out.squeeze(1) * 255
         return log
