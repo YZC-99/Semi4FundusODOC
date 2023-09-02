@@ -58,7 +58,7 @@ class UNet(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
         )
-        self.final = nn.Conv2d(64, num_classes, kernel_size=1)
+        self.classifier = nn.Conv2d(64, num_classes, kernel_size=1)
 
     def forward(self, x):
         enc1 = self.enc1(x)
@@ -70,7 +70,7 @@ class UNet(nn.Module):
         dec3 = self.dec3(torch.cat([dec4, F.upsample(enc3, dec4.size()[2:], mode='bilinear')], 1))
         dec2 = self.dec2(torch.cat([dec3, F.upsample(enc2, dec3.size()[2:], mode='bilinear')], 1))
         dec1 = self.dec1(torch.cat([dec2, F.upsample(enc1, dec2.size()[2:], mode='bilinear')], 1))
-        final = self.final(dec1)
+        final = self.classifier(dec1)
         out =  F.upsample(final, x.size()[2:], mode='bilinear')
 
 
