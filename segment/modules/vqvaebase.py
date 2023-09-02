@@ -116,9 +116,9 @@ class Base(pl.LightningModule):
         normalized_out = (out - min_value) / (max_value - min_value)
 
         # colorize_out
-        colormap = plt.get_cmap('hot')
-        colored_image = colormap(normalized_out.cpu())  # 归一化到 [0, 1] 范围
+        # colormap = plt.get_cmap('hot')
+        # colored_image = colormap(normalized_out.cpu())  # 归一化到 [0, 1] 范围
 
         log["label"] = y_color
-        log["predict"] = colored_image
+        log["predict"] = normalized_out * 255
         return log
