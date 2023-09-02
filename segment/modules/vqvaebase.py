@@ -10,6 +10,7 @@ from segment.losses.vae.loss import vqvae_loss
 from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
 import torchmetrics
+from torchvision import transforms as T
 from segment.modules.VQVAE.vqvae import ResVectorQuantizedVAE
 import copy
 import numpy as np
@@ -42,6 +43,8 @@ class Base(pl.LightningModule):
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+        x = x.unsqueeze(1).float()
+        x = T.Normalize((0.0,), (1.0,))(x)
         out = self.model(x)
         return out
 
@@ -49,7 +52,7 @@ class Base(pl.LightningModule):
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
         y = batch['mask']
         output = self(y)
-        loss = self.loss(output)
+        loss = self.loss(y,output)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,)
         return loss
@@ -58,7 +61,7 @@ class Base(pl.LightningModule):
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         y = batch['mask']
         output = self(y)
-        loss = self.loss(output)
+        loss = self.loss(y,output)
         return {'val_loss':loss,'preds':output['x_tilde'],'y':y}
 
     def validation_step_end(self, outputs):
