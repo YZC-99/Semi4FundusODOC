@@ -47,10 +47,14 @@ class Base(pl.LightningModule):
         out = self.model(x)
         return out
 
+    def get_mask_as_imput(self,batch):
+        y = batch['mask']
+        y = y.unsqueeze(1).float() / 2.0
+        return y
+
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
-        y = batch['mask']
-        y = y.unsqueeze(1).float()
+        y = self.get_mask_as_imput(batch)
         output = self(y)
         loss = self.loss(y,output)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,)
@@ -59,8 +63,7 @@ class Base(pl.LightningModule):
 
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
-        y = batch['mask']
-        y = y.unsqueeze(1).float()
+        y = self.get_mask_as_imput(batch)
         output = self(y)
         loss = self.loss(y,output)
         return {'val_loss':loss,'preds':output['x_tilde'],'y':y}
@@ -101,13 +104,13 @@ class Base(pl.LightningModule):
         print(">>>>>>>>>>>>>total iters:{}<<<<<<<<<<<<<<<<".format(total_iters))
         return optimizers, schedulers
 
+
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
         log = dict()
-        y = batch['mask']
-        y = y.unsqueeze(1).float()
-        y = T.Normalize((0.0,), (1.0,))(y)
+        y = self.get_mask_as_imput(batch)
         out = self(y)['x_tilde']
-        y_color, out_color = self.gray2rgb(self, y.squeeze(1), out.squeeze(1))
+        y_color, out_color = self.gray2rgb(self, y.squeeze(1) * 2.0, out.squeeze(1))
         log["label"] = y_color
-        log["predict"] = out_color
+        log["predict"] = out
+        print(torch.unique(out))
         return log
