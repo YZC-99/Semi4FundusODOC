@@ -281,8 +281,8 @@ class ResVectorQuantizedVAE(nn.Module):
     def __init__(self,backbone, input_dim=3, dim=512, K=512):
         super().__init__()
         self.input_layer = nn.Conv2d(input_dim,input_dim*3,3,padding=1)
-        backbones = {"resnet18":resnet18,"resnet34":resnet34, "resnet50":resnet50, "resnet101":resnet101}
-        self.encoder = backbones[backbone]
+        backbone_zoo = {'resnet18': resnet18,'resnet34': resnet34,'resnet50': resnet50, 'resnet101': resnet101}
+        self.encoder = backbone_zoo[backbone]
         # self.encoder.conv1.in_channels = input_dim
 
         self.codebook = VQEmbedding(K, dim)
