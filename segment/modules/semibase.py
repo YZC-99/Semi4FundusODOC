@@ -165,12 +165,22 @@ class Base(pl.LightningModule):
 
     def configure_optimizers(self) -> Tuple[List, List]:
         lr = self.learning_rate
-        # total_iters = self.trainer.max_steps
         total_iters = self.train_steps
-        optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
-        # lambda_lr = lambda iters: lr * (1 - iters / total_iters) ** 0.9
-        # scheduler = LambdaLR(optimizers[0],lr_lambda=lambda_lr)
-        scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters,power=0.9)
+
+        # 获取backbone的参数
+        backbone_params = set(self.model.backbone.parameters())
+
+        # 获取非backbone的参数
+        non_backbone_params = [p for p in self.model.parameters() if p not in backbone_params]
+
+        # 创建两个参数组，一个用于backbone，一个用于非backbone部分
+        param_groups = [
+            {'params': self.model.backbone.parameters(), 'lr': lr},
+            {'params': non_backbone_params, 'lr': lr * 10}
+        ]
+
+        optimizers = [SGD(param_groups, momentum=0.9, weight_decay=1e-4)]
+        scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
         schedulers = [
             {
                 'scheduler': scheduler,
@@ -181,6 +191,21 @@ class Base(pl.LightningModule):
 
         print(">>>>>>>>>>>>>total iters:{}<<<<<<<<<<<<<<<<".format(total_iters))
         return optimizers, schedulers
+    # def configure_optimizers(self) -> Tuple[List, List]:
+    #     lr = self.learning_rate
+    #     total_iters = self.train_steps
+    #     optimizers = [SGD(self.model.parameters(), lr=lr, momentum=0.9,weight_decay=1e-4)]
+    #     scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters,power=0.9)
+    #     schedulers = [
+    #         {
+    #             'scheduler': scheduler,
+    #             'interval': 'step',
+    #             'frequency': 1
+    #         }
+    #     ]
+    #
+    #     print(">>>>>>>>>>>>>total iters:{}<<<<<<<<<<<<<<<<".format(total_iters))
+    #     return optimizers, schedulers
 
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
         log = dict()
