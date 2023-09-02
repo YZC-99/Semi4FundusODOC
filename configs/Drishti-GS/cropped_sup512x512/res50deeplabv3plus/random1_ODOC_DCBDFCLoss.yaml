@@ -8,7 +8,7 @@ MODEL:
   DC_loss: True
   BD_loss: True
   FC_loss: True
-  ckpt_path: 'experiments/Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCLoss/lightning_logs/version_0/ckpt/last.ckpt'
+  resume_path: 'experiments/Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCLoss/lightning_logs/version_0/ckpt/last.ckpt'
   loss:
     target: torch.nn.CrossEntropyLoss
 
