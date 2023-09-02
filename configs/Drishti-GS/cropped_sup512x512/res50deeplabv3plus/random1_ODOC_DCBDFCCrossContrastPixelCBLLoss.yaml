@@ -9,7 +9,6 @@ MODEL:
   BD_loss: True
   FC_loss: True
   ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.05]
-  resume_path: 'experiments/Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCCrossContrastPixelCBLLoss/lightning_logs/version_0/ckpt/last.ckpt'
   loss:
     target: torch.nn.CrossEntropyLoss
 
