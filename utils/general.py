@@ -113,11 +113,29 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     # val_loss
     on_min_val_loss = ModelCheckpoint(
         dirpath = ckpt_path,
-        filename="{epoch}-{val_OD_dice:.6f}-{val_OD_mIoU:.6f}-{val_OC_dice:.6f}-{val_OC_mIoU:.6f}",
+        filename="valloss-{epoch}-{val_OD_dice:.6f}-{val_OD_mIoU:.6f}-{val_OC_dice:.6f}-{val_OC_mIoU:.6f}",
         monitor="val_loss",
         mode="min",
         save_top_k=1,
         save_last=True,
+        verbose=False,
+    )
+    on_best_OD_Dice = ModelCheckpoint(
+        dirpath = ckpt_path,
+        filename="{epoch}-{val_OD_dice:.6f}-{val_OD_mIoU:.6f}",
+        monitor="val_OD_dice",
+        mode="max",
+        save_top_k=1,
+        save_last=True,
+        verbose=False,
+    )
+    on_best_OC_Dice = ModelCheckpoint(
+        dirpath = ckpt_path,
+        filename="{epoch}-{val_OC_dice:.6f}-{val_OC_mIoU:.6f}",
+        monitor="val_OC_dice",
+        mode="max",
+        save_top_k=1,
+        save_last=False,
         verbose=False,
     )
 
@@ -131,7 +149,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
         # return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
-        return [setup_callback,on_min_val_loss,logger_img_callback], logger,Profiler
+        return [setup_callback,on_min_val_loss,on_best_OD_Dice,on_best_OC_Dice,logger_img_callback], logger,Profiler
     return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
 
 

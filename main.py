@@ -165,5 +165,5 @@ if __name__ == '__main__':
                          )
 
     # Train
-    trainer.fit(model, data)
+    trainer.fit(model, data,ckpt_path=cfg.MODEL.resume_path)
 
