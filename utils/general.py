@@ -139,6 +139,16 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         verbose=False,
     )
 
+    on_vqe_min_loss = ModelCheckpoint(
+        dirpath = ckpt_path,
+        filename="{epoch}-{val_loss:.6f}",
+        monitor="val_loss",
+        mode="min",
+        save_top_k=1,
+        save_last=True,
+        verbose=False,
+    )
+
 
     Profiler = SimpleProfiler(filename="perf_logs")
     if dist.is_initialized() and dist.get_rank() == 0:
@@ -150,6 +160,8 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     if config.MODEL.NUM_CLASSES == 3:
         # return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
         return [setup_callback,on_min_val_loss,on_best_OD_Dice,on_best_OC_Dice,logger_img_callback], logger,Profiler
+    elif config.MODEL.NUM_CLASSES == -1:
+        return [setup_callback, on_vqe_min_loss,logger_img_callback], logger, Profiler
     return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
 
 
