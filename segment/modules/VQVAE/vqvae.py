@@ -5,7 +5,7 @@ from torch.distributions.normal import Normal
 from torch.distributions import kl_divergence
 from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 
-from functions import vq, vq_st
+from segment.modules.VQVAE.functions import vq, vq_st
 
 def to_scalar(arr):
     if type(arr) == list:
