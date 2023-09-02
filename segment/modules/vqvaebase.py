@@ -114,6 +114,11 @@ class Base(pl.LightningModule):
         max_value = out.max().item()  # 找到最大值
         # 最小-最大归一化
         normalized_out = (out - min_value) / (max_value - min_value)
+
+        # colorize_out
+        colormap = plt.get_cmap('hot')
+        colored_image = colormap(normalized_out)  # 归一化到 [0, 1] 范围
+
         log["label"] = y_color
-        log["predict"] = normalized_out * 255
+        log["predict"] = colored_image
         return log
