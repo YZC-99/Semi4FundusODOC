@@ -21,7 +21,7 @@ wait $PID4
 #----------------
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCCrossContrastPixelCBLLoss
 
-CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/vqvae/random1_ODOC
+CUDA_VISIBLE_DEVICES=0 python vae_main.py -ng 1 --config Drishti-GS/cropped_sup512x512/vqvae/random1_ODOC
 
 #---------------
 # vavae
