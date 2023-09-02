@@ -1,4 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/unet/random1_ODOC_DCBDFCCrossContrastPixelCBLLoss &
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/unet/random1_ODOC_DCBDFCLoss
 
 
 
