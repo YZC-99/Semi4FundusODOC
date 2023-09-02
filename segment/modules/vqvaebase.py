@@ -117,7 +117,7 @@ class Base(pl.LightningModule):
 
         # colorize_out
         colormap = plt.get_cmap('hot')
-        colored_image = colormap(normalized_out.cpu().detach().numpy())  # 归一化到 [0, 1] 范围
+        colored_image = colormap(normalized_out.cpu())  # 归一化到 [0, 1] 范围
 
         log["label"] = y_color
         log["predict"] = colored_image
