@@ -65,7 +65,7 @@ if __name__ == '__main__':
                                    "max_images": args.max_images})
 
 
-    model = Base(cfg.MODEL.model,cfg.MODEL.backbone,cfg.MODEL.NUM_CLASSES,cfg)
+    model = Base(cfg.MODEL.model,cfg.MODEL.backbone,cfg.MODEL.NUM_CLASSES,1,512,512,cfg)
     model.learning_rate = cfg.MODEL.lr * args.num_gpus
     # Setup callbacks
     callbacks, logger,simple_Profiler = setup_callbacks(exp_config, config)

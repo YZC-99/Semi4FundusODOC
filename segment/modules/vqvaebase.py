@@ -28,7 +28,6 @@ class Base(pl.LightningModule):
                  dim: int,
                  z_dim: int,
                  cfg,
-                 loss
                  ):
         super(Base, self).__init__()
         self.cfg = cfg
