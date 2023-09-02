@@ -115,5 +115,5 @@ class Base(pl.LightningModule):
         # 最小-最大归一化
         normalized_out = (out - min_value) / (max_value - min_value)
         log["label"] = y_color
-        log["predict"] = out * 255
+        log["predict"] = normalized_out * 255
         return log
