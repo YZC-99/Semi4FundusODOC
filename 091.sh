@@ -19,7 +19,8 @@ wait $PID4
 
 
 #----------------
-CUDA_VISIBLE_DEVICES=1 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCCrossContrastPixelCBLLoss
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCCrossContrastPixelCBLLoss
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/unet/random1_ODOC_DCBDFCCrossContrastPixelCBLLoss
 
 #-------------------------
 #CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config REFUGE/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCLoss #11500
