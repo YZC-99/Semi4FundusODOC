@@ -107,7 +107,7 @@ class Base(pl.LightningModule):
         y = y.unsqueeze(1).float()
         y = T.Normalize((0.0,), (1.0,))(y)
         out = self(y)['x_tilde']
-        y_color, out_color = self.gray2rgb(self, y, out)
+        y_color, out_color = self.gray2rgb(self, y.squeeze(1), out.squeeze(1))
         log["label"] = y_color
         log["predict"] = out_color
         return log
