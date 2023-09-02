@@ -307,7 +307,7 @@ class ResVectorQuantizedVAE(nn.Module):
             nn.ReLU(True),
         )
         self.output_layer = nn.Sequential(
-            nn.Conv2d(dim, input_dim, 4, 2, 1),
+            nn.Conv2d(dim, input_dim,3,1,1),
             nn.Tanh()
         )
 
@@ -341,11 +341,10 @@ if __name__ == '__main__':
     z_dim = 16
     input = torch.randn(2,num_channels,512,512)
 
-    resvqvae = ResVectorQuantizedVAE(num_channels,hidden_size,z_dim)
+    resvqvae = ResVectorQuantizedVAE('resnet34',num_channels,hidden_size,z_dim)
 
     out = resvqvae(input)
-    print(out[0].size())
-    print(out[1].size())
+    print(out['x_tilde'].size())
     # print(out[2].size())
     # vqvae = VectorQuantizedVAE(num_channels,hidden_size,z_dim)
     #
