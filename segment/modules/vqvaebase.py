@@ -112,5 +112,9 @@ class Base(pl.LightningModule):
         y_color, out_color = self.gray2rgb(self, y.squeeze(1) * 2.0, out.squeeze(1))
         log["label"] = y_color
         log["predict"] = out
-        print(torch.unique(out))
+        min_value = out.min().item()  # 找到最小值
+        max_value = out.max().item()  # 找到最大值
+        # 最小-最大归一化
+        normalized_out = (out - min_value) / (max_value - min_value)
+        print(torch.unique(normalized_out))
         return log
