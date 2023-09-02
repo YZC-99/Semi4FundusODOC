@@ -75,5 +75,6 @@ class UNet(nn.Module):
 
 
         return {'out':out,
+                'out_fuse': dec1,
                 'out_classifier':final,
                 'backbone_features':center}
