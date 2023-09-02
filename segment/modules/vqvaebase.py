@@ -43,7 +43,6 @@ class Base(pl.LightningModule):
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        x = x.unsqueeze(1).float()
         x = T.Normalize((0.0,), (1.0,))(x)
         out = self.model(x)
         return out
@@ -51,6 +50,7 @@ class Base(pl.LightningModule):
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
         y = batch['mask']
+        y = y.unsqueeze(1).float()
         output = self(y)
         loss = self.loss(y,output)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,)
@@ -60,6 +60,7 @@ class Base(pl.LightningModule):
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         y = batch['mask']
+        y = y.unsqueeze(1).float()
         output = self(y)
         loss = self.loss(y,output)
         return {'val_loss':loss,'preds':output['x_tilde'],'y':y}
@@ -72,15 +73,6 @@ class Base(pl.LightningModule):
         self.log("val_loss", loss, prog_bar=True, logger=False, on_step=False, on_epoch=True,
                       sync_dist=True,
                       )
-
-    def test_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
-        x = batch['img']
-        y = batch['mask']
-        output = self(x)
-        backbone_feat,logits = output['backbone_features'],output['out']
-        preds = nn.functional.softmax(logits, dim=1).argmax(1)
-        return {'preds':preds,'y':y}
-
     def setup(self, stage: str):
         if stage == 'fit':
             limit_batches = self.trainer.limit_train_batches
@@ -112,6 +104,8 @@ class Base(pl.LightningModule):
     def log_images(self, batch: Tuple[Any, Any], *args, **kwargs) -> Dict:
         log = dict()
         y = batch['mask']
+        y = y.unsqueeze(1).float()
+        y = T.Normalize((0.0,), (1.0,))(y)
         out = self(y)['x_tilde']
         y_color, out_color = self.gray2rgb(self, y, out)
         log["label"] = y_color
