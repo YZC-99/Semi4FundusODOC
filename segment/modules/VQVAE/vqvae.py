@@ -283,7 +283,7 @@ class ResVectorQuantizedVAE(nn.Module):
         self.input_layer = nn.Conv2d(input_dim,input_dim*3,3,padding=1)
         backbones = {"resnet18":resnet18,"resnet34":resnet34, "resnet50":resnet50, "resnet101":resnet101}
         self.encoder = backbones[backbone]
-        self.encoder.conv1.in_channels = input_dim
+        # self.encoder.conv1.in_channels = input_dim
 
         self.codebook = VQEmbedding(K, dim)
 
