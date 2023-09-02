@@ -126,7 +126,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         monitor="val_OD_dice",
         mode="max",
         save_top_k=1,
-        save_last=True,
+        save_last=False,
         verbose=False,
     )
     on_best_OC_Dice = ModelCheckpoint(
