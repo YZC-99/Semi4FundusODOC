@@ -57,8 +57,8 @@ class DualDeepLabV3Plus(BaseNet):
 
 
 class DeepLabV3Plus(BaseNet):
-    def __init__(self, backbone, nclass,Isdysample = False):
-        super(DeepLabV3Plus, self).__init__(backbone)
+    def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False):
+        super(DeepLabV3Plus, self).__init__(backbone,inplace_seven)
 
         low_level_channels = self.backbone.channels[0]
         high_level_channels = self.backbone.channels[-1]
