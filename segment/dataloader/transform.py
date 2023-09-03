@@ -74,7 +74,6 @@ def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
 def random_rotate(img, mask, p=0.5, max_rotation_angle=90):
     if random.random() < p:
         rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
-
         img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
         mask = mask.rotate(rotation_angle, resample=Image.NEAREST, expand=True)
 

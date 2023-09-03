@@ -8,7 +8,6 @@ MODEL:
   DC_loss: True
   BD_loss: True
   FC_loss: True
-  ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.05]
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -17,7 +16,7 @@ dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
         batch_size: 8
-        num_workers: 8
+        num_workers: 4
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
@@ -27,6 +26,13 @@ dataset:
                 labeled_id_path: 'dataset/Drishti-GS/cropped_sup/training.txt'
                 size: 512
                 mode: 'train'
+                aug:
+                  weak:
+                    flip: True
+                    rotate: True
+                    translate: False
+                    noise: True
+                    scale: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain

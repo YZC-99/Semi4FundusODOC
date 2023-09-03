@@ -143,11 +143,16 @@ class SemiDataset(Dataset):
             mask = get_labels(self.task, os.path.join(self.pseudo_mask_path, fname))
         # basic augmentation on all training images
         # img, mask = crop(img, mask, self.size)
-        img, mask = hflip(img, mask, p=0.5)
-        img, mask = random_rotate(img, mask,p=0.5)
-        img, mask = random_translate(img, mask,p=0.2)
-        img, mask = add_salt_pepper_noise(img, mask,p=0.2)
-        img, mask = random_scale(img, mask,p=0.2)
+        if self.aug.weak.flip:
+            img, mask = hflip(img, mask, p=0.5)
+        elif self.aug.weak.rotate:
+            img, mask = random_rotate(img, mask,p=0.5)
+        elif self.aug.weak.translate:
+            img, mask = random_translate(img, mask,p=0.2)
+        elif self.aug.weak.noise:
+            img, mask = add_salt_pepper_noise(img, mask,p=0.2)
+        elif self.aug.weak.scale:
+            img, mask = random_scale(img, mask,p=0.2)
 
 
         img, mask = resize(img, mask, self.size)

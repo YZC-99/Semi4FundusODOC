@@ -1,3 +1,6 @@
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_flip_rotate_noiseDCBDFCLoss
+
+
 # 20230901
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config REFUGE/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_DCBDFCLoss &
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config REFUGE/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_CEIoUABLLoss &
