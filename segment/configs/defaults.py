@@ -53,6 +53,7 @@ _C.MODEL.labeled_id_path_2 = ''
 _C.MODEL.unlabeled_id_path = ''
 _C.MODEL.pseudo_mask_path = ''
 _C.MODEL.logs_path = ''
+_C.MODEL.aux = 0.0
 _C.MODEL.save_path = ''
 _C.MODEL.resume_path = None
 _C.MODEL.uda = False

@@ -7,29 +7,35 @@ from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet1
 import torch.nn as nn
 num_classes = 3
 input = torch.randn(2,3,256,256)
+# --------------------------测试resnet的 7x7更换为 三个3x3
 # 下采样两倍
-conv7 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
-                       bias=False)
-out1 = conv7(input)
+# conv7 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
+#                        bias=False)
+# out1 = conv7(input)
+#
+# conv2 = nn.Sequential(
+#     nn.Conv2d(3,16,3,2,1,bias=False),
+#     nn.Conv2d(16,32,3,1,1,bias=False),
+#     nn.Conv2d(32,64,3,1,1,bias=False)
+# )
+# out2 = conv2(input)
+# print(out1.size())
+# print(out2.size())
+# print(64 /2)
+#-----------------------
 
-conv2 = nn.Sequential(
-    nn.Conv2d(3,16,3,2,1,bias=False),
-    nn.Conv2d(16,32,3,1,1,bias=False),
-    nn.Conv2d(32,64,3,1,1,bias=False)
-)
-out2 = conv2(input)
-print(out1.size())
-print(out2.size())
-print(64 /2)
-
-# res50 = resnet50(pretrained=False)
-#c1(2,256,64,64)
-#c2(2,512,32,32)
-#c3(2,1024,32,32)
-#c4(2,2048,32,32)
-# c1,c2,c3,c4 = res50.base_forward(input)
-# print('xx')
-
+#-----------测试resnet的c3分支改进
+res50 = resnet50(pretrained=False)
+# c1(2,256,64,64)
+# c2(2,512,32,32)
+# c3(2,1024,32,32)
+# c4(2,2048,32,32)
+c1,c2,c3,c4 = res50.base_forward(input)
+print(c1.size())
+print(c2.size())
+# 如何在c3处加入aux task？
+print(c3.size())
+print(c4.size())
 #
 # model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
 # res101model = model_zoo['deeplabv3plus']('resnet101', num_classes)

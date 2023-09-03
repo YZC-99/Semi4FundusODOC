@@ -123,6 +123,9 @@ class SemiDataset(Dataset):
         # else:
         img = Image.open(img_path)
         mask_path = os.path.join(self.root, id.split(' ')[1])
+        classification_label = 0
+        if len(id.split(' ')) == 3:
+            classification_label = id.split(' ')[-1]
 
         if self.mode == 'val' or self.mode == 'test' or self.mode == 'label':
             if self.add_unlabeled_ids is not None and id in self.add_unlabeled_ids:
@@ -133,7 +136,7 @@ class SemiDataset(Dataset):
             img, mask = resize(img, mask, 512)
             img, mask = normalize(img, mask)
             boundary = dist_transform(mask)
-            return {'img':img, 'mask':mask, 'id':id,'boundary':boundary}
+            return {'img':img, 'mask':mask, 'id':id,'boundary':boundary,'classification_label':classification_label}
 
         if self.mode == 'train' or (self.mode == 'semi_train' and id in self.labeled_ids):
             mask = get_labels(self.task, mask_path)
@@ -162,7 +165,7 @@ class SemiDataset(Dataset):
             if self.aug.strong.Not:
                 img, mask = normalize(img, mask)
                 boundary = dist_transform(mask)
-                return {'img':img, 'mask':mask,'boundary':boundary}
+                return {'img':img, 'mask':mask,'boundary':boundary,'classification_label':classification_label}
 
             if self.aug == None or self.aug.strong.default:
                 if random.random() < 0.8:
@@ -181,10 +184,10 @@ class SemiDataset(Dataset):
 
             img, mask = normalize(img, mask)
             boundary = dist_transform(mask)
-            return {'img':img, 'mask':mask,'boundary':boundary}
+            return {'img':img, 'mask':mask,'boundary':boundary,'classification_label':classification_label}
         img, mask = normalize(img, mask)
         boundary = dist_transform(mask)
-        return {'img':img, 'mask':mask,'boundary':boundary}
+        return {'img':img, 'mask':mask,'boundary':boundary,'classification_label':classification_label}
 
     def __len__(self):
         return len(self.ids)

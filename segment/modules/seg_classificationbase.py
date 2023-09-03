@@ -66,11 +66,9 @@ class Base(pl.LightningModule):
 
         self.step_end_compute_update_metrics = step_end_compute_update_metrics
         self.epoch_end_show_metrics = epoch_end_show_metrics
-        if cfg.MODEL.aux != 0.0:
-            self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
-            self.binary_classifier = nn.Linear(1024, self.num_classes)
 
-
+        self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.binary_classifier = nn.Linear(1024, self.num_classes)
 
         self.color_map = {0: [0, 0, 0], 1: [128, 0, 0], 2: [0, 128, 0], 3: [128, 128, 0], 4: [0, 0, 128]}
 
@@ -93,10 +91,9 @@ class Base(pl.LightningModule):
             self.frequency_list = self.frequency_list.to(self.device)
             logits = logits + (viariation.abs().permute(0, 2, 3, 1) / self.frequency_list.max() * self.frequency_list).permute(0, 3, 1, 2)
             out['out'] = logits
-        if self.cfg.MODEL.aux != 0.0:
-            c3_pooled = self.global_avg_pool(out['c3'])
-            c3_flattened = c3_pooled.view(c3_pooled.size(0), -1)
-            out['classification_logits'] = self.binary_classifier(c3_flattened)
+        c3_pooled = self.global_avg_pool(out['c3'])
+        c3_flattened = c3_pooled.view(c3_pooled.size(0), -1)
+        out['classification_logits'] = self.binary_classifier(c3_flattened)
         return out
 
 
@@ -116,9 +113,11 @@ class Base(pl.LightningModule):
             loss = self.uda_train(self,batch)
         else:
             x = batch['img']
-            y = batch['mask']
+            classification_label = batch['classification_label']
             output = self(x)
             loss = self.compute_loss(self,output,batch)
+            classification_loss = self.loss(output['classification_logits'],classification_label)
+            loss = loss + 0.5 * classification_loss
 
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,)
@@ -132,6 +131,9 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.compute_loss(self,output,batch)
+        classification_label = batch['classification_label']
+        classification_loss = self.loss(output['classification_logits'], classification_label)
+        loss = loss + 0.5 * classification_loss
         return {'val_loss':loss,'preds':preds,'y':y}
 
     def validation_step_end(self, outputs):

@@ -103,6 +103,7 @@ class DeepLabV3Plus(BaseNet):
 
         return {'out':out,
                 'out_classifier':out_classifier,
+                'resnet_c3':c3,
                 'out_fuse':out_fuse,
                 'backbone_features':backbone_feats}
 

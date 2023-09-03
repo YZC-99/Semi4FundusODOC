@@ -121,6 +121,11 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
                                                         pl_module.model.classifier.bias)
     if pl_module.cfg.MODEL.Pairwise_CBL_loss:
         loss = loss + pl_module.Pairwise_CBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
+
+    if pl_module.cfg.MODEL.aux != 0.0:
+        classification_label = batch['classification_label']
+        classification_loss = pl_module.loss(output['classification_logits'], classification_label)
+        loss = loss + pl_module.cfg.MODEL.aux * classification_loss
     return loss
 
 def init_metrics(pl_module: pl.LightningModule):
