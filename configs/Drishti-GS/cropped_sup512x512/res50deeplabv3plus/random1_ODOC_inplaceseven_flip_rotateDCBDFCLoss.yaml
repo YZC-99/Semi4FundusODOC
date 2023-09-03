@@ -27,6 +27,13 @@ dataset:
                 labeled_id_path: 'dataset/Drishti-GS/cropped_sup/training.txt'
                 size: 512
                 mode: 'train'
+                aug:
+                  weak:
+                    flip: True
+                    rotate: True
+                    translate: False
+                    noise: False
+                    scale: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
