@@ -6,8 +6,8 @@ import torch.nn.functional as F
 from segment.modules.nn.dysapmle import DySample
 
 class DualDeepLabV3Plus(BaseNet):
-    def __init__(self, backbone, nclass):
-        super(DualDeepLabV3Plus, self).__init__(backbone)
+    def __init__(self, backbone, nclass,inplace_seven):
+        super(DualDeepLabV3Plus, self).__init__(backbone,inplace_seven)
 
         low_level_channels = self.backbone.channels[0]
         high_level_channels = self.backbone.channels[-1]

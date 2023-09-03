@@ -45,6 +45,8 @@ _C.MODEL.dataset = 'od_val_refuge'
 _C.MODEL.task = 'od'
 _C.MODEL.data_root = './data/fundus_datasets/od_oc/WACV/REFUGE_cross_new/'
 _C.MODEL.backbone = 'resnet50'
+_C.MODEL.backbone_inplace_seven = False
+
 _C.MODEL.model = 'deeplabv3plus'
 _C.MODEL.labeled_id_path = ''
 _C.MODEL.labeled_id_path_2 = ''
