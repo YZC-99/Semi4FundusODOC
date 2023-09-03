@@ -119,9 +119,9 @@ class ResNet(nn.Module):
         self.base_width = width_per_group
         if inplace_seven:
             self.conv1 = nn.Sequential(
-                nn.Conv2d(3, self.inplanes / 4, kernel_size=3, stride=2, padding=1, bias=False),
-                nn.Conv2d(self.inplanes / 4, self.inplanes / 2, kernel_size=3, stride=1, padding=1, bias=False),
-                nn.Conv2d(self.inplanes / 2, self.inplanes, kernel_size=3, stride=1, padding=1, bias=False)
+                nn.Conv2d(3, int(self.inplanes / 4), kernel_size=3, stride=2, padding=1, bias=False),
+                nn.Conv2d(int(self.inplanes / 4), int(self.inplanes / 2), kernel_size=3, stride=1, padding=1, bias=False),
+                nn.Conv2d(int(self.inplanes / 2), self.inplanes, kernel_size=3, stride=1, padding=1, bias=False)
             )
         else:
             self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,

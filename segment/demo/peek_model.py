@@ -20,6 +20,7 @@ conv2 = nn.Sequential(
 out2 = conv2(input)
 print(out1.size())
 print(out2.size())
+print(64 /2)
 
 # res50 = resnet50(pretrained=False)
 #c1(2,256,64,64)
