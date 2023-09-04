@@ -11,6 +11,7 @@ MODEL:
   FC_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
+    params:
       weight: [1.0,3.0,3.0]
 
 
