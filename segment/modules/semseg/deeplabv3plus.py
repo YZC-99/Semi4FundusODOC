@@ -92,6 +92,18 @@ class DeepLabV3Plus(BaseNet):
                                         nn.BatchNorm2d(256),
                                         nn.ReLU(True))
             self.cross_attention = ScaledDotProductAttention(d_model=256, d_k=256, d_v=256, h=1)
+            self.mlp_diff = nn.Sequential(
+                                    nn.Conv1d(128*128,4096,1,bias=False),
+                                    nn.ReLU(4096)
+            )
+            self.mlp_fuse = nn.Sequential(
+                                    nn.Conv1d(128*128,4096,1,bias=False),
+                                    nn.ReLU(4096)
+            )
+            self.mlp_fuse_to_high = nn.Sequential(
+                                    nn.Conv1d(4096,128*128,1,bias=False),
+                                    nn.ReLU(128*128)
+            )
 
         # self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=2)
 
@@ -131,8 +143,15 @@ class DeepLabV3Plus(BaseNet):
             b_fuse,c_fuse,h_fuse,w_fuse = out_fuse.size()
             diff = diff.view(b_fuse,-1,c_fuse)
             out_fuse = out_fuse.view(b_fuse,-1,c_fuse)
-            out_fuse = self.cross_attention(diff,out_fuse,out_fuse)
+            # 这里直接爆显存了 估计会是128*128的长度，现在需要将它降低到4096长
+            diff = self.mlp_diff(diff)
+            out_fuse_lowlevel = self.mlp_fuse(out_fuse)
+            out_fuse_lowlevel = self.cross_attention(diff,out_fuse_lowlevel,out_fuse_lowlevel)
+            out_fuse_highlevel = self.mlp_fuse_to_high(out_fuse_lowlevel)
+            out_fuse_highlevel = out_fuse_highlevel.view(b_fuse,c_fuse,h_fuse,w_fuse)
             out_fuse = out_fuse.view(b_fuse,c_fuse,h_fuse,w_fuse)
+
+            out_fuse = out_fuse + out_fuse_highlevel
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
