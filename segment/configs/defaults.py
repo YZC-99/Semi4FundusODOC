@@ -24,6 +24,8 @@ _C.MODEL.ContrastPixelCorrectCBL_loss = None
 _C.MODEL.ContrastCrossPixelCorrectCBL_loss = None
 _C.MODEL.Pairwise_CBL_loss = None
 _C.MODEL.LOVASZ_loss = False
+_C.MODEL.LOVASZPlus_loss = False
+
 _C.MODEL.CBLcontrast_start_epoch = 0
 _C.MODEL.Isdysample = False
 _C.MODEL.Teacher_Student = False

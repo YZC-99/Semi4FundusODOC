@@ -171,8 +171,11 @@ def lovasz_softmax(probas, labels, classes='present', per_image=False, ignore=No
         loss = lovasz_softmax_flat(*flatten_probas(probas, labels, ignore), classes=classes)
     return loss
 
+def lovasz_softmaxPlus(probas, labels, classes='present', per_image=False, ignore=None):
+    loss = lovasz_softmax_flat(*flatten_probas(probas, labels, ignore), classes=classes,plus=True)
+    return loss
 
-def lovasz_softmax_flat(probas, labels, classes='present'):
+def lovasz_softmax_flat(probas, labels, classes='present',plus=False):
     """
     Multi-class Lovasz-Softmax loss
       probas: [P, C] Variable, class probabilities at each prediction (between 0 and 1)
@@ -199,7 +202,10 @@ def lovasz_softmax_flat(probas, labels, classes='present'):
         errors_sorted, perm = torch.sort(errors, 0, descending=True)
         perm = perm.data
         fg_sorted = fg[perm]
-        losses.append(torch.dot(errors_sorted, Variable(lovasz_grad(fg_sorted))))
+        if plus:
+            losses.append(torch.dot(errors_sorted, Variable(lovasz_grad(fg_sorted)))+1)
+        else:
+            losses.append(torch.dot(errors_sorted, Variable(lovasz_grad(fg_sorted))))
     return mean(losses)
 
 

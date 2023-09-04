@@ -15,7 +15,7 @@ from segment.losses.abl import ABL
 from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL
 from segment.losses.cbl import ContrastPixelCBL,ContrastPixelCorrectCBL,ContrastCrossPixelCorrectCBL
 # from segment.losses.cbl import ContrastPixelCBLV2 as ContrastPixelCBL
-from segment.losses.lovasz_loss import lovasz_softmax
+from segment.losses.lovasz_loss import lovasz_softmax,lovasz_softmaxPlus
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
@@ -107,8 +107,10 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
     if pl_module.cfg.MODEL.ABL_loss:
         if pl_module.ABL_loss(logits, y) is not None:
             loss = loss + pl_module.ABL_loss(logits, y)
-        if pl_module.cfg.MODEL.LOVASZ_loss:
-            loss = loss + lovasz_softmax(out_soft, y, ignore=255)
+    if pl_module.cfg.MODEL.LOVASZ_loss:
+        loss = loss + lovasz_softmax(out_soft, y, ignore=255)
+    if pl_module.cfg.MODEL.LOVASZPlus_loss:
+        loss = loss + lovasz_softmaxPlus(out_soft, y, ignore=255)
     if pl_module.current_epoch > pl_module.cfg.MODEL.CBLcontrast_start_epoch:
         if pl_module.cfg.MODEL.CBL_loss:
             loss = loss + pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
