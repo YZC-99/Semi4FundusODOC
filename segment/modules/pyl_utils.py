@@ -159,11 +159,11 @@ def init_metrics(pl_module: pl.LightningModule):
         pl_module.od_rmOC_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
         pl_module.od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
 
-def gt2boundary(gt, ignore_label=-1):  # gt NHW
-    gt_ud = gt[:, 1:, :] - gt[:, :-1, :]  # NHW
-    gt_lr = gt[:, :, 1:] - gt[:, :, :-1]
-    gt_ud = torch.nn.functional.pad(gt_ud, [0, 0, 0, 1, 0, 0], mode='constant', value=0) != 0
-    gt_lr = torch.nn.functional.pad(gt_lr, [0, 1, 0, 0, 0, 0], mode='constant', value=0) != 0
+def gt2boundary(gt,boundary_width=1, ignore_label=-1):  # gt NHW
+    gt_ud = gt[:, boundary_width:, :] - gt[:, :-boundary_width, :]  # NHW
+    gt_lr = gt[:, :, boundary_width:] - gt[:, :, :-boundary_width]
+    gt_ud = torch.nn.functional.pad(gt_ud, [0, 0, 0, boundary_width, 0, 0], mode='constant', value=0) != 0
+    gt_lr = torch.nn.functional.pad(gt_lr, [0, boundary_width, 0, 0, 0, 0], mode='constant', value=0) != 0
     gt_combine = gt_lr + gt_ud
     del gt_lr
     del gt_ud
@@ -178,7 +178,7 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
     preds, y = outputs['preds'], outputs['y']
     # 在这里对边缘进行裁剪
     if pl_module.cfg.MODEL.preds_postprocess > 0:
-        preds_boundary = gt2boundary(preds.squeeze()) * 1
+        preds_boundary = gt2boundary(preds.squeeze(),boundary_width=pl_module.cfg.MODEL.preds_postprocess) * 1
         # print("preds的唯一值:{}".format(torch.unique(preds)))
         # print("preds的形状:{}".format(preds.size()))
         # print("preds_boundary的唯一值:{}".format(torch.unique(preds_boundary)))
