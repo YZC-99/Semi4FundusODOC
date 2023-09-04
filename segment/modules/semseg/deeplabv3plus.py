@@ -4,6 +4,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from segment.modules.nn.dysapmle import DySample
+from segment.modules.semseg.nn import ScaledDotProductAttention
 from segment.modules.semseg.nn import Attention
 
 class DualDeepLabV3Plus(BaseNet):
@@ -27,6 +28,8 @@ class DualDeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
+
+
 
         self.classifier1 = nn.Conv2d(256, nclass, 1, bias=True)
         self.classifier2 = nn.Conv2d(256, nclass, 1, bias=True)
@@ -79,6 +82,7 @@ class DeepLabV3Plus(BaseNet):
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
         # 有可能后续的会对
+        self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=8)
 
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
         self.Isdysample = Isdysample
@@ -95,7 +99,13 @@ class DeepLabV3Plus(BaseNet):
 
         c1 = self.reduce(c1)
 
+        # 做差
+        c3 = F.interpolate(c3, size=c4.shape[-2:], mode="bilinear", align_corners=True)
+        difference = c4 - c3
+
         out = torch.cat([c1, c4], dim=1)
+        # 使用difference与out_fuse做cross_attention
+
         out_fuse = self.fuse(out)
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
