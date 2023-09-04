@@ -128,11 +128,11 @@ class DeepLabV3Plus(BaseNet):
             diff = self.diff_to_fuse(diff)
             diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             # out_fuse = out_fuse + diff
-            b,c,h,w = out_fuse.size()
-            diff = diff.view(b,-1,c)
-            out_fuse = out_fuse.view(b,-1,c)
+            b_fuse,c_fuse,h_fuse,w_fuse = out_fuse.size()
+            diff = diff.view(b_fuse,-1,c_fuse)
+            out_fuse = out_fuse.view(b_fuse,-1,c_fuse)
             out_fuse = self.cross_attention(diff,out_fuse,out_fuse)
-            out_fuse = out_fuse.view(b,c,h,w)
+            out_fuse = out_fuse.view(b_fuse,c_fuse,h_fuse,w_fuse)
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
@@ -199,5 +199,5 @@ class ASPPModule(nn.Module):
 
 if __name__ == '__main__':
     input  = torch.randn(2,3,512,512)
-    model = DeepLabV3Plus(backbone='resnet50', nclass=3)
+    model = DeepLabV3Plus(backbone='resnet50', nclass=3,ca=True)
     out = model(input)
