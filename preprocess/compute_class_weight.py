@@ -3,8 +3,8 @@ from PIL import Image
 import numpy as np
 
 def compute_class_weight():
-    root = '../data/fundus_datasets/od_oc/SEG/'
-    path = '../dataset/SEG/cropped_sup/random1/training.txt'
+    root = '../data/fundus_datasets/od_oc/Drishti-GS/'
+    path = '../dataset/Drishti-GS/cropped_sup/training.txt'
 
     od_ratio = 0.0
     oc_ratio = 0.0
