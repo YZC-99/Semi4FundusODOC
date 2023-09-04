@@ -179,12 +179,13 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
     # 在这里对边缘进行裁剪
     if pl_module.cfg.MODEL.preds_postprocess > 0:
         preds_boundary = gt2boundary(preds.squeeze()) * 1
-        print("preds的唯一值:{}".format(torch.unique(preds)))
-        print("preds的形状:{}".format(preds.size()))
-        print("preds_boundary的唯一值:{}".format(torch.unique(preds_boundary)))
-        print("preds_boundary的形状:{}".format(preds_boundary.size()))
+        # print("preds的唯一值:{}".format(torch.unique(preds)))
+        # print("preds的形状:{}".format(preds.size()))
+        # print("preds_boundary的唯一值:{}".format(torch.unique(preds_boundary)))
+        # print("preds_boundary的形状:{}".format(preds_boundary.size()))
         # 按道理preds应该要减去边缘
-        preds = preds - preds_boundary
+        preds = preds - preds_boundary*2
+        preds[preds < 0] = 0
     # preds = gt_boundary.unsqueeze(1)
 
 
