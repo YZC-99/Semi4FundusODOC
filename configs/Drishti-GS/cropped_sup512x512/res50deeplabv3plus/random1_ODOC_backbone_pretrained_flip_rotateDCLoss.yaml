@@ -1,7 +1,7 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 300
+  epochs: 150
   lr: 0.001 # 0.004/16*batch_size
   backbone: 'resnet50'
   backbone_pretrained: True
