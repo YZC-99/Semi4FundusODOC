@@ -101,26 +101,28 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         loss = 0.5 * loss + 0.5 * pl_module.BD_loss(out_soft, dist)
     if pl_module.cfg.MODEL.FC_loss:
         loss = loss + pl_module.FC_loss(logits, y)
+    if pl_module.cfg.MODEL.Pairwise_CBL_loss:
+        loss = loss + pl_module.Pairwise_CBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
+
     if pl_module.cfg.MODEL.ABL_loss:
         if pl_module.ABL_loss(logits, y) is not None:
             loss = loss + pl_module.ABL_loss(logits, y)
         if pl_module.cfg.MODEL.LOVASZ_loss:
             loss = loss + lovasz_softmax(out_soft, y, ignore=255)
-    if pl_module.cfg.MODEL.CBL_loss:
-        loss = loss + pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
-    if pl_module.cfg.MODEL.ContrastCenterCBL_loss:
-        loss = loss + pl_module.ContrastCenterCBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
-    if pl_module.cfg.MODEL.ContrastPixelCBL_loss:
-        loss = loss + pl_module.ContrastPixelCBL_loss(output, y, pl_module.model.classifier.weight,
-                                                  pl_module.model.classifier.bias)
-    if pl_module.cfg.MODEL.ContrastPixelCorrectCBL_loss:
-        loss = loss + pl_module.ContrastPixelCorrectCBL_loss(output, y, pl_module.model.classifier.weight,
-                                                  pl_module.model.classifier.bias)
-    if pl_module.cfg.MODEL.ContrastCrossPixelCorrectCBL_loss:
-        loss = loss + pl_module.ContrastCrossPixelCorrectCBL_loss(output, y, pl_module.model.classifier.weight,
-                                                        pl_module.model.classifier.bias)
-    if pl_module.cfg.MODEL.Pairwise_CBL_loss:
-        loss = loss + pl_module.Pairwise_CBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
+    if pl_module.current_epoch > pl_module.cfg.MODEL.CBLcontrast_start_epoch:
+        if pl_module.cfg.MODEL.CBL_loss:
+            loss = loss + pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
+        if pl_module.cfg.MODEL.ContrastCenterCBL_loss:
+            loss = loss + pl_module.ContrastCenterCBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
+        if pl_module.cfg.MODEL.ContrastPixelCBL_loss:
+            loss = loss + pl_module.ContrastPixelCBL_loss(output, y, pl_module.model.classifier.weight,
+                                                      pl_module.model.classifier.bias)
+        if pl_module.cfg.MODEL.ContrastPixelCorrectCBL_loss:
+            loss = loss + pl_module.ContrastPixelCorrectCBL_loss(output, y, pl_module.model.classifier.weight,
+                                                      pl_module.model.classifier.bias)
+        if pl_module.cfg.MODEL.ContrastCrossPixelCorrectCBL_loss:
+            loss = loss + pl_module.ContrastCrossPixelCorrectCBL_loss(output, y, pl_module.model.classifier.weight,
+                                                            pl_module.model.classifier.bias)
 
     if pl_module.cfg.MODEL.aux != 0.0:
         classification_label = batch['classification_label']
