@@ -58,7 +58,10 @@ class Base(pl.LightningModule):
                 self.model = UNet(self.num_classes)
         self.init_from_ckpt = init_from_ckpt
 
-        self.loss = initialize_from_config(loss)
+        if cfg.MODEL.weightCE_loss is not None:
+            self.loss = nn.CrossEntropyLoss(weight=torch.tensor(cfg.MODEL.weightCE_loss))
+        else:
+            self.loss = initialize_from_config(loss)
         
         init_loss(self)
         init_metrics(self)

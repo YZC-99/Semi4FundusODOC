@@ -12,6 +12,7 @@ _C.info.description=''
 # _C = CN()
 _C.MODEL = CN()
 _C.MODEL.Dual = False
+_C.MODEL.weightCE_loss = None
 _C.MODEL.DC_loss = False
 _C.MODEL.BD_loss = False
 _C.MODEL.FC_loss = False

@@ -6,13 +6,12 @@ MODEL:
   backbone: 'resnet50'
   backbone_pretrained: True
   model: 'deeplabv3plus'
+  weightCE_loss: [1.0,3.0,3.0]
   DC_loss: True
   BD_loss: True
   FC_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
-    params:
-      torch.tensor: [1.0,3.0,3.0]
 
 
 dataset:
