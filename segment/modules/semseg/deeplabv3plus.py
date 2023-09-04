@@ -81,7 +81,11 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
-        # 有可能后续的会对
+        # c1要与c4做差，那么需要将c1通过一个conv
+        # self.c1_to_c4 = nn.Sequential(nn.Conv2d(low_level_channels, high_level_channels, 1, bias=False),
+        #                             nn.BatchNorm2d(48),
+        #                             nn.ReLU(True))
+
         # self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=8)
 
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
@@ -105,8 +109,10 @@ class DeepLabV3Plus(BaseNet):
 
         out = torch.cat([c1, c4], dim=1)
         # 使用difference与out_fuse做cross_attention
-
         out_fuse = self.fuse(out)
+        # 我自己加的
+        # difference = F.interpolate(difference, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
             out = self.dysample(out_classifier)
@@ -169,3 +175,8 @@ class ASPPModule(nn.Module):
         feat4 = self.b4(x)
         y = torch.cat((feat0, feat1, feat2, feat3, feat4), 1)
         return self.project(y)
+
+if __name__ == '__main__':
+    input  = torch.randn(2,3,512,512)
+    model = DeepLabV3Plus(backbone='resnet50', nclass=3)
+    out = model(input)
