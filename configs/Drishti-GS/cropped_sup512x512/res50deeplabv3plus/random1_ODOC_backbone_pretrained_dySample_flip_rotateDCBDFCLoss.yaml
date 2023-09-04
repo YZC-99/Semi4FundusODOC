@@ -4,9 +4,12 @@ MODEL:
   epochs: 150
   lr: 0.001 # 0.004/16*batch_size
   backbone: 'resnet50'
+  backbone_pretrained: True
   model: 'deeplabv3plus'
   Isdysample: True
-  ContrastPixelCorrectCBL_loss: [2.0,0.1,0.05]
+  DC_loss: True
+  BD_loss: True
+  FC_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -25,6 +28,13 @@ dataset:
                 labeled_id_path: 'dataset/Drishti-GS/cropped_sup/training.txt'
                 size: 512
                 mode: 'train'
+                aug:
+                  weak:
+                    flip: True
+                    rotate: True
+                    translate: False
+                    noise: False
+                    scale: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
