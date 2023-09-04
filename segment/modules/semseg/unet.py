@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
+from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 
 class _EncoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, dropout=False):
@@ -78,3 +79,52 @@ class UNet(nn.Module):
                 'out_fuse': dec1,
                 'out_classifier':final,
                 'backbone_features':center}
+
+class ResUNet(nn.Module):
+    def __init__(self, num_classes,bb_pretrained=True,inplace_seven=False):
+        super(ResUNet, self).__init__()
+        self.encoder = resnet50(pretrained=bb_pretrained, inplace_seven=inplace_seven)
+
+        self.center = _DecoderBlock(2048, 2048, 2048)
+        self.dec5 = _DecoderBlock(4096, 2048, 1024)
+        self.dec4 = _DecoderBlock(2048, 1024, 512)
+        self.dec3 = _DecoderBlock(1024, 512, 256)
+        self.dec2 = _DecoderBlock(512, 256, 128)
+        self.dec1 = nn.Sequential(
+            nn.Conv2d(128, 64, kernel_size=3),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 64, kernel_size=3),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+        )
+        self.classifier = nn.Conv2d(64, num_classes, kernel_size=1)
+
+    def forward(self, x):
+        # x(2,3,256,256)
+        # c1(2,256,64,64)
+        # c2(2,512,32,32)
+        # c3(2,1024,32,32)
+        # c4(2,2048,32,32)
+        c1,c2,c3,c4 = self.encoder.base_forward(x)
+        center = self.center(c4)
+        dec5 = self.dec5(torch.cat([center, F.upsample(c4, center.size()[2:], mode='bilinear')], 1))
+        dec4 = self.dec4(torch.cat([dec5, F.upsample(c3, dec5.size()[2:], mode='bilinear')], 1))
+        dec3 = self.dec3(torch.cat([dec4, F.upsample(c2, dec4.size()[2:], mode='bilinear')], 1))
+        dec2 = self.dec2(torch.cat([dec3, F.upsample(c1, dec3.size()[2:], mode='bilinear')], 1))
+        # dec2 128维度
+        dec1 = self.dec1(dec2)
+        final = self.classifier(dec1)
+        out =  F.upsample(final, x.size()[2:], mode='bilinear')
+
+        return {'out':out,
+                'out_fuse': dec1,
+                'out_classifier':final,
+                'backbone_features':center}
+
+if __name__ == '__main__':
+    resunet = ResUNet(num_classes=3,bb_pretrained=False,inplace_seven=False)
+    input = torch.randn(2,3,256,256)
+    out = resunet(input)
+    logits = out['out']
+    print(logits.shape)

@@ -24,7 +24,7 @@ from torchmetrics import JaccardIndex,Dice
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 
-from segment.modules.semseg.unet import UNet
+from segment.modules.semseg.unet import UNet,ResUNet
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -52,7 +52,10 @@ class Base(pl.LightningModule):
             self.backbone = backbone
             self.model = DeepLabV2(self.backbone,self.num_classes)
         if model == 'unet':
-            self.model = UNet(self.num_classes)
+            if backbone == 'resnet50':
+                self.model = ResUNet(self.num_classes,bb_pretrained=cfg.MODEL.backbone_pretrained)
+            else:
+                self.model = UNet(self.num_classes)
         self.init_from_ckpt = init_from_ckpt
 
         self.loss = initialize_from_config(loss)
