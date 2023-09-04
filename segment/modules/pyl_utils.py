@@ -184,7 +184,7 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
         print("gt_boundary的唯一值:{}".format(torch.unique(gt_boundary)))
         print("gt_boundary的形状:{}".format(gt_boundary.size()))
         # 按道理preds应该要减去边缘
-        preds = preds - gt_boundary.unsqueeze(1)
+        preds = preds - gt_boundary.unsqueeze(1)*1
     # preds = gt_boundary.unsqueeze(1)
 
 
