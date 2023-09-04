@@ -83,7 +83,7 @@ class UNet(nn.Module):
 class ResUNet(nn.Module):
     def __init__(self, num_classes,bb_pretrained=True,inplace_seven=False):
         super(ResUNet, self).__init__()
-        self.encoder = resnet50(pretrained=bb_pretrained, inplace_seven=inplace_seven)
+        self.backbone = resnet50(pretrained=bb_pretrained, inplace_seven=inplace_seven)
 
         self.center = _DecoderBlock(2048, 2048, 2048)
         self.dec5 = _DecoderBlock(4096, 2048, 1024)
@@ -106,7 +106,7 @@ class ResUNet(nn.Module):
         # c2(2,512,32,32)
         # c3(2,1024,32,32)
         # c4(2,2048,32,32)
-        c1,c2,c3,c4 = self.encoder.base_forward(x)
+        c1,c2,c3,c4 = self.backbone.base_forward(x)
         center = self.center(c4)
         dec5 = self.dec5(torch.cat([center, F.upsample(c4, center.size()[2:], mode='bilinear')], 1))
         dec4 = self.dec4(torch.cat([dec5, F.upsample(c3, dec5.size()[2:], mode='bilinear')], 1))
