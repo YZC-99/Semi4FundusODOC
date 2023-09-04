@@ -4,6 +4,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from segment.modules.nn.dysapmle import DySample
+from segment.modules.semseg.nn import Attention
 
 class DualDeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass,inplace_seven):
@@ -77,6 +78,7 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
+        # 有可能后续的会对
 
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
         self.Isdysample = Isdysample
