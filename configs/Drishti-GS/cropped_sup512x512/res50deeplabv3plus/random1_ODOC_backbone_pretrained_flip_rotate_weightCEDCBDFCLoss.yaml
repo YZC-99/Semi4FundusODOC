@@ -12,7 +12,7 @@ MODEL:
   loss:
     target: torch.nn.CrossEntropyLoss
     params:
-      weight: [1.0,3.0,3.0]
+      weight: torch.tensor([1.0,3.0,3.0])
 
 
 dataset:
