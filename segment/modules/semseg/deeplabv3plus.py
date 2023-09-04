@@ -82,7 +82,7 @@ class DeepLabV3Plus(BaseNet):
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
         # 有可能后续的会对
-        self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=8)
+        # self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=8)
 
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
         self.Isdysample = Isdysample
@@ -100,8 +100,8 @@ class DeepLabV3Plus(BaseNet):
         c1 = self.reduce(c1)
 
         # 做差
-        c3 = F.interpolate(c3, size=c4.shape[-2:], mode="bilinear", align_corners=True)
-        difference = c4 - c3
+        # c3 = F.interpolate(c3, size=c4.shape[-2:], mode="bilinear", align_corners=True)
+        # difference = c4 - c3
 
         out = torch.cat([c1, c4], dim=1)
         # 使用difference与out_fuse做cross_attention
