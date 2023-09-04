@@ -91,7 +91,7 @@ class DeepLabV3Plus(BaseNet):
             self.diff_to_fuse = nn.Sequential(nn.Conv2d(c3_level_channels, 256, 1, bias=False),
                                         nn.BatchNorm2d(256),
                                         nn.ReLU(True))
-            self.cross_attention = ScaledDotProductAttention(d_model=256, d_k=256, d_v=256, h=1)
+            self.cross_attention = ScaledDotProductAttention(d_model=256, d_k=256, d_v=256, h=4)
             self.mlp_diff = nn.Sequential(
                                     nn.Conv1d(128*128,4096,1,bias=False),
                                     nn.ReLU(4096)
