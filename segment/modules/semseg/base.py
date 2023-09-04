@@ -5,10 +5,10 @@ import torch.nn.functional as F
 
 
 class BaseNet(nn.Module):
-    def __init__(self, backbone,inplace_seven):
+    def __init__(self, backbone,inplace_seven,bb_pretrained):
         super(BaseNet, self).__init__()
         backbone_zoo = {'resnet18': resnet18,'resnet34': resnet34,'resnet50': resnet50, 'resnet101': resnet101}
-        self.backbone = backbone_zoo[backbone](pretrained=False,inplace_seven=inplace_seven)
+        self.backbone = backbone_zoo[backbone](pretrained=bb_pretrained,inplace_seven=inplace_seven)
 
     def base_forward(self, x):
         h, w = x.shape[-2:]
