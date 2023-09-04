@@ -159,10 +159,35 @@ def init_metrics(pl_module: pl.LightningModule):
         pl_module.od_rmOC_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
         pl_module.od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
 
+def gt2boundary(gt, ignore_label=-1):  # gt NHW
+    gt_ud = gt[:, 1:, :] - gt[:, :-1, :]  # NHW
+    gt_lr = gt[:, :, 1:] - gt[:, :, :-1]
+    gt_ud = torch.nn.functional.pad(gt_ud, [0, 0, 0, 1, 0, 0], mode='constant', value=0) != 0
+    gt_lr = torch.nn.functional.pad(gt_lr, [0, 1, 0, 0, 0, 0], mode='constant', value=0) != 0
+    gt_combine = gt_lr + gt_ud
+    del gt_lr
+    del gt_ud
+
+    # set 'ignore area' to all boundary
+    gt_combine += (gt == ignore_label)
+    return gt_combine > 0
+
 
 def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
 
     preds, y = outputs['preds'], outputs['y']
+    # 在这里对边缘进行裁剪
+    if pl_module.cfg.MODEL.preds_postprocess > 0:
+        gt_boundary = gt2boundary(preds.squeeze())
+        print("preds的唯一值:{}".format(torch.unique(preds)))
+        print("preds的形状:{}".format(preds.size()))
+        print("gt_boundary的唯一值:{}".format(torch.unique(gt_boundary)))
+        print("gt_boundary的形状:{}".format(gt_boundary.size()))
+        # 按道理preds应该要减去边缘
+        preds = preds - gt_boundary.unsqueeze(1)
+    # preds = gt_boundary.unsqueeze(1)
+
+
     # 首先是计算各个类别的dice和iou，preds里面的值就代表了对每个像素点的预测
     # 背景的指标不必计算
     # 计算视盘的指标,因为视盘的像素标签值为1，视杯为2，因此，值为1的都是od，其他的都为0
@@ -170,6 +195,8 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
     od_y = copy.deepcopy(y)
     od_preds[od_preds != 1] = 0
     od_y[od_y != 1] = 0
+
+
 
     if pl_module.cfg.MODEL.NUM_CLASSES == 3:
         oc_preds = copy.deepcopy(preds)

@@ -29,6 +29,7 @@ _C.MODEL.Isdysample = False
 _C.MODEL.Teacher_Student = False
 _C.MODEL.Teacher_pretrined = True
 _C.MODEL.Student_pretrined = False
+_C.MODEL.preds_postprocess = 0
 _C.MODEL.sup = False
 _C.MODEL.NUM_CLASSES = 2
 _C.MODEL.batch_size = 16
