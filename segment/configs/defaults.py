@@ -28,6 +28,7 @@ _C.MODEL.LOVASZPlus_loss = False
 
 _C.MODEL.CBLcontrast_start_epoch = 0
 _C.MODEL.Isdysample = False
+_C.MODEL.CrossAttention = False
 _C.MODEL.Teacher_Student = False
 _C.MODEL.Teacher_pretrined = True
 _C.MODEL.Student_pretrined = False

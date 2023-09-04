@@ -61,10 +61,13 @@ class DualDeepLabV3Plus(BaseNet):
 
 
 class DeepLabV3Plus(BaseNet):
-    def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False,bb_pretrained = False):
+    def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False,bb_pretrained = False,ca=False):
         super(DeepLabV3Plus, self).__init__(backbone,inplace_seven,bb_pretrained)
+        self.ca = ca
 
         low_level_channels = self.backbone.channels[0]
+        c2_level_channels = self.backbone.channels[1]
+        c3_level_channels = self.backbone.channels[2]
         high_level_channels = self.backbone.channels[-1]
 
         self.head = ASPPModule(high_level_channels, (12, 24, 36))
@@ -81,10 +84,14 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
-        # c1要与c4做差，那么需要将c1通过一个conv
-        # self.c1_to_c4 = nn.Sequential(nn.Conv2d(low_level_channels, high_level_channels, 1, bias=False),
-        #                             nn.BatchNorm2d(48),
-        #                             nn.ReLU(True))
+        if self.ca:
+            self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
+                                        nn.BatchNorm2d(c3_level_channels),
+                                        nn.ReLU(True))
+            self.diff_to_fuse = nn.Sequential(nn.Conv2d(c3_level_channels, 256, 1, bias=False),
+                                        nn.BatchNorm2d(256),
+                                        nn.ReLU(True))
+            self.cross_attention = ScaledDotProductAttention(d_model=256, d_k=256, d_v=256, h=8)
 
         # self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=8)
 
@@ -103,15 +110,28 @@ class DeepLabV3Plus(BaseNet):
 
         c1 = self.reduce(c1)
 
-        # 做差
-        # c3 = F.interpolate(c3, size=c4.shape[-2:], mode="bilinear", align_corners=True)
-        # difference = c4 - c3
 
         out = torch.cat([c1, c4], dim=1)
         # 使用difference与out_fuse做cross_attention
         out_fuse = self.fuse(out)
-        # 我自己加的
-        # difference = F.interpolate(difference, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+
+        # 做c2和c3的差，c2(2,512,64,64)  c3(2,1024,64,64)
+        # 将c2送入一个conv，变成 c2(2,1024,64,64)
+        # c2-c3:(2,1024,64,64)
+        #
+        # 将c2-c3的差引入out_fuse做cross attention
+        # out_fuse(2,256,128,128)
+        # 将c2-c3送入conv，变成(2,256,64,64),然后插值，变成(2,256,128,128)
+        if self.ca:
+            c2 = self.c2_to_c3(c2)
+            diff = c2 - c3
+            diff = self.diff_to_fuse(diff)
+            diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+            b,c,h,w = out_fuse.size()
+            diff = diff.view(b,-1,c)
+            out_fuse = out_fuse.view(b,-1,c)
+            out_fuse = self.cross_attention(diff,out_fuse,out_fuse)
+            out_fuse = out_fuse.view(b,c,h,w)
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
