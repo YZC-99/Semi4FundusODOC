@@ -127,11 +127,12 @@ class DeepLabV3Plus(BaseNet):
             diff = c2 - c3
             diff = self.diff_to_fuse(diff)
             diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
-            b,c,h,w = out_fuse.size()
-            diff = diff.view(b,-1,c)
-            out_fuse = out_fuse.view(b,-1,c)
-            out_fuse = self.cross_attention(diff,out_fuse,out_fuse)
-            out_fuse = out_fuse.view(b,c,h,w)
+            out_fuse = out_fuse + diff
+            # b,c,h,w = out_fuse.size()
+            # diff = diff.view(b,-1,c)
+            # out_fuse = out_fuse.view(b,-1,c)
+            # out_fuse = self.cross_attention(diff,out_fuse,out_fuse)
+            # out_fuse = out_fuse.view(b,c,h,w)
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
