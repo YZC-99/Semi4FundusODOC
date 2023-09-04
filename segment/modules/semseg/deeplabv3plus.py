@@ -91,9 +91,9 @@ class DeepLabV3Plus(BaseNet):
             self.diff_to_fuse = nn.Sequential(nn.Conv2d(c3_level_channels, 256, 1, bias=False),
                                         nn.BatchNorm2d(256),
                                         nn.ReLU(True))
-            self.cross_attention = ScaledDotProductAttention(d_model=256, d_k=256, d_v=256, h=8)
+            self.cross_attention = ScaledDotProductAttention(d_model=256, d_k=256, d_v=256, h=1)
 
-        # self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=8)
+        # self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=2)
 
         self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
         self.Isdysample = Isdysample
@@ -128,11 +128,11 @@ class DeepLabV3Plus(BaseNet):
             diff = self.diff_to_fuse(diff)
             diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = out_fuse + diff
-            # b,c,h,w = out_fuse.size()
-            # diff = diff.view(b,-1,c)
-            # out_fuse = out_fuse.view(b,-1,c)
-            # out_fuse = self.cross_attention(diff,out_fuse,out_fuse)
-            # out_fuse = out_fuse.view(b,c,h,w)
+            b,c,h,w = out_fuse.size()
+            diff = diff.view(b,-1,c)
+            out_fuse = out_fuse.view(b,-1,c)
+            out_fuse = self.cross_attention(diff,out_fuse,out_fuse)
+            out_fuse = out_fuse.view(b,c,h,w)
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
