@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import unittest
-
+import torch.nn as nn
 import torch
 import numpy as np
 
 import utils
 
+nn.CrossEntropyLoss()
 class TestDice(unittest.TestCase):
     def test_equal(self):
         t = torch.zeros((1, 100, 100), dtype=torch.int64)

@@ -5,22 +5,20 @@ MODEL:
   lr: 0.001 # 0.004/16*batch_size
   backbone: 'resnet50'
   backbone_pretrained: True
-  backbone_inplace_seven: False
   model: 'deeplabv3plus'
   DC_loss: True
   BD_loss: True
   FC_loss: True
-  aux: 0.5
   loss:
     target: torch.nn.CrossEntropyLoss
-
+      weight: [1.0,3.0,3.0]
 
 
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
         batch_size: 8
-        num_workers: 4
+        num_workers: 8
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
