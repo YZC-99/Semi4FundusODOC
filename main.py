@@ -74,6 +74,8 @@ if __name__ == '__main__':
 
     cfg.prototype_path = now_ex_prototypes_path
     cfg.MODEL.pseudo_mask_path = now_ex_pseudo_masks_path
+    cfg.MODEL.logs_path = now_experiment_path
+
 
 
     exp_config = OmegaConf.create({"name": args.config, "epochs": cfg.MODEL.epochs, "update_every": args.update_every,
@@ -90,7 +92,6 @@ if __name__ == '__main__':
     model.learning_rate = cfg.MODEL.lr * args.num_gpus
     # Setup callbacks
     callbacks, logger,simple_Profiler = setup_callbacks(exp_config, config)
-    cfg.MODEL.logs_path = logger.log_dir
 
 
 
