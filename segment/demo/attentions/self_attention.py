@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch.nn import init
-# from fightingcv_attention.attention.SelfAttention import ScaledDotProductAttention
+from fightingcv_attention.attention.CrissCrossAttention import CrissCrossAttention
 
 
 class ScaledDotProductAttention(nn.Module):

@@ -5,7 +5,7 @@ from torch import nn
 import torch.nn.functional as F
 from segment.modules.nn.dysapmle import DySample
 from segment.modules.semseg.nn import ScaledDotProductAttention
-from segment.modules.semseg.nn import Attention
+from segment.modules.semseg.nn import Attention,CrissCrossAttention
 
 class DualDeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass,inplace_seven):
@@ -60,9 +60,9 @@ class DualDeepLabV3Plus(BaseNet):
 
 
 class DeepLabV3Plus(BaseNet):
-    def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False,bb_pretrained = False,ca=False):
+    def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False,bb_pretrained = False,attention=None):
         super(DeepLabV3Plus, self).__init__(backbone,inplace_seven,bb_pretrained)
-        self.ca = ca
+        self.attention = attention
 
         low_level_channels = self.backbone.channels[0]
         c2_level_channels = self.backbone.channels[1]
@@ -83,7 +83,8 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
-        if self.ca:
+        self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
+        if self.attention == 'CrossAttention':
             self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
                                         nn.BatchNorm2d(c3_level_channels),
                                         nn.ReLU(True))
@@ -104,9 +105,28 @@ class DeepLabV3Plus(BaseNet):
                                     nn.ReLU(128*128)
             )
 
-        # self.cross_attention = ScaledDotProductAttention(d_model=c2, d_k=c1, d_v=c1, h=2)
+        elif self.attention == 'Criss_CrossAttention':
+            self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
+                                        nn.BatchNorm2d(c3_level_channels),
+                                        nn.ReLU(True))
+            self.diff_reduc = nn.Sequential(nn.Conv2d(c3_level_channels, 64, 1, bias=False),
+                                        nn.BatchNorm2d(64),
+                                        nn.ReLU(True))
+            self.criss_cross_attention = CrissCrossAttention(64)
+            # self.diff_increase = nn.Sequential(nn.Conv2d(64, c3_level_channels, 1, bias=False),
+            #                             nn.BatchNorm2d(c3_level_channels),
+            #                             nn.ReLU(True))
 
-        self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
+            self.fuse_diff_out = nn.Sequential(nn.Conv2d(256 + 64, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+                                  nn.Dropout(0.1, False))
+
+
         self.Isdysample = Isdysample
         if self.Isdysample:
             self.dysample = DySample(in_channels=nclass, scale=4,style='lp', groups=3)
@@ -133,7 +153,7 @@ class DeepLabV3Plus(BaseNet):
         # 将c2-c3的差引入out_fuse做cross attention
         # out_fuse(2,256,128,128)
         # 将c2-c3送入conv，变成(2,256,64,64),然后插值，变成(2,256,128,128)
-        if self.ca:
+        if self.attention == 'CrossAttention':
             c2 = self.c2_to_c3(c2)
             diff = c2 - c3
             diff = self.diff_to_fuse(diff)
@@ -151,6 +171,15 @@ class DeepLabV3Plus(BaseNet):
             out_fuse = out_fuse.view(b_fuse,c_fuse,h_fuse,w_fuse)
 
             out_fuse = out_fuse + out_fuse_highlevel
+
+        elif self.attention == 'Criss_CrossAttention':
+            c2 = self.c2_to_c3(c2)
+            diff = c2 - c3
+            diff = self.diff_reduc(diff)
+            diff = self.criss_cross_attention(diff)
+            # diff = self.diff_increase(diff)
+            diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+            out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
@@ -217,5 +246,5 @@ class ASPPModule(nn.Module):
 
 if __name__ == '__main__':
     input  = torch.randn(2,3,512,512)
-    model = DeepLabV3Plus(backbone='resnet50', nclass=3,ca=True)
+    model = DeepLabV3Plus(backbone='resnet50', nclass=3,attention = 'Criss_CrossAttention')
     out = model(input)
