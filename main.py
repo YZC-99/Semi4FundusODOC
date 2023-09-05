@@ -25,7 +25,7 @@ import torch
 import pytorch_lightning as pl
 
 from utils.general import get_config_from_file, initialize_from_config, setup_callbacks,merge_cfg
-
+from pytorch_lightning.callbacks import ModelCheckpoint, Callback,StochasticWeightAveraging
 def get_obj_from_str(string, reload=False):
     module, cls = string.rsplit(".", 1)
     if reload:
@@ -47,6 +47,8 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_frequency', type=int, default=10000)
     parser.add_argument('-m', '--max_images', type=int, default=1)
     parser.add_argument('--limit_val_batches', type=int, default=8)
+    parser.add_argument('-tune', default=False, action='store_true')
+    parser.add_argument('-saw', default=False, action='store_true')
     parser.add_argument('-abs','--auto_scale_batch_size', default=False, action='store_true')
     parser.add_argument('-alf','--auto_lr_find', default=False, action='store_true')
     parser.add_argument('-v','--check_val_every_n_epoch', type=int, default=1)
@@ -152,7 +154,9 @@ if __name__ == '__main__':
     data = initialize_from_config(config.dataset)
     data.prepare_data()
 
-
+    if args.saw:
+        SWA_callback = StochasticWeightAveraging(swa_lrs=0.0008,swa_epoch_start=10)
+        callbacks.append(SWA_callback)
 
 
     # Build trainer
@@ -170,7 +174,7 @@ if __name__ == '__main__':
                          auto_lr_find=args.auto_lr_find,
                          )
 
-    if args.auto_lr_find:
+    if args.auto_lr_find and args.tune:
         trainer.tune(model,data)
     # Train
     trainer.fit(model, data,ckpt_path=cfg.MODEL.resume_path)
