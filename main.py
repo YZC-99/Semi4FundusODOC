@@ -166,10 +166,12 @@ if __name__ == '__main__':
                          logger=logger,
                          profiler= simple_Profiler,
                          check_val_every_n_epoch= args.check_val_every_n_epoch,
-                         auto_scale_batch_size=args.auto_scale_batch_size,
+                         auto_scale_batch_size='binsearch',
                          auto_lr_find=args.auto_lr_find,
                          )
 
+    if args.auto_lr_find:
+        trainer.tune(model)
     # Train
     trainer.fit(model, data,ckpt_path=cfg.MODEL.resume_path)
 
