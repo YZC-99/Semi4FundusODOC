@@ -274,7 +274,7 @@ class DeepLabV3Plus(BaseNet):
             c3 = self.criss_cross_attention1(c3)
             out_fuse_shape = out_fuse.shape[-2:]
             # 将out_fuse缩小
-            out_fuse = F.interpolate(out_fuse,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+            out_fuse = F.interpolate(out_fuse,size=c3.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse_reducted = self.fuse_reduc(out_fuse)
             out_cross_criss_att = self.criss_cross_attention2.cross_forward(c3,out_fuse_reducted)
             out_fuse = F.interpolate(out_cross_criss_att,size=out_fuse_shape, mode="bilinear", align_corners=True)
