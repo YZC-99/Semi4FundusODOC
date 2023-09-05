@@ -10,7 +10,7 @@ import pathlib
 from typing import Tuple, List, Dict, ClassVar
 
 import torch
-from pytorch_lightning.callbacks import ModelCheckpoint, Callback
+from pytorch_lightning.callbacks import ModelCheckpoint, Callback,StochasticWeightAveraging
 from pytorch_lightning.profilers import SimpleProfiler,AdvancedProfiler
 from pytorch_lightning.loggers import WandbLogger,TensorBoardLogger,CSVLogger
 import torch.distributed as dist
@@ -150,6 +150,9 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     )
 
 
+    SWA_callback = StochasticWeightAveraging(swa_lrs=0.0008,swa_epoch_start=10)
+
+
     Profiler = SimpleProfiler(filename="perf_logs")
     if dist.is_initialized() and dist.get_rank() == 0:
         os.makedirs(setup_callback.logdir, exist_ok=True)
@@ -159,7 +162,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
         # return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
-        return [setup_callback,on_min_val_loss,on_best_OD_Dice,on_best_OC_Dice,logger_img_callback], logger,Profiler
+        return [setup_callback,on_min_val_loss,on_best_OD_Dice,on_best_OC_Dice,logger_img_callback,SWA_callback], logger,Profiler
     elif config.MODEL.NUM_CLASSES == -1:
         return [setup_callback, on_vqe_min_loss,logger_img_callback], logger, Profiler
     return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
