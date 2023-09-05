@@ -225,7 +225,7 @@ class DeepLabV3Plus(BaseNet):
             # c2 = self.c2_to_c3(c2)
             # diff = c2 + c3
             # diff = self.diff_reduc(c2)
-            diff = self.criss_cross_attention(c3)
+            diff = self.coordinate_attention(c3)
             diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
 
