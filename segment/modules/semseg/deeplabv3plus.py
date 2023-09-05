@@ -276,9 +276,9 @@ class DeepLabV3Plus(BaseNet):
             # 将out_fuse缩小
             out_fuse = F.interpolate(out_fuse,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse_reducted = self.fuse_reduc(out_fuse)
-            out_cross_criss_att = self.criss_cross_attention2.cross_forward(c3,out_fuse)
+            out_cross_criss_att = self.criss_cross_attention2.cross_forward(c3,out_fuse_reducted)
             out_fuse = F.interpolate(out_cross_criss_att,size=out_fuse_shape, mode="bilinear", align_corners=True)
-            out_fuse = self.fuse_diff_out(torch.cat([out_fuse, out_fuse_reducted], dim=1))
+            out_fuse = self.fuse_diff_out(torch.cat([out_fuse, out_cross_criss_att], dim=1))
 
 
         elif self.attention == 'Coordinate_Attention':
