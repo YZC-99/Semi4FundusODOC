@@ -108,7 +108,7 @@ class S3Net(nn.Module):
         return x, x_aux
 if __name__ == '__main__':
     img_path = 'T0001.jpg'
-    img_rgb = Image.open(img_path)
+    img_rgb = cv2.imread(img_path)
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY) / 255.
     sobelx = cv2.Sobel(src=img_gray, ddepth=cv2.CV_64F, dx=1, dy=0, ksize=3)
 
