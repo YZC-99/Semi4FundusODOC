@@ -10,6 +10,7 @@ MODEL:
   stage1_ckpt_path: 'experiments/SEG/cropped_sup512x512/random1_ODOC_sup10_backbone_pretrained_DCBDFCLoss/lightning_logs/version_1/ckpt/epoch=18-val_OD_dice=0.946168-val_OD_mIoU=0.932403.ckpt'
   DC_loss: True
   BD_loss: True
+  FC_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
 
