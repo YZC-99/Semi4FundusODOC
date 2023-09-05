@@ -144,6 +144,7 @@ _C.dataset.params.train2.params.mode = ''
 _C.dataset.params.train2.params.size = 512
 _C.dataset.params.train2.params.labeled_id_path = None
 _C.dataset.params.train2.params.unlabeled_id_path = None
+_C.dataset.params.train2.params.add_unlabeled_id_path = None
 _C.dataset.params.train2.params.pseudo_mask_path = None
 _C.dataset.params.train2.params.cfg = CN()
 
