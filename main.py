@@ -64,7 +64,6 @@ if __name__ == '__main__':
     now_experiment_path = Path("experiments")/(args.config)
     now_ex_pseudo_masks_path = os.path.join(now_experiment_path,'pseudo_masks')
     now_ex_prototypes_path = os.path.join(now_experiment_path,'prototypes')
-    now_ex_models_path = os.path.join(now_experiment_path,'models')
 
     if not os.path.exists(now_experiment_path):
         os.makedirs(now_experiment_path)
@@ -73,9 +72,9 @@ if __name__ == '__main__':
     if not os.path.exists(now_ex_pseudo_masks_path):
         os.makedirs(now_ex_pseudo_masks_path)
 
-    cfg.MODEL.save_path = now_ex_models_path
     cfg.prototype_path = now_ex_prototypes_path
     cfg.MODEL.pseudo_mask_path = now_ex_pseudo_masks_path
+
 
     exp_config = OmegaConf.create({"name": args.config, "epochs": cfg.MODEL.epochs, "update_every": args.update_every,
                                     "use_amp": args.use_amp, "batch_frequency": args.batch_frequency,
@@ -91,6 +90,7 @@ if __name__ == '__main__':
     model.learning_rate = cfg.MODEL.lr * args.num_gpus
     # Setup callbacks
     callbacks, logger,simple_Profiler = setup_callbacks(exp_config, config)
+    cfg.MODEL.logs_path = logger.log_dir
 
 
 
