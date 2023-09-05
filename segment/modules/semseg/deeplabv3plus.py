@@ -59,7 +59,6 @@ class DualDeepLabV3Plus(BaseNet):
                 'backbone_features':backbone_feats}
 
 
-
 class DeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False,bb_pretrained = False,ca=False):
         super(DeepLabV3Plus, self).__init__(backbone,inplace_seven,bb_pretrained)
