@@ -105,7 +105,7 @@ class DeepLabV3Plus(BaseNet):
                                     nn.ReLU(128*128)
             )
 
-        elif self.attention == 'Criss_CrossAttention':
+        elif self.attention == 'Criss_CrossAttention' or self.attention == 'Criss_CrossAttention_R2':
             self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
                                         nn.BatchNorm2d(c3_level_channels),
                                         nn.ReLU(True))
