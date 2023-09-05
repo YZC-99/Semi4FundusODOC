@@ -64,17 +64,18 @@ if __name__ == '__main__':
     now_experiment_path = Path("experiments")/(args.config)
     now_ex_pseudo_masks_path = os.path.join(now_experiment_path,'pseudo_masks')
     now_ex_prototypes_path = os.path.join(now_experiment_path,'prototypes')
+    now_ex_logs_path = os.path.join(now_experiment_path,'logs')
 
     if not os.path.exists(now_experiment_path):
         os.makedirs(now_experiment_path)
     if not os.path.exists(now_ex_prototypes_path):
         os.makedirs(now_ex_prototypes_path)
-    if not os.path.exists(now_ex_pseudo_masks_path):
-        os.makedirs(now_ex_pseudo_masks_path)
+    if not os.path.exists(now_ex_logs_path):
+        os.makedirs(now_ex_logs_path)
 
     cfg.prototype_path = now_ex_prototypes_path
     cfg.MODEL.pseudo_mask_path = now_ex_pseudo_masks_path
-    cfg.MODEL.logs_path = now_experiment_path
+    cfg.MODEL.logs_path = now_ex_logs_path
 
 
 
