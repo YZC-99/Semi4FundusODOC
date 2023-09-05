@@ -136,6 +136,14 @@ class DeepLabV3Plus(BaseNet):
             #                             nn.BatchNorm2d(64),
             #                             nn.ReLU(True))
             self.coordinate_attention = CoordAtt(c3_level_channels,c3_level_channels,reduction=8)
+            self.fuse_diff_out = nn.Sequential(nn.Conv2d(256 + 64, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+                                  nn.Dropout(0.1, False))
 
 
         self.Isdysample = Isdysample
