@@ -136,7 +136,7 @@ class DeepLabV3Plus(BaseNet):
                                         nn.BatchNorm2d(64),
                                         nn.ReLU(True))
             self.criss_cross_attention1 = CrissCrossAttention(64)
-            self.criss_cross_attention2 = CrissCrossAttention(64)
+            self.criss_cross_attention2 = CrissCrossAttention(c3_level_channels)
             # self.diff_increase = nn.Sequential(nn.Conv2d(64, c3_level_channels, 1, bias=False),
             #                             nn.BatchNorm2d(c3_level_channels),
             #                             nn.ReLU(True))
