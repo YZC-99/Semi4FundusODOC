@@ -6,10 +6,9 @@ MODEL:
   backbone: 'resnet50'
   backbone_pretrained: True
   model: 'deeplabv3plus'
-  Attention: 'Criss_CrossAttention'
+  Attention: 'Criss_Attention_R2_V1'
   DC_loss: True
   BD_loss: True
-  FC_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
 

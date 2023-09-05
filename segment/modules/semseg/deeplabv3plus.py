@@ -105,10 +105,10 @@ class DeepLabV3Plus(BaseNet):
                                     nn.ReLU(128*128)
             )
 
-        elif self.attention == 'Criss_CrossAttention' or self.attention == 'Criss_CrossAttention_R2_V1' or \
-                self.attention == 'Criss_CrossAttention_R2_V2' or \
-                self.attention == 'Criss_CrossAttention_R2_V3' \
-                or self.attention == 'Criss_CrossAttention_R2':
+        elif self.attention == 'Criss_Attention' or self.attention == 'Criss_Attention_R2_V1' or \
+                self.attention == 'Criss_Attention_R2_V2' or \
+                self.attention == 'Criss_Attention_R2_V3' \
+                or self.attention == 'Criss_Attention_R2':
             self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
                                         nn.BatchNorm2d(c3_level_channels),
                                         nn.ReLU(True))
@@ -128,6 +128,21 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
+        elif self.attention == 'Cross_CrissAttention':
+            self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
+                                        nn.BatchNorm2d(c3_level_channels),
+                                        nn.ReLU(True))
+            self.diff_reduc = nn.Sequential(nn.Conv2d(c3_level_channels, 64, 1, bias=False),
+                                        nn.BatchNorm2d(64),
+                                        nn.ReLU(True))
+            self.criss_cross_attention1 = CrissCrossAttention(64)
+            self.criss_cross_attention2 = CrissCrossAttention(64)
+            # self.diff_increase = nn.Sequential(nn.Conv2d(64, c3_level_channels, 1, bias=False),
+            #                             nn.BatchNorm2d(c3_level_channels),
+            #                             nn.ReLU(True))
+
+
+
         elif self.attention == 'Coordinate_Attention':
             self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
                                         nn.BatchNorm2d(c3_level_channels),
@@ -144,7 +159,23 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
+        elif self.attention == 'Criss_Coordinate_Attention':
+            self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
+                                          nn.BatchNorm2d(c3_level_channels),
+                                          nn.ReLU(True))
+            self.diff_reduc = nn.Sequential(nn.Conv2d(c3_level_channels, 64, 1, bias=False),
+                                        nn.BatchNorm2d(64),
+                                        nn.ReLU(True))
+            self.criss_cross_attention = CrissCrossAttention(64)
+            self.coordinate_attention = CoordAtt(c3_level_channels, c3_level_channels, reduction=8)
+            self.fuse_diff_out = nn.Sequential(nn.Conv2d(c3_level_channels + 256, 256, 3, padding=1, bias=False),
+                                               nn.BatchNorm2d(256),
+                                               nn.ReLU(True),
 
+                                               nn.Conv2d(256, 256, 3, padding=1, bias=False),
+                                               nn.BatchNorm2d(256),
+                                               nn.ReLU(True),
+                                               nn.Dropout(0.1, False))
 
         self.Isdysample = Isdysample
         if self.Isdysample:
@@ -191,7 +222,7 @@ class DeepLabV3Plus(BaseNet):
 
             out_fuse = out_fuse + out_fuse_highlevel
 
-        elif self.attention == 'Criss_CrossAttention':
+        elif self.attention == 'Criss_Attention':
             c2 = self.c2_to_c3(c2)
             diff = c2 - c3
             diff = self.diff_reduc(diff)
@@ -200,7 +231,7 @@ class DeepLabV3Plus(BaseNet):
             diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
 
-        elif self.attention == 'Criss_CrossAttention_R2':
+        elif self.attention == 'Criss_Attention_R2':
             c2 = self.c2_to_c3(c2)
             diff = c2 - c3
             diff = self.diff_reduc(diff)
@@ -208,27 +239,37 @@ class DeepLabV3Plus(BaseNet):
             diff = self.criss_cross_attention(diff)
             diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
-        elif self.attention == 'Criss_CrossAttention_R2_V1':
+        elif self.attention == 'Criss_Attention_R2_V1':
             # c2 = self.c2_to_c3(c2)
             # diff = c2 - c3
             diff = self.diff_reduc(c3)
             diff = self.criss_cross_attention(diff)
             diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
-        elif self.attention == 'Criss_CrossAttention_R2_V2':
+        elif self.attention == 'Criss_Attention_R2_V2':
             c2 = self.c2_to_c3(c2)
             diff = c2 + c3
             diff = self.diff_reduc(diff)
             diff = self.criss_cross_attention(diff)
             diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
-        elif self.attention == 'Criss_CrossAttention_R2_V3':
+        elif self.attention == 'Criss_Attention_R2_V3':
             c2 = self.c2_to_c3(c2)
             # diff = c2 + c3
             diff = self.diff_reduc(c2)
             diff = self.criss_cross_attention(diff)
             diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
+        elif self.attention == 'Cross_CrissAttention':
+            c3 = self.diff_reduc(c3)
+            c3 = self.criss_cross_attention1(c3)
+            out_fuse_shape = out_fuse.shape[-2:]
+            # 将out_fuse缩小
+            out_fuse = F.interpolate(out_fuse,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+            out_cross_criss_att = self.criss_cross_attention2(c3,out_fuse)
+            out_fuse = F.interpolate(out_cross_criss_att,size=out_fuse_shape, mode="bilinear", align_corners=True)
+
+
         elif self.attention == 'Coordinate_Attention':
             # c2 = self.c2_to_c3(c2)
             # diff = c2 + c3
@@ -236,6 +277,7 @@ class DeepLabV3Plus(BaseNet):
             diff = self.coordinate_attention(c3)
             diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
+
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
@@ -302,5 +344,5 @@ class ASPPModule(nn.Module):
 
 if __name__ == '__main__':
     input  = torch.randn(2,3,512,512)
-    model = DeepLabV3Plus(backbone='resnet50', nclass=3,attention = 'Criss_CrossAttention')
+    model = DeepLabV3Plus(backbone='resnet50', nclass=3,attention = 'Criss_Attention')
     out = model(input)
