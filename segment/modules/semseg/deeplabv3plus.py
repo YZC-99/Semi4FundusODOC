@@ -180,6 +180,15 @@ class DeepLabV3Plus(BaseNet):
             # diff = self.diff_increase(diff)
             diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
+        elif self.attention == 'Criss_CrossAttention_R2':
+            c2 = self.c2_to_c3(c2)
+            diff = c2 - c3
+            diff = self.diff_reduc(diff)
+            diff = self.criss_cross_attention(diff)
+            diff = self.criss_cross_attention(diff)
+            diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+            out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
+
 
         out_classifier = self.classifier(out_fuse)
         if self.Isdysample:
