@@ -5,7 +5,7 @@ from torch import nn
 import torch.nn.functional as F
 from segment.modules.nn.dysapmle import DySample
 from segment.modules.semseg.nn import ScaledDotProductAttention
-from segment.modules.semseg.nn import Attention,CrissCrossAttention
+from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt
 
 class DualDeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass,inplace_seven):
@@ -128,6 +128,14 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
+        elif self.attention == 'Coordinate_Attention':
+            self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
+                                        nn.BatchNorm2d(c3_level_channels),
+                                        nn.ReLU(True))
+            # self.diff_reduc = nn.Sequential(nn.Conv2d(c3_level_channels, 64, 1, bias=False),
+            #                             nn.BatchNorm2d(64),
+            #                             nn.ReLU(True))
+            self.coordinate_attention = CoordAtt(c3_level_channels,c3_level_channels,reduction=8)
 
 
         self.Isdysample = Isdysample
@@ -212,6 +220,13 @@ class DeepLabV3Plus(BaseNet):
             diff = self.diff_reduc(c2)
             diff = self.criss_cross_attention(diff)
             diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+            out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
+        elif self.attention == 'Coordinate_Attention':
+            # c2 = self.c2_to_c3(c2)
+            # diff = c2 + c3
+            # diff = self.diff_reduc(c2)
+            diff = self.criss_cross_attention(c3)
+            diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
 
         out_classifier = self.classifier(out_fuse)
