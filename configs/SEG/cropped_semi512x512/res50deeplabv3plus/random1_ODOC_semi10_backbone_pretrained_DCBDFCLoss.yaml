@@ -54,12 +54,6 @@ dataset:
 
             size: 512
             mode: 'semi_train'
-            weak:
-              flip: True
-              rotate: True
-              translate: True
-              noise: False
-              scale: False
             aug:
                 strong:
                   Not: False
