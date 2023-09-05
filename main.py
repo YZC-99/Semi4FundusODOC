@@ -47,6 +47,8 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_frequency', type=int, default=10000)
     parser.add_argument('-m', '--max_images', type=int, default=1)
     parser.add_argument('--limit_val_batches', type=int, default=8)
+    parser.add_argument('-abs','--auto_scale_batch_size', default=False, action='store_true')
+    parser.add_argument('-alf','--auto_lr_find', default=False, action='store_true')
     parser.add_argument('-v','--check_val_every_n_epoch', type=int, default=1)
     args = parser.parse_args()
 
@@ -164,6 +166,8 @@ if __name__ == '__main__':
                          logger=logger,
                          profiler= simple_Profiler,
                          check_val_every_n_epoch= args.check_val_every_n_epoch,
+                         auto_scale_batch_size=args.auto_scale_batch_size,
+                         auto_lr_find=args.auto_lr_find,
                          )
 
     # Train
