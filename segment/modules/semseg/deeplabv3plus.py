@@ -135,11 +135,20 @@ class DeepLabV3Plus(BaseNet):
             self.diff_reduc = nn.Sequential(nn.Conv2d(c3_level_channels, 64, 1, bias=False),
                                         nn.BatchNorm2d(64),
                                         nn.ReLU(True))
+            self.fuse_reduc = nn.Sequential(nn.Conv2d(256, 64, 1, bias=False),
+                                        nn.BatchNorm2d(64),
+                                        nn.ReLU(True))
             self.criss_cross_attention1 = CrissCrossAttention(64)
-            self.criss_cross_attention2 = CrissCrossAttention(c3_level_channels)
-            # self.diff_increase = nn.Sequential(nn.Conv2d(64, c3_level_channels, 1, bias=False),
-            #                             nn.BatchNorm2d(c3_level_channels),
-            #                             nn.ReLU(True))
+            self.criss_cross_attention2 = CrissCrossAttention(64)
+            self.fuse_diff_out = nn.Sequential(nn.Conv2d(256 + 64, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+                                  nn.Dropout(0.1, False))
+
 
 
 
@@ -266,8 +275,10 @@ class DeepLabV3Plus(BaseNet):
             out_fuse_shape = out_fuse.shape[-2:]
             # 将out_fuse缩小
             out_fuse = F.interpolate(out_fuse,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+            out_fuse_reducted = self.fuse_reduc(out_fuse)
             out_cross_criss_att = self.criss_cross_attention2.cross_forward(c3,out_fuse)
             out_fuse = F.interpolate(out_cross_criss_att,size=out_fuse_shape, mode="bilinear", align_corners=True)
+            out_fuse = self.fuse_diff_out(torch.cat([out_fuse, out_fuse_reducted], dim=1))
 
 
         elif self.attention == 'Coordinate_Attention':
