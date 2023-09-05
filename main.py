@@ -171,7 +171,7 @@ if __name__ == '__main__':
                          )
 
     if args.auto_lr_find:
-        trainer.tune(model)
+        trainer.tune(model,data)
     # Train
     trainer.fit(model, data,ckpt_path=cfg.MODEL.resume_path)
 
