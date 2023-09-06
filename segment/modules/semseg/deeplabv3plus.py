@@ -403,9 +403,9 @@ class ASPPPooling(nn.Module):
 
 
 class ASPPModule(nn.Module):
-    def __init__(self, in_channels, atrous_rates):
+    def __init__(self, in_channels, atrous_rates,down_ratio=8, height_down=1):
         super(ASPPModule, self).__init__()
-        out_channels = in_channels // 8
+        out_channels = in_channels // down_ratio
         rate1, rate2, rate3 = atrous_rates
 
         self.b0 = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, bias=False),
@@ -416,7 +416,7 @@ class ASPPModule(nn.Module):
         self.b3 = ASPPConv(in_channels, out_channels, rate3)
         self.b4 = ASPPPooling(in_channels, out_channels)
 
-        self.project = nn.Sequential(nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
+        self.project = nn.Sequential(nn.Conv2d(5 * out_channels, out_channels, 1,stride=height_down, bias=False),
                                      nn.BatchNorm2d(out_channels),
                                      nn.ReLU(True),
                                      nn.Dropout2d(0.5, False))
