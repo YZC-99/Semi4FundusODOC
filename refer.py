@@ -43,7 +43,7 @@ model.eval()
 
 dataset = SupTrain(task='od_oc',
                     name='Drishti-GS/cropped_sup',
-                    root='/data/fundus_datasets/od_oc/Drishti-GS/',
+                    root='./data/fundus_datasets/od_oc/Drishti-GS/',
                     mode='test',
                     size=512
                              )
