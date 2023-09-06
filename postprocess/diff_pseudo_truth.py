@@ -17,9 +17,9 @@ def color_map():
 
 cmap = color_map()
 
-root = '/root/autodl-tmp/Semi4FundusODOC/data/fundus_datasets/od_oc/SEG'
-unlabeled_path = '../dataset/SEG/cropped_semi/random1/90/unlabeled.txt'
-pseudo_path_root = '/root/autodl-tmp/Semi4FundusODOC/experiments/SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_None/pseudo_masks'
+root = '/root/autodl-tmp/Semi4FundusODOC/data/fundus_datasets/od_oc/Drishti-GS'
+unlabeled_path = '../dataset/Drishti-GS/cropped_sup/random1/test.txt'
+pseudo_path_root = '/root/autodl-tmp/Semi4FundusODOC/experiments/preds0'
 
 with open(unlabeled_path, 'r') as f:
     truth = f.read().splitlines()
