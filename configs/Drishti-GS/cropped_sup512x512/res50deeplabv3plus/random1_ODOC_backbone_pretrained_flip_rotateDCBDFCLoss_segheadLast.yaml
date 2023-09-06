@@ -10,7 +10,6 @@ MODEL:
   BD_loss: True
   FC_loss: True
   seghead_last: True
-  resume_path: 'experiments/Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_backbone_pretrained_flip_rotateDCBDFCLoss/lightning_logs/version_2/ckpt/last.ckpt'
   loss:
     target: torch.nn.CrossEntropyLoss
 
