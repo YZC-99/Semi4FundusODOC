@@ -58,7 +58,7 @@ cmap = color_map('eye')
 if not os.path.exists(log_path):
     os.mkdir(log_path)
 # 创建csv文件
-with open(os.path.join('refers','preds_metrics.csv'), 'w', newline='') as file:
+with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['ID', 'OD_mIoU','OD_Dice','OC_mIoU','OC_Dice'])  # 写入表头
     with torch.no_grad():
