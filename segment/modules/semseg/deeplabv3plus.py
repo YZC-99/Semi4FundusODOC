@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from segment.modules.nn.dysapmle import DySample
 from segment.modules.semseg.nn import ScaledDotProductAttention
 from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt
+from segment.modules.semseg.CTF import cft
 
 class DualDeepLabV3Plus(BaseNet):
     def __init__(self, backbone, nclass,inplace_seven):
@@ -148,10 +149,6 @@ class DeepLabV3Plus(BaseNet):
                                   nn.BatchNorm2d(256),
                                   nn.ReLU(True),
                                   nn.Dropout(0.1, False))
-
-
-
-
         elif self.attention == 'Coordinate_Attention':
             self.c2_to_c3 = nn.Sequential(nn.Conv2d(c2_level_channels, c3_level_channels, 1, bias=False),
                                         nn.BatchNorm2d(c3_level_channels),
@@ -230,7 +227,6 @@ class DeepLabV3Plus(BaseNet):
             out_fuse = out_fuse.view(b_fuse,c_fuse,h_fuse,w_fuse)
 
             out_fuse = out_fuse + out_fuse_highlevel
-
         elif self.attention == 'Criss_Attention':
             c2 = self.c2_to_c3(c2)
             diff = c2 - c3
@@ -239,7 +235,6 @@ class DeepLabV3Plus(BaseNet):
             # diff = self.diff_increase(diff)
             diff = F.interpolate(diff,size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
-
         elif self.attention == 'Criss_Attention_R2':
             c2 = self.c2_to_c3(c2)
             diff = c2 - c3
@@ -280,8 +275,6 @@ class DeepLabV3Plus(BaseNet):
             out_cross_criss_att = F.interpolate(out_cross_criss_att,size=out_fuse_shape, mode="bilinear", align_corners=True)
             out_fuse = F.interpolate(out_fuse,size=out_fuse_shape, mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, out_cross_criss_att], dim=1))
-
-
         elif self.attention == 'Coordinate_Attention':
             # c2 = self.c2_to_c3(c2)
             # diff = c2 + c3
@@ -301,6 +294,89 @@ class DeepLabV3Plus(BaseNet):
                 'out_classifier':out_classifier,
                 'c3':c3,
                 'out_fuse':out_fuse,
+                'backbone_features':backbone_feats}
+
+class My_DeepLabV3PlusPlus(BaseNet):
+    def __init__(self, backbone, nclass,inplace_seven=False,bb_pretrained = False,attention=None):
+        super(My_DeepLabV3PlusPlus, self).__init__(backbone,inplace_seven,bb_pretrained)
+        self.attention = attention
+
+        low_level_channels = self.backbone.channels[0]
+        c2_level_channels = self.backbone.channels[1]
+        c3_level_channels = self.backbone.channels[2]
+        high_level_channels = self.backbone.channels[-1]
+
+        self.lateral_connections_c4 = ASPPModule(high_level_channels, (12, 24, 36), down_ratio=8)
+        self.lateral_connections_c3 = ASPPModule(c3_level_channels, (12, 24, 36), down_ratio=4)
+        self.lateral_connections_c2 = ASPPModule(c2_level_channels, (12, 24, 36), down_ratio=2)
+        self.lateral_connections_c1 = ASPPModule(low_level_channels, (12, 24, 36), down_ratio=1, height_down=2)
+
+        self.cft4 = cft(256,nclass)
+        self.cft3 = cft(256,nclass)
+        self.cft2 = cft(256,nclass)
+
+        # self.head = ASPPModule(high_level_channels, (12, 24, 36))
+
+        self.reduce = nn.Sequential(nn.Conv2d(low_level_channels, 48, 1, bias=False),
+                                    nn.BatchNorm2d(48),
+                                    nn.ReLU(True))
+
+        self.fuse = nn.Sequential(nn.Conv2d(high_level_channels // 8 + 48, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+                                  nn.Dropout(0.1, False))
+
+        self.fuse2 = nn.Sequential(nn.Conv2d(256*4, 512, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(512),
+                                  nn.ReLU(True),
+
+                                  nn.Conv2d(512, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+
+                                  nn.Conv2d(256, 256, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(256),
+                                  nn.ReLU(True),
+                                  nn.Dropout(0.1, False))
+
+        self.classifier = nn.Conv2d(256, nclass, 1, bias=True)
+
+    def base_forward(self, x):
+        h, w = x.shape[-2:]
+        c1, c2, c3, c4 = self.backbone.base_forward(x)
+        c_lateral_3 = self.lateral_connections_c3(c3)
+        c_lateral_2 = self.lateral_connections_c2(c2)
+        c_lateral_1 = self.lateral_connections_c1(c1)
+
+        backbone_feats = c4
+        c4 = self.lateral_connections_c4(c4)
+        cft4_out = self.cft4(c4,c_lateral_3)
+        cft3_out = self.cft3(cft4_out,c_lateral_2)
+        cft2_out = self.cft2(cft3_out,c_lateral_1)
+
+        c4 = F.interpolate(c4, size=c1.shape[-2:], mode="bilinear", align_corners=True)
+        c1 = self.reduce(c1)
+
+        out = torch.cat([c1, c4], dim=1)
+        # 使用difference与out_fuse做cross_attention
+        out_fuse = self.fuse(out)
+        cft4_out = F.interpolate(cft4_out, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+        cft3_out = F.interpolate(cft3_out, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+        cft2_out = F.interpolate(cft2_out, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
+
+        out_fuse2 = self.fuse2(torch.cat([out_fuse,cft4_out,cft3_out,cft2_out]))
+
+        out_classifier = self.classifier(out_fuse2)
+        out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
+
+        return {'out':out,
+                'out_classifier':out_classifier,
+                'c3':c3,
+                'out_fuse':out_fuse2,
                 'backbone_features':backbone_feats}
 
 

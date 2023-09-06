@@ -21,7 +21,7 @@ from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
-from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
+from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus,My_DeepLabV3PlusPlus
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 
 from segment.modules.semseg.unet import UNet,ResUNet
@@ -45,6 +45,11 @@ class Base(pl.LightningModule):
         super(Base, self).__init__()
         self.cfg = cfg
         self.num_classes = num_classes
+        if model == 'mydeeplabv3plusplus':
+            self.backbone = backbone
+            self.model = My_DeepLabV3PlusPlus(self.backbone, self.num_classes,
+                                       inplace_seven=cfg.MODEL.backbone_inplace_seven,
+                                       bb_pretrained=cfg.MODEL.backbone_pretrained, attention=cfg.MODEL.Attention)
         if model == 'deeplabv3plus':
             self.backbone = backbone
             self.model = DeepLabV3Plus(self.backbone,self.num_classes,Isdysample=cfg.MODEL.Isdysample,inplace_seven=cfg.MODEL.backbone_inplace_seven,bb_pretrained=cfg.MODEL.backbone_pretrained,attention=cfg.MODEL.Attention)
