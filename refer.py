@@ -86,10 +86,10 @@ with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as f
             od_cover_preds = od_preds + oc_preds
             od_cover_preds[od_cover_preds > 0] = 1
 
-            # pred = Image.fromarray(preds.squeeze(0).cpu().detach().numpy().astype(np.uint8), mode='P')
-            # pred.putpalette(cmap)
-            #
-            # pred.save('%s/%s' % (log_path, os.path.basename(id[0].split(' ')[1])))
+            pred = Image.fromarray(preds.squeeze(0).cpu().detach().numpy().astype(np.uint8), mode='P')
+            pred.putpalette(cmap)
+
+            pred.save('%s/%s' % (log_path, os.path.basename(id[0].split(' ')[1])))
             # 写入csv
             writer.writerow([id[0],
                              round(od_mIoU(od_cover_gt,od_cover_preds).item()*100,2),
