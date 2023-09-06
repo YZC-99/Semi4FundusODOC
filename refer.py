@@ -67,7 +67,13 @@ with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as f
             mask = mask.to('cuda:0')
             img = img.to('cuda:0')
             logits = model(img)['out']
-            preds = nn.functional.softmax(logits, dim=1).argmax(1)
+            # preds = nn.functional.softmax(logits, dim=1).argmax(1)
+            #-------------
+            probs = nn.functional.softmax(logits, dim=1)
+            threshold = 0.5
+            thresholded_preds = (probs >= threshold).float()
+            preds = torch.argmax(thresholded_preds, dim=1)
+            # -------------
 
             od_preds = deepcopy(preds)
             od_mask = deepcopy(mask)
