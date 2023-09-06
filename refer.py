@@ -12,7 +12,7 @@ from PIL import Image
 from skimage import measure,draw
 import numpy as np
 from segment.modules.semseg.deeplabv2 import DeepLabV2
-from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
+from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus,My_DeepLabV3PlusPlus
 from segment.modules.semseg.pspnet import PSPNet
 from segment.dataloader.od_oc_dataset import SupTrain
 from torch.utils.data import DataLoader
@@ -21,8 +21,8 @@ from torch.utils.data import DataLoader
 num_classes = 3
 ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_None_minus_Boundary2/ckpt/epoch=45-val_OD_dice=0.963002.ckpt'
 log_path = 'experiments/preds'
-model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
-model = model_zoo['deeplabv3plus']('resnet50', num_classes)
+model_zoo = {'deeplabv3plus': DeepLabV3Plus,'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
+model = model_zoo['mydeeplabv3plusplus']('resnet50', num_classes)
 
 sd = torch.load(ckpt_path,map_location='cpu')
 if 'state_dict' in sd:
@@ -42,8 +42,8 @@ model.to('cuda:0')
 model.eval()
 
 dataset = SupTrain(task='od_oc',
-                    name='SEG/cropped_semi/random1',
-                    root='./data/fundus_datasets/od_oc/SEG/',
+                    name='cropped_sup',
+                    root='/data/fundus_datasets/od_oc/Drishti-GS/',
                     mode='test',
                     size=512
                              )
