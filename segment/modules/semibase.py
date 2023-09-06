@@ -52,7 +52,7 @@ class Base(pl.LightningModule):
                                        bb_pretrained=cfg.MODEL.backbone_pretrained, attention=cfg.MODEL.Attention)
         if model == 'deeplabv3plus':
             self.backbone = backbone
-            self.model = DeepLabV3Plus(self.backbone,self.num_classes,Isdysample=cfg.MODEL.Isdysample,inplace_seven=cfg.MODEL.backbone_inplace_seven,bb_pretrained=cfg.MODEL.backbone_pretrained,attention=cfg.MODEL.Attention)
+            self.model = DeepLabV3Plus(self.backbone,self.num_classes,Isdysample=cfg.MODEL.Isdysample,inplace_seven=cfg.MODEL.backbone_inplace_seven,bb_pretrained=cfg.MODEL.backbone_pretrained,attention=cfg.MODEL.Attention,seghead_last=cfg.MODEL.seghead_last)
         if model == 'deeplabv2':
             self.backbone = backbone
             self.model = DeepLabV2(self.backbone,self.num_classes)

@@ -61,10 +61,10 @@ class DualDeepLabV3Plus(BaseNet):
 
 
 class DeepLabV3Plus(BaseNet):
-    def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False,bb_pretrained = False,attention=None):
+    def __init__(self, backbone, nclass,Isdysample = False,inplace_seven=False,bb_pretrained = False,attention=None,seghead_last=False):
         super(DeepLabV3Plus, self).__init__(backbone,inplace_seven,bb_pretrained)
         self.attention = attention
-
+        self.seghead_last = seghead_last
         low_level_channels = self.backbone.channels[0]
         c2_level_channels = self.backbone.channels[1]
         c3_level_channels = self.backbone.channels[2]
@@ -283,12 +283,16 @@ class DeepLabV3Plus(BaseNet):
             diff = F.interpolate(diff, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
             out_fuse = self.fuse_diff_out(torch.cat([out_fuse, diff], dim=1))
 
-
-        out_classifier = self.classifier(out_fuse)
-        if self.Isdysample:
-            out = self.dysample(out_classifier)
+        if self.seghead_last:
+            out_classifier = F.interpolate(out_fuse, size=(h, w), mode="bilinear", align_corners=True)
+            out = self.classifier(out_classifier)
         else:
-            out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
+            out_classifier = self.classifier(out_fuse)
+            if self.Isdysample:
+                out = self.dysample(out_classifier)
+            else:
+
+                out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
 
         return {'out':out,
                 'out_classifier':out_classifier,
@@ -370,6 +374,7 @@ class My_DeepLabV3PlusPlus(BaseNet):
 
         out_fuse2 = self.fuse2(torch.cat([out_fuse,cft4_out,cft3_out,cft2_out],dim=1))
 
+        # 使用上采样插值也许带来的效果
         out_classifier = self.classifier(out_fuse2)
         out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
 
