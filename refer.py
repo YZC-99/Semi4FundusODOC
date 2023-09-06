@@ -19,12 +19,12 @@ from torch.utils.data import DataLoader
 
 #
 num_classes = 3
-ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/Drishti-GS/cropped_sup512x512/res50Mydeeplabv3plusplus/random1_ODOC_backbone_pretrained_flip_rotateDCBDFCLoss/lightning_logs/version_0/ckpt/epoch=77-val_OC_dice=0.882072-val_OC_mIoU=0.868874.ckpt'
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_backbone_pretrained_Criss_attentionR2_V1_flip_rotateDCBDFCLoss_segheadlast/lightning_logs/version_0/ckpt/epoch=37-val_OD_dice=0.967840-val_OD_mIoU=0.947283.ckpt'
 log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus,'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
-model = model_zoo['mydeeplabv3plusplus']('resnet50', num_classes)
-
+model = model_zoo['deeplabv3plus']('resnet50', num_classes,attention='Criss_Attention_R2_V1',seghead_last=True)
 sd = torch.load(ckpt_path,map_location='cpu')
+
 if 'state_dict' in sd:
     # If 'state_dict' exists, use it directly
     sd = sd['state_dict']
