@@ -42,7 +42,7 @@ model.to('cuda:0')
 model.eval()
 
 dataset = SupTrain(task='od_oc',
-                    name='cropped_sup',
+                    name='Drishti-GS/cropped_sup',
                     root='/data/fundus_datasets/od_oc/Drishti-GS/',
                     mode='test',
                     size=512
