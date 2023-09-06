@@ -1,4 +1,3 @@
-
 Drishti-GS1_files/Test/images_cropped/drishtiGS_082.png Drishti-GS1_files/my_gts_cropped/drishtiGS_082.png
 Drishti-GS1_files/Test/images_cropped/drishtiGS_034.png Drishti-GS1_files/my_gts_cropped/drishtiGS_034.png
 Drishti-GS1_files/Test/images_cropped/drishtiGS_039.png Drishti-GS1_files/my_gts_cropped/drishtiGS_039.png
