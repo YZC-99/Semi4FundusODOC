@@ -18,7 +18,7 @@ def color_map():
 cmap = color_map()
 
 root = '/root/autodl-tmp/Semi4FundusODOC/data/fundus_datasets/od_oc/Drishti-GS'
-unlabeled_path = '../dataset/Drishti-GS/cropped_sup/random1/test.txt'
+unlabeled_path = '../dataset/Drishti-GS/cropped_sup/test.txt'
 pseudo_path_root = '/root/autodl-tmp/Semi4FundusODOC/experiments/preds0'
 
 with open(unlabeled_path, 'r') as f:
