@@ -368,7 +368,7 @@ class My_DeepLabV3PlusPlus(BaseNet):
         cft3_out = F.interpolate(cft3_out, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
         cft2_out = F.interpolate(cft2_out, size=out_fuse.shape[-2:], mode="bilinear", align_corners=True)
 
-        out_fuse2 = self.fuse2(torch.cat([out_fuse,cft4_out,cft3_out,cft2_out]))
+        out_fuse2 = self.fuse2(torch.cat([out_fuse,cft4_out,cft3_out,cft2_out],dim=1))
 
         out_classifier = self.classifier(out_fuse2)
         out = F.interpolate(out_classifier, size=(h, w), mode="bilinear", align_corners=True)
