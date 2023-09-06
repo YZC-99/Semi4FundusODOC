@@ -241,17 +241,26 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
 
 def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
     od_miou = pl_module.od_multiclass_jaccard.compute()
+    pl_module.od_multiclass_jaccard.reset()
+
     od_iou = pl_module.od_binary_jaccard.compute()
+    pl_module.od_binary_jaccard.reset()
+
     od_biou = pl_module.od_binary_boundary_jaccard.compute()
+    pl_module.od_binary_boundary_jaccard.reset()
+
     od_mbiou = pl_module.od_multiclass_boundary_jaccard.compute()
+    pl_module.od_multiclass_boundary_jaccard.reset()
 
     od_dice = pl_module.od_dice_score.compute()
-    od_withBdice = pl_module.od_withB_dice_score.compute()
-
-    pl_module.od_multiclass_jaccard.reset()
-    pl_module.od_binary_jaccard.reset()
     pl_module.od_dice_score.reset()
+
+    od_withBdice = pl_module.od_withB_dice_score.compute()
     pl_module.od_withB_dice_score.reset()
+
+
+
+
 
     pl_module.log("{}_OD_IoU".format(tag), od_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
              rank_zero_only=True)
@@ -283,14 +292,21 @@ def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
     # 每一次validation后的值都应该是最新的，而不是一直累计之前的值，因此需要一个epoch，reset一次
 
     oc_miou = pl_module.oc_multiclass_jaccard.compute()
-    oc_iou = pl_module.oc_binary_jaccard.compute()
-    oc_biou = pl_module.oc_binary_boundary_jaccard.compute()
-    oc_mbiou = pl_module.oc_multiclass_boundary_jaccard.compute()
-    oc_dice = pl_module.oc_dice_score.compute()
-    oc_withBdice = pl_module.oc_withB_dice_score.compute()
     pl_module.oc_multiclass_jaccard.reset()
+
+    oc_iou = pl_module.oc_binary_jaccard.compute()
     pl_module.oc_binary_jaccard.reset()
+
+    oc_biou = pl_module.oc_binary_boundary_jaccard.compute()
+    pl_module.oc_binary_boundary_jaccard.reset()
+
+    oc_mbiou = pl_module.oc_multiclass_boundary_jaccard.compute()
+    pl_module.oc_multiclass_boundary_jaccard.reset()
+
+    oc_dice = pl_module.oc_dice_score.compute()
     pl_module.oc_dice_score.reset()
+
+    oc_withBdice = pl_module.oc_withB_dice_score.compute()
     pl_module.oc_withB_dice_score.reset()
 
     pl_module.log("{}_OC_IoU".format(tag), oc_iou, prog_bar=True, logger=False, on_step=False, on_epoch=True, sync_dist=True,
@@ -320,8 +336,9 @@ def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
              sync_dist=True, rank_zero_only=True)
 
     od_rm_oc_iou = pl_module.od_rmOC_jaccard.compute()
-    od_rm_oc_dice = pl_module.od_rmOC_dice_score.compute()
     pl_module.od_rmOC_jaccard.reset()
+
+    od_rm_oc_dice = pl_module.od_rmOC_dice_score.compute()
     pl_module.od_rmOC_dice_score.reset()
     pl_module.log("{}_OD_rm_OC_IoU".format(tag), od_rm_oc_iou, prog_bar=True, logger=False, on_step=False,
              on_epoch=True, sync_dist=True, rank_zero_only=True)
