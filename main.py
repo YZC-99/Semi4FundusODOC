@@ -155,7 +155,7 @@ if __name__ == '__main__':
     data.prepare_data()
 
     if args.saw:
-        SWA_callback = StochasticWeightAveraging(swa_lrs=0.0008,swa_epoch_start=10)
+        SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1,swa_epoch_start=10,annealing_epochs=30)
         callbacks.append(SWA_callback)
 
 
