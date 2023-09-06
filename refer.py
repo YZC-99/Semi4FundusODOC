@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 
 #
 num_classes = 3
-ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/SEG/cropped_semi512x512/res50deeplabv3plus/random1_ODOC_semi90_None_minus_Boundary2/ckpt/epoch=45-val_OD_dice=0.963002.ckpt'
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/Drishti-GS/cropped_sup512x512/res50Mydeeplabv3plusplus/random1_ODOC_backbone_pretrained_flip_rotateDCBDFCLoss/lightning_logs/version_0/ckpt/epoch=77-val_OC_dice=0.882072-val_OC_mIoU=0.868874.ckpt'
 log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus,'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
 model = model_zoo['mydeeplabv3plusplus']('resnet50', num_classes)
