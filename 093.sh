@@ -10,6 +10,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_su
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup512x512/segformer/random1_ODOC_backbone_b5_pretrained_flip_rotateDCBDFCLoss
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup256x256/segformer/random1_ODOC_backbone_b5_pretrained_flip_rotateDCBDFCLoss
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup512x512/segformer/random1_ODOC_backbone_b4_pretrained_flip_rotateDCBDFCLoss
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup512x512/segformer/random1_ODOC_backbone_b2_pretrained_whole_inVOC_flip_rotateDCBDFCLoss
 
 
 

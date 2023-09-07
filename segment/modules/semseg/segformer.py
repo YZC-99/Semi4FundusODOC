@@ -110,6 +110,9 @@ class SegFormer(nn.Module):
         return {'out':x,
                 'backbone_features':backbone_feats}
 if __name__ == '__main__':
+    ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
+    sd = torch.load(ckpt_path,map_location='cpu')
+
     model = SegFormer(num_classes=3, phi='b5', pretrained=False)
     img = torch.randn(2,3,512,512)
     out = model(img)
