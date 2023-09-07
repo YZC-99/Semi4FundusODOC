@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 
 # 6.9定稿版本
 # 参考：
@@ -73,6 +74,10 @@ class backboneModule(nn.Module):
             resnet = models.resnet34(pretrained=resnet_pretrain)
         elif backbone == 'resnet50':
             resnet = models.resnet50(pretrained=resnet_pretrain)
+
+
+
+
         self.firstconv = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
         self.firstbn = resnet.bn1
         self.firstrelu = resnet.relu
@@ -154,8 +159,50 @@ class Resnet_Unet(nn.Module):
                 'out_feat':d4,
                 'backbone_features':e3}
 
+
+class my_resnet_unet(nn.Module):
+    def __init__(self,num_classes = 3, resnet_pretrain=False):
+        super().__init__()
+        self.backbone = models.resnet50(pretrained=resnet_pretrain)
+        filters = [64, 256, 512, 1024, 2048]
+        self.center = DecoderBlock(in_channels=filters[3], mid_channels=filters[3] * 4, out_channels=filters[3],
+                                   BN_enable=self.BN_enable)
+        self.decoder1 = DecoderBlock(in_channels=filters[3] + filters[2], mid_channels=filters[2] * 4,
+                                     out_channels=filters[2], BN_enable=self.BN_enable)
+        self.decoder2 = DecoderBlock(in_channels=filters[2] + filters[1], mid_channels=filters[1] * 4,
+                                     out_channels=filters[1], BN_enable=self.BN_enable)
+        self.decoder3 = DecoderBlock(in_channels=filters[1] + filters[0], mid_channels=filters[0] * 4,
+                                     out_channels=filters[0], BN_enable=self.BN_enable)
+        if self.BN_enable:
+            self.final = nn.Sequential(
+                nn.Conv2d(in_channels=filters[0], out_channels=32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(inplace=False),
+                nn.Conv2d(in_channels=32, out_channels=num_classes, kernel_size=1),
+                nn.Sigmoid()
+            )
+        else:
+            self.final = nn.Sequential(
+                nn.Conv2d(in_channels=filters[0], out_channels=32, kernel_size=3, padding=1),
+                nn.ReLU(inplace=False),
+                nn.Conv2d(in_channels=32, out_channels=num_classes, kernel_size=1),
+                nn.Sigmoid()
+            )
+    def forward(self,x):
+        backbone_out = self.backbone(x)
+        x, c1, c2, c3 = backbone_out['x_relu'],backbone_out['c1'],backbone_out['c2'],backbone_out['c3']
+        center = self.center(c3)
+
+        d2 = self.decoder1(torch.cat([center, c2], dim=1))
+        d3 = self.decoder2(torch.cat([d2, c1], dim=1))
+        d4 = self.decoder3(torch.cat([d3, x], dim=1))
+        out = self.final(d4)
+        return {'out':out,
+                'out_feat':d4,
+                'backbone_features':c3}
+
 if __name__ == '__main__':
     img = torch.randn(2,3,512,512)
-    model = Resnet_Unet()
-    out = model(img)
+    model = resnet50(pretrained=False)
+    out = model.base_forward(img)
     print(out.shape)

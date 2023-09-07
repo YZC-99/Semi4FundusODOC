@@ -190,7 +190,8 @@ class DeepLabV3Plus(BaseNet):
     def base_forward(self, x):
         h, w = x.shape[-2:]
 
-        c1, c2, c3, c4 = self.backbone.base_forward(x)
+        backbone_out = self.backbone.base_forward(x)
+        c1, c2, c3, c4 = backbone_out['c1'],backbone_out['c2'],backbone_out['c3'],backbone_out['c4']
         backbone_feats = c4
         c4 = self.head(c4)
         c4 = F.interpolate(c4, size=c1.shape[-2:], mode="bilinear", align_corners=True)

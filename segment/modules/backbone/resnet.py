@@ -178,15 +178,21 @@ class ResNet(nn.Module):
     def base_forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        x_relu = self.relu(x)
+        x = self.maxpool(x_relu)
 
         c1 = self.layer1(x)
         c2 = self.layer2(c1)
         c3 = self.layer3(c2)
         c4 = self.layer4(c3)
 
-        return c1, c2, c3, c4
+        return {
+                   "x_relu":x_relu,
+                   "c1":c1,
+                   "c2":c2,
+                   "c3":c3,
+                   "c4":c4,
+                }
 
 
 def _resnet(arch, block, layers, pretrained, **kwargs):

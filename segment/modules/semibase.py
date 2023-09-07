@@ -25,7 +25,7 @@ from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus,My_DeepLabV3PlusP
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 
 # from segment.modules.semseg.unet import UNet,ResUNet
-from segment.modules.semseg.resnet_Unet import Resnet_Unet
+from segment.modules.semseg.resnet_Unet import Resnet_Unet,my_resnet_unet
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -59,7 +59,7 @@ class Base(pl.LightningModule):
             self.model = DeepLabV2(self.backbone,self.num_classes)
         if model == 'unet':
             if backbone == 'resnet50':
-                self.model = Resnet_Unet(num_classes = self.num_classes,resnet_pretrain=cfg.MODEL.backbone_pretrained)
+                self.model = my_resnet_unet(num_classes = self.num_classes,resnet_pretrain=cfg.MODEL.backbone_pretrained)
             else:
                 self.model = UNet(self.num_classes)
         self.init_from_ckpt = init_from_ckpt
