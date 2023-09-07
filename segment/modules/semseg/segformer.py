@@ -140,8 +140,8 @@ class SegFormer(nn.Module):
         #     k=1,
         # )
 
-        # self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
-        self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
+        self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
+        # self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
 
 
 
