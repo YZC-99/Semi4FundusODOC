@@ -156,7 +156,8 @@ class SemiDataset(Dataset):
             img, mask = add_salt_pepper_noise(img, mask,p=0.2)
         elif self.aug.weak.scale:
             img, mask = random_scale(img, mask,p=0.2)
-
+        if self.aug.weak.cutout:
+            img, mask = cutout(img, mask, p=0.5)
 
         img, mask = resize(img, mask, self.size)
 

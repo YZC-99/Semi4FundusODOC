@@ -121,11 +121,12 @@ _C.dataset.params.train.params.cfg = CN()
 
 _C.dataset.params.train.params.aug = CN()
 _C.dataset.params.train.params.aug.weak = CN()
-_C.dataset.params.train.params.aug.flip = True
-_C.dataset.params.train.params.aug.rotate = True
-_C.dataset.params.train.params.aug.translate = True
-_C.dataset.params.train.params.aug.noise = True
-_C.dataset.params.train.params.aug.scale = True
+_C.dataset.params.train.params.aug.weak.flip = True
+_C.dataset.params.train.params.aug.weak.rotate = True
+_C.dataset.params.train.params.aug.weak.translate = True
+_C.dataset.params.train.params.aug.weak.noise = True
+_C.dataset.params.train.params.aug.weak.scale = True
+_C.dataset.params.train.params.aug.weak.cutout = False
 _C.dataset.params.train.params.aug.strong = CN()
 _C.dataset.params.train.params.aug.strong.Not = False
 _C.dataset.params.train.params.aug.strong.default = True
