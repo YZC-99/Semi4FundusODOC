@@ -6,6 +6,7 @@ MODEL:
   backbone: 'b5'
   backbone_pretrained: True
   model: 'SegFormer'
+  optimizer: 'AdamW'
   DC_loss: True
   BD_loss: True
   FC_loss: True
