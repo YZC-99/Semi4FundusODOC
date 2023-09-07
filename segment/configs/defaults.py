@@ -72,6 +72,7 @@ _C.MODEL.label_minus_boundary = 0
 _C.MODEL.uda_tgt_label = False
 _C.MODEL.uda_pretrained = True
 _C.MODEL.retraining = False
+_C.MODEL.resume_whole_path = None
 _C.MODEL.stage1 = False #训练教师网络
 _C.MODEL.stage1_ckpt_path = None
 _C.MODEL.stage2 = False # 计算prototype或者进行全监督域适应训练

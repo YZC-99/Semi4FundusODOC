@@ -3,8 +3,7 @@ MODEL:
   NUM_CLASSES: 3
   epochs: 80
   lr: 0.001 # 0.004/16*batch_size
-  retraining: True
-  stage2_ckpt_path: './pretrained/segformer_b2_weights_voc.pth'
+  resume_whole_path: './pretrained/segformer_b2_weights_voc.pth'
   backbone: 'b2'
   backbone_pretrained: True
   model: 'SegFormer'
