@@ -54,6 +54,11 @@ class SegFormerHead(nn.Module):
             c2=embedding_dim,
             k=1,
         )
+        self.linear_fuse2 = ConvModule(
+            c1=embedding_dim,
+            c2=embedding_dim / 3,
+            k=1,
+        )
 
         # self.classifier    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
         self.dropout        = nn.Dropout2d(dropout_ratio)
@@ -76,12 +81,47 @@ class SegFormerHead(nn.Module):
         _c1 = self.linear_c1(c1).permute(0,2,1).reshape(n, -1, c1.shape[2], c1.shape[3])
 
         _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
+        _c = self.linear_fuse2(_c)
 
         out_feat = self.dropout(_c)
         # x = self.classifier(out_feat)
 
         # return out_feat,x
         return out_feat
+
+class org_SegFormer(nn.Module):
+    def __init__(self, num_classes = 21, phi = 'b0', pretrained = False):
+        super(org_SegFormer, self).__init__()
+        self.in_channels = {
+            'b0': [32, 64, 160, 256], 'b1': [64, 128, 320, 512], 'b2': [64, 128, 320, 512],
+            'b3': [64, 128, 320, 512], 'b4': [64, 128, 320, 512], 'b5': [64, 128, 320, 512],
+        }[phi]
+        self.backbone   = {
+            'b0': mit_b0, 'b1': mit_b1, 'b2': mit_b2,
+            'b3': mit_b3, 'b4': mit_b4, 'b5': mit_b5,
+        }[phi](pretrained)
+        self.embedding_dim   = {
+            'b0': 256, 'b1': 256, 'b2': 768,
+            'b3': 768, 'b4': 768, 'b5': 768,
+        }[phi]
+        self.decode_head = SegFormerHead(num_classes, self.in_channels, self.embedding_dim)
+
+        self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
+
+    def forward(self, inputs):
+        H, W = inputs.size(2), inputs.size(3)
+
+        backbone_feats = self.backbone.forward(inputs)
+        # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
+        out_feat = self.decode_head.forward(backbone_feats)
+        out_classifier = self.classifier(out_feat)
+
+        x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
+
+        return {'out':x,
+                'out_features':out_feat,
+                'out_classifier':out_classifier,
+                'backbone_features':backbone_feats}
 
 class SegFormer(nn.Module):
     def __init__(self, num_classes = 21, phi = 'b0', pretrained = False):
