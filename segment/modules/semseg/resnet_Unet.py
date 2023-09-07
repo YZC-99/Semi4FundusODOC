@@ -61,6 +61,36 @@ class DecoderBlock(nn.Module):
         x = self.relu2(x)
         return x
 
+class backboneModule(nn.Module):
+    """
+    定稿使用resnet50作为backbone
+
+    BN_enable控制是否存在BN，定稿设置为True
+    """
+    def __init__(self,backbone = 'resnet50', resnet_pretrain=False):
+        super().__init__()
+        if backbone == 'resnet34':
+            resnet = models.resnet34(pretrained=resnet_pretrain)
+        elif backbone == 'resnet50':
+            resnet = models.resnet50(pretrained=resnet_pretrain)
+        self.firstconv = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.firstbn = resnet.bn1
+        self.firstrelu = resnet.relu
+        self.firstmaxpool = resnet.maxpool
+        self.encoder1 = resnet.layer1
+        self.encoder2 = resnet.layer2
+        self.encoder3 = resnet.layer3
+    def forward(self,x):
+        x = self.firstconv(x)
+        x = self.firstbn(x)
+        x = self.firstrelu(x)
+        x_ = self.firstmaxpool(x)
+
+        e1 = self.encoder1(x_)
+        e2 = self.encoder2(e1)
+        e3 = self.encoder3(e2)
+        return  e1,e2,e3,x
+
 
 class Resnet_Unet(nn.Module):
     """
@@ -82,13 +112,8 @@ class Resnet_Unet(nn.Module):
         elif backbone == 'resnet50':
             resnet = models.resnet50(pretrained=resnet_pretrain)
             filters = [64, 256, 512, 1024, 2048]
-        self.firstconv = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.firstbn = resnet.bn1
-        self.firstrelu = resnet.relu
-        self.firstmaxpool = resnet.maxpool
-        self.encoder1 = resnet.layer1
-        self.encoder2 = resnet.layer2
-        self.encoder3 = resnet.layer3
+
+        self.backbone = backboneModule(backbone,resnet_pretrain=resnet_pretrain)
 
         # decoder部分
         self.center = DecoderBlock(in_channels=filters[3], mid_channels=filters[3] * 4, out_channels=filters[3],
@@ -116,14 +141,7 @@ class Resnet_Unet(nn.Module):
             )
 
     def forward(self, x):
-        x = self.firstconv(x)
-        x = self.firstbn(x)
-        x = self.firstrelu(x)
-        x_ = self.firstmaxpool(x)
-
-        e1 = self.encoder1(x_)
-        e2 = self.encoder2(e1)
-        e3 = self.encoder3(e2)
+        e1,e2,e3,x = self.backbone(x)
 
         center = self.center(e3)
 
