@@ -448,7 +448,7 @@ def optimizer_config(pl_module: pl.LightningModule):
     # 获取非backbone的参数
     non_backbone_params = [p for p in pl_module.model.parameters() if p not in backbone_params]
 
-    if pl_module.model == 'SegFormer':
+    if pl_module.cfg.MODEL.model == 'SegFormer':
         param_groups = [
             {'params': pl_module.model.backbone.parameters(), 'lr': lr},
             {'params': non_backbone_params, 'lr': lr * 10}
