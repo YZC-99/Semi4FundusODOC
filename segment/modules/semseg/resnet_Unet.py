@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+import torch.nn.functional as F
 from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 
 # 6.9定稿版本
@@ -74,9 +75,6 @@ class backboneModule(nn.Module):
             resnet = models.resnet34(pretrained=resnet_pretrain)
         elif backbone == 'resnet50':
             resnet = models.resnet50(pretrained=resnet_pretrain)
-
-
-
 
         self.firstconv = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
         self.firstbn = resnet.bn1
@@ -191,19 +189,22 @@ class my_resnet_unet(nn.Module):
             )
     def forward(self,x):
         backbone_out = self.backbone.base_forward(x)
-        x, c1, c2, c3 = backbone_out['x_relu'],backbone_out['c1'],backbone_out['c2'],backbone_out['c3']
+        x_relu,x, c1, c2, c3 = backbone_out['x_relu'],backbone_out['x'],backbone_out['c1'],backbone_out['c2'],backbone_out['c3']
         center = self.center(c3)
 
+        c2 = F.interpolate(c2, size=center.shape[-2:], mode="bilinear", align_corners=True)
         d2 = self.decoder1(torch.cat([center, c2], dim=1))
+        c1 = F.interpolate(c1, size=d2.shape[-2:], mode="bilinear", align_corners=True)
         d3 = self.decoder2(torch.cat([d2, c1], dim=1))
-        d4 = self.decoder3(torch.cat([d3, x], dim=1))
+        x_relu = F.interpolate(x_relu, size=d3.shape[-2:], mode="bilinear", align_corners=True)
+        d4 = self.decoder3(torch.cat([d3, x_relu], dim=1))
         out = self.final(d4)
         return {'out':out,
-                'out_feat':d4,
+                'out_feat':c3,
                 'backbone_features':c3}
 
 if __name__ == '__main__':
     img = torch.randn(2,3,512,512)
-    model = resnet50(pretrained=False)
-    out = model.base_forward(img)
+    model = my_resnet_unet(num_classes=3,resnet_pretrain=False)
+    out = model(img)
     print(out.shape)

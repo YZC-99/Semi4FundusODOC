@@ -187,6 +187,7 @@ class ResNet(nn.Module):
         c4 = self.layer4(c3)
 
         return {
+                   "x":x,
                    "x_relu":x_relu,
                    "c1":c1,
                    "c2":c2,
