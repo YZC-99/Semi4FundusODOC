@@ -190,7 +190,7 @@ class my_resnet_unet(nn.Module):
                 nn.Sigmoid()
             )
     def forward(self,x):
-        backbone_out = self.backbone(x)
+        backbone_out = self.backbone.base_forward(x)
         x, c1, c2, c3 = backbone_out['x_relu'],backbone_out['c1'],backbone_out['c2'],backbone_out['c3']
         center = self.center(c3)
 
