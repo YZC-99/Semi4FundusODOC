@@ -71,8 +71,11 @@ def init_loss(pl_module: pl.LightningModule):
     if pl_module.cfg.MODEL.ContrastPixelCBL_loss is not None:
         pl_module.ContrastPixelCBL_loss = ContrastPixelCBL(pl_module.num_classes, pl_module.cfg.MODEL.ContrastPixelCBL_loss)
     if pl_module.cfg.MODEL.ContrastPixelCorrectCBL_loss is not None:
+        extractor_channel = 256
+        if pl_module.cfg.MODEL.model == 'SegFormer':
+            extractor_channel = 768
         pl_module.ContrastPixelCorrectCBL_loss = ContrastPixelCorrectCBL(pl_module.num_classes,
-                                                                    pl_module.cfg.MODEL.ContrastPixelCorrectCBL_loss)
+                                                                    pl_module.cfg.MODEL.ContrastPixelCorrectCBL_loss,extractor_channel=extractor_channel)
     if pl_module.cfg.MODEL.ContrastCrossPixelCorrectCBL_loss is not None:
         extractor_channel = 256
         if pl_module.cfg.MODEL.model == 'SegFormer':

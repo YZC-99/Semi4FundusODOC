@@ -1185,7 +1185,7 @@ class ContrastPixelCorrectCBL(nn.Module):
     考虑到边界像素周围假阴样本过多的极端情况，现在针对local center做进一步的改进
     改进的目标是：希望周围的local center应该是分类正确的，而不应该带有分类失败的样本
     '''
-    def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5]):
+    def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5],extractor_channel=256):
         super(ContrastPixelCorrectCBL,self).__init__()
 
         # 这里需要注意的是，conv_seg是最后一层网络
@@ -1197,7 +1197,7 @@ class ContrastPixelCorrectCBL(nn.Module):
                                 [1, 1, 1, 1, 1],
                                 [1, 1, 1, 1, 1], ])
         base_weight = base_weight.reshape((1, 1, 5, 5))
-        self.same_class_extractor_weight = np.repeat(base_weight, 256, axis=0)
+        self.same_class_extractor_weight = np.repeat(base_weight, extractor_channel, axis=0)
         self.same_class_extractor_weight = torch.FloatTensor(self.same_class_extractor_weight)
         # self.same_class_extractor_weight.requires_grad(False)
         self.same_class_number_extractor_weight = base_weight
@@ -1251,7 +1251,7 @@ class ContrastPixelCorrectCBL(nn.Module):
         if self.same_class_number_extractor_weight.device != er_input.device:
             self.same_class_number_extractor_weight = self.same_class_number_extractor_weight.to(er_input.device)
         # same_class_extractor是用来提取同一个类的邻居特征的
-        same_class_extractor = NeighborExtractor5(256)
+        same_class_extractor = NeighborExtractor5(self.extractor_channel)
         same_class_extractor = same_class_extractor.to(er_input.device)
         same_class_extractor.same_class_extractor.weight.data = self.same_class_extractor_weight
         # same_class_number_extractor是用来提取同一个类的邻居个数的
