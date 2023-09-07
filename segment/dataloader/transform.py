@@ -62,9 +62,10 @@ def add_salt_pepper_noise(img,mask, p=0.5,noise_level=0.02):
 
 def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
     if random.random() < p:
-        scale_factor = random.uniform(min_scale, max_scale)
-        new_width = int(img.width * scale_factor)
-        new_height = int(img.height * scale_factor)
+        w_scale_factor = random.uniform(min_scale, max_scale)
+        h_scale_factor = random.uniform(min_scale, max_scale)
+        new_width = int(img.width * w_scale_factor)
+        new_height = int(img.height * h_scale_factor)
 
         img = img.resize((new_width, new_height), Image.BILINEAR)
         mask = mask.resize((new_width, new_height), Image.NEAREST)
