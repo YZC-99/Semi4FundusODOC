@@ -1,5 +1,5 @@
 import torch
-from torchmetrics import JaccardIndex,Dice
+from torchmetrics import Dice,JaccardIndex
 od_Dice = Dice(num_classes=1,multiclass=False)
 
 gt = torch.ones(2,8,dtype=torch.int)
@@ -14,6 +14,9 @@ print(dice1)
 print("dice2")
 dice2 = od_Dice(gt,preds2)
 print(dice2)
+print("使用dice(),后使用compute")
+print(od_Dice.compute())
+print((dice1 + dice2) /2)
 print("==========")
 print("直接使用dice.update计算的")
 od_Dice.reset()

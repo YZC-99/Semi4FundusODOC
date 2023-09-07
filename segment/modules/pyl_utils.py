@@ -143,23 +143,23 @@ def init_metrics(pl_module: pl.LightningModule):
     配置文件中的v2是指dice开了multiclass=True
     配置文件中的v3是指dice开了multiclass=False
     '''
-    pl_module.od_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
-    pl_module.od_withB_dice_score = Dice(num_classes=2, average='macro').to(pl_module.device)
-    pl_module.od_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
-    pl_module.od_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(pl_module.device)
+    pl_module.od_dice_score = Dice(num_classes=1, multiclass=False,average='samples').to(pl_module.device)
+    pl_module.od_withB_dice_score = Dice(num_classes=2,average='samples').to(pl_module.device)
+    pl_module.od_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass',average='micro').to(pl_module.device)
+    pl_module.od_binary_jaccard = JaccardIndex(num_classes=2, task='binary',average='micro').to(pl_module.device)
     pl_module.od_binary_boundary_jaccard = BoundaryIoU(num_classes=2, task='binary').to(pl_module.device)
     pl_module.od_multiclass_boundary_jaccard = BoundaryIoU(num_classes=2, task='multiclass').to(pl_module.device)
 
     if pl_module.cfg.MODEL.NUM_CLASSES == 3:
-        pl_module.oc_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
-        pl_module.oc_withB_dice_score = Dice(num_classes=2, average='macro').to(pl_module.device)
-        pl_module.oc_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
-        pl_module.oc_binary_jaccard = JaccardIndex(num_classes=2, task='binary').to(pl_module.device)
+        pl_module.oc_dice_score = Dice(num_classes=1, multiclass=False,average='samples').to(pl_module.device)
+        pl_module.oc_withB_dice_score = Dice(num_classes=2,average='samples').to(pl_module.device)
+        pl_module.oc_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass',average='micro').to(pl_module.device)
+        pl_module.oc_binary_jaccard = JaccardIndex(num_classes=2, task='binary',average='micro').to(pl_module.device)
         pl_module.oc_binary_boundary_jaccard = BoundaryIoU(num_classes=2, task='binary').to(pl_module.device)
         pl_module.oc_multiclass_boundary_jaccard = BoundaryIoU(num_classes=2, task='multiclass').to(pl_module.device)
 
-        pl_module.od_rmOC_dice_score = Dice(num_classes=1, multiclass=False).to(pl_module.device)
-        pl_module.od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass').to(pl_module.device)
+        pl_module.od_rmOC_dice_score = Dice(num_classes=1, multiclass=False,average='samples').to(pl_module.device)
+        pl_module.od_rmOC_jaccard = JaccardIndex(num_classes=2, task='multiclass',average='micro').to(pl_module.device)
 
 def gt2boundary(gt,boundary_width=1, ignore_label=-1):  # gt NHW
     gt_ud = gt[:, boundary_width:, :] - gt[:, :-boundary_width, :]  # NHW
