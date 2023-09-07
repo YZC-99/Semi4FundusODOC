@@ -64,8 +64,11 @@ def init_loss(pl_module: pl.LightningModule):
         frequency_list = torch.log(cls_num_list)
         pl_module.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list)
     if pl_module.cfg.MODEL.CBL_loss is not None:
+        extractor_channel = 256
+        if pl_module.cfg.MODEL.model == 'SegFormer':
+            extractor_channel = 768
         # pl_module.CBL_loss = Faster_CBL(pl_module.num_classes)
-        pl_module.CBL_loss = CBL(pl_module.num_classes, pl_module.cfg.MODEL.CBL_loss)
+        pl_module.CBL_loss = CBL(pl_module.num_classes, pl_module.cfg.MODEL.CBL_loss,extractor_channel=extractor_channel)
     if pl_module.cfg.MODEL.ContrastCenterCBL_loss is not None:
         pl_module.ContrastCenterCBL_loss = ContrastCenterCBL(pl_module.num_classes, pl_module.cfg.MODEL.ContrastCenterCBL_loss)
     if pl_module.cfg.MODEL.ContrastPixelCBL_loss is not None:

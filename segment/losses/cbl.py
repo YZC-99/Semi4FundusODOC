@@ -29,9 +29,9 @@ class NeighborExtractor5(nn.Module):
         return output
 
 class CBL(nn.Module):
-    def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5]):
+    def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5],extractor_channel=256):
         super(CBL,self).__init__()
-
+        self.extractor_channel = extractor_channel
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
         self.weights = weights
@@ -41,7 +41,7 @@ class CBL(nn.Module):
                                 [1, 1, 1, 1, 1],
                                 [1, 1, 1, 1, 1], ])
         base_weight = base_weight.reshape((1, 1, 5, 5))
-        self.same_class_extractor_weight = np.repeat(base_weight, 256, axis=0)
+        self.same_class_extractor_weight = np.repeat(base_weight, self.extractor_channel, axis=0)
         self.same_class_extractor_weight = torch.FloatTensor(self.same_class_extractor_weight)
         # self.same_class_extractor_weight.requires_grad(False)
         self.same_class_number_extractor_weight = base_weight
@@ -147,7 +147,7 @@ class CBL(nn.Module):
         if self.same_class_number_extractor_weight.device != er_input.device:
             self.same_class_number_extractor_weight = self.same_class_number_extractor_weight.to(er_input.device)
         # print(self.same_class_number_extractor_weight)
-        same_class_extractor = NeighborExtractor5(256)
+        same_class_extractor = NeighborExtractor5(self.extractor_channel)
         # TODO
         same_class_extractor = same_class_extractor.to(er_input.device)
         same_class_extractor.same_class_extractor.weight.data = self.same_class_extractor_weight
