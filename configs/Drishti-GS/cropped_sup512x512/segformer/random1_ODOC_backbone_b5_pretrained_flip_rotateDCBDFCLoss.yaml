@@ -31,9 +31,10 @@ dataset:
                   weak:
                     flip: True
                     rotate: True
-                    translate: False
+                    translate: True
                     noise: False
-                    scale: False
+                    scale: True
+                    cutout: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
