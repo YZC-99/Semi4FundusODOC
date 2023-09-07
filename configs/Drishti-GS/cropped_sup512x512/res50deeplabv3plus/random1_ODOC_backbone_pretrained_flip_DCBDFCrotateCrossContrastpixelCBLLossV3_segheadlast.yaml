@@ -10,6 +10,7 @@ MODEL:
   BD_loss: True
   FC_loss: True
   ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.3]
+  seghead_last: True
   loss:
     target: torch.nn.CrossEntropyLoss
 
