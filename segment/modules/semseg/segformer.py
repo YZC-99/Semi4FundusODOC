@@ -56,7 +56,7 @@ class SegFormerHead(nn.Module):
         )
         self.linear_fuse2 = ConvModule(
             c1=embedding_dim,
-            c2=embedding_dim / 3,
+            c2=256,
             k=1,
         )
 
