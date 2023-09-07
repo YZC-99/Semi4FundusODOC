@@ -2119,6 +2119,18 @@ class FastContrastPixelCorrectCBL(nn.Module):
     '''
     def forward(self, outputs,gt_sem = None,conv_seg_weight = None,conv_seg_bias = None):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
+
+
+        contrast_loss = self.contrast_loss(
+            outputs['out_features'],
+            seg_label=gt_sem,
+            seg_logit=outputs['out_classifier'],
+            gt_boundary_seg=gt_sem_boundary,
+            )
+
+        if self.weights[1] == 0.0:
+            return self.weights[0] * (self.weights[2] * contrast_loss)
+
         er_loss = self.er_loss4Semantic(
             outputs['out_features'],
             seg_label=gt_sem,
@@ -2128,13 +2140,6 @@ class FastContrastPixelCorrectCBL(nn.Module):
             conv_seg_bias = conv_seg_bias
         )
         loss_A2C_SCE,loss_A2C_pair = er_loss[0],er_loss[1]
-        contrast_loss = self.contrast_loss(
-            outputs['out_features'],
-            seg_label=gt_sem,
-            seg_logit=outputs['out_classifier'],
-            gt_boundary_seg=gt_sem_boundary,
-            )
-
         return self.weights[0] * (self.weights[2] * contrast_loss + self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
 
 
