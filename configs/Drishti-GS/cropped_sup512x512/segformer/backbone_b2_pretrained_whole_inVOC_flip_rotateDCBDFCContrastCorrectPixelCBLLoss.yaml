@@ -11,7 +11,7 @@ MODEL:
   DC_loss: True
   BD_loss: True
   FC_loss: True
-  ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.3]
+  ContrastPixelCorrectCBL_loss: [2.0,0.1,0.3]
   loss:
     target: torch.nn.CrossEntropyLoss
 
