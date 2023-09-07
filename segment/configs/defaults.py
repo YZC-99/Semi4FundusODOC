@@ -56,6 +56,7 @@ _C.MODEL.backbone_inplace_seven = False
 _C.MODEL.backbone_pretrained = False
 
 _C.MODEL.model = 'deeplabv3plus'
+_C.MODEL.optimizer = 'SGD'
 _C.MODEL.labeled_id_path = ''
 _C.MODEL.labeled_id_path_2 = ''
 _C.MODEL.unlabeled_id_path = ''
