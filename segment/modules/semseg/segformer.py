@@ -134,13 +134,16 @@ class SegFormer(nn.Module):
         }[phi]
         self.decode_head = SegFormerHead(num_classes, self.in_channels, self.embedding_dim)
 
-        self.pred = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
-
-        self.classifier = ConvModule(
+        self.reduct4loss = ConvModule(
             c1=self.embedding_dim,
             c2=256,
             k=1,
         )
+
+        # self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
+        self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
+
+
 
     def forward(self, inputs):
         H, W = inputs.size(2), inputs.size(3)
@@ -148,9 +151,8 @@ class SegFormer(nn.Module):
         backbone_feats = self.backbone.forward(inputs)
         # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
         out_feat = self.decode_head.forward(backbone_feats)
-        out_classifier = self.pred(out_feat)
-
-        out_feat = self.classifier(out_feat)
+        out_feat = self.reduct4loss(out_feat)
+        out_classifier = self.classifier(out_feat)
 
         x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
 
