@@ -55,7 +55,7 @@ class SegFormerHead(nn.Module):
             k=1,
         )
 
-        self.classifier    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
+        # self.classifier    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
         self.dropout        = nn.Dropout2d(dropout_ratio)
     
     def forward(self, inputs):
@@ -78,9 +78,10 @@ class SegFormerHead(nn.Module):
         _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
         out_feat = self.dropout(_c)
-        x = self.classifier(out_feat)
+        # x = self.classifier(out_feat)
 
-        return out_feat,x
+        # return out_feat,x
+        return out_feat
 
 class SegFormer(nn.Module):
     def __init__(self, num_classes = 21, phi = 'b0', pretrained = False):
@@ -99,12 +100,16 @@ class SegFormer(nn.Module):
         }[phi]
         self.decode_head = SegFormerHead(num_classes, self.in_channels, self.embedding_dim)
 
+        self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
+
     def forward(self, inputs):
         H, W = inputs.size(2), inputs.size(3)
 
         backbone_feats = self.backbone.forward(inputs)
-        out_feat,out_classifier = self.decode_head.forward(backbone_feats)
-        
+        # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
+        out_feat = self.decode_head.forward(backbone_feats)
+        out_classifier = self.classifier(out_feat)
+
         x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
 
         return {'out':x,
