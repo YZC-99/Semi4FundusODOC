@@ -77,10 +77,10 @@ class SegFormerHead(nn.Module):
 
         _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
-        x = self.dropout(_c)
-        x = self.linear_pred(x)
+        out_feat = self.dropout(_c)
+        x = self.linear_pred(out_feat)
 
-        return x
+        return out_feat,x
 
 class SegFormer(nn.Module):
     def __init__(self, num_classes = 21, phi = 'b0', pretrained = False):
@@ -103,12 +103,15 @@ class SegFormer(nn.Module):
         H, W = inputs.size(2), inputs.size(3)
 
         backbone_feats = self.backbone.forward(inputs)
-        x = self.decode_head.forward(backbone_feats)
+        out_feat,out_classifier = self.decode_head.forward(backbone_feats)
         
-        x = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True)
+        x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
 
         return {'out':x,
+                'out_features':out_feat,
+                'out_classifier':out_classifier,
                 'backbone_features':backbone_feats}
+
 if __name__ == '__main__':
     ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     sd = torch.load(ckpt_path,map_location='cpu')

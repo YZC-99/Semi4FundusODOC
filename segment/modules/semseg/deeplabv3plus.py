@@ -298,7 +298,7 @@ class DeepLabV3Plus(BaseNet):
         return {'out':out,
                 'out_classifier':out_classifier,
                 'c3':c3,
-                'out_fuse':out_fuse,
+                'out_features':out_fuse,
                 'backbone_features':backbone_feats}
 
 class My_DeepLabV3PlusPlus(BaseNet):
@@ -382,7 +382,7 @@ class My_DeepLabV3PlusPlus(BaseNet):
         return {'out':out,
                 'out_classifier':out_classifier,
                 'c3':c3,
-                'out_fuse':out_fuse2,
+                'out_features':out_fuse2,
                 'backbone_features':backbone_feats}
 
 

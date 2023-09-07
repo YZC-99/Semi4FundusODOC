@@ -286,7 +286,7 @@ class CBL(nn.Module):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         er_loss = self.er_loss4Semantic(
-                   outputs['out_fuse'],
+                   outputs['out_features'],
                    seg_label=gt_sem,
                    seg_logit=outputs['out_classifier'],
                    gt_boundary_seg=gt_sem_boundary,
@@ -298,7 +298,7 @@ class CBL(nn.Module):
             return self.weights[0] * (self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
         else:
             loss_A2PN = self.context_loss(
-                        outputs['out_fuse'],
+                        outputs['out_features'],
                         seg_label=gt_sem,
                         gt_boundary_seg=gt_sem_boundary)
             return self.weights[0] * (self.weights[2] * loss_A2PN + self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
@@ -567,7 +567,7 @@ class CEpair_CBL(nn.Module):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         er_loss = self.er_loss4Semantic(
-            outputs['out_fuse'],
+            outputs['out_features'],
             seg_label=gt_sem,
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
@@ -579,7 +579,7 @@ class CEpair_CBL(nn.Module):
             return self.weights[0] * (self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
         else:
             loss_A2PN = self.context_loss(
-                outputs['out_fuse'],
+                outputs['out_features'],
                 seg_label=gt_sem,
                 gt_boundary_seg=gt_sem_boundary)
             return self.weights[0] * (self.weights[2] * loss_A2PN + self.weights[1] * loss_A2C_SCE + loss_A2C_pair)
@@ -856,7 +856,7 @@ class ContrastCenterCBL(nn.Module):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         er_loss = self.er_loss4Semantic(
-            outputs['out_fuse'],
+            outputs['out_features'],
             seg_label=gt_sem,
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
@@ -1169,7 +1169,7 @@ class ContrastPixelCBL(nn.Module):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         er_loss = self.er_loss4Semantic(
-            outputs['out_fuse'],
+            outputs['out_features'],
             seg_label=gt_sem,
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
@@ -1490,7 +1490,7 @@ class ContrastPixelCorrectCBL(nn.Module):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         er_loss = self.er_loss4Semantic(
-            outputs['out_fuse'],
+            outputs['out_features'],
             seg_label=gt_sem,
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
@@ -1819,7 +1819,7 @@ class ContrastCrossPixelCorrectCBL(nn.Module):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
         er_loss = self.er_loss4Semantic(
-            outputs['out_fuse'],
+            outputs['out_features'],
             seg_label=gt_sem,
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
@@ -2118,7 +2118,7 @@ class FastContrastPixelCorrectCBL(nn.Module):
     def forward(self, outputs,gt_sem = None,conv_seg_weight = None,conv_seg_bias = None):
         gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
         er_loss = self.er_loss4Semantic(
-            outputs['out_fuse'],
+            outputs['out_features'],
             seg_label=gt_sem,
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
@@ -2127,7 +2127,7 @@ class FastContrastPixelCorrectCBL(nn.Module):
         )
         loss_A2C_SCE,loss_A2C_pair = er_loss[0],er_loss[1]
         contrast_loss = self.contrast_loss(
-            outputs['out_fuse'],
+            outputs['out_features'],
             seg_label=gt_sem,
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
@@ -2141,7 +2141,7 @@ if __name__ == '__main__':
     # import time
     # num_classes = 3
     # ccbl = ContrastPixelCorrectCBL(num_classes)
-    # outputs = {'out_fuse':torch.randn(4,256,64,64).to('cuda'),
+    # outputs = {'out_features':torch.randn(4,256,64,64).to('cuda'),
     #            'out_classifier':torch.randn(4,3,64,64).to('cuda')
     #            }
     # seg_label = torch.zeros(4,512,512).to('cuda')
