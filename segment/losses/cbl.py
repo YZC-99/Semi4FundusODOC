@@ -1187,7 +1187,7 @@ class ContrastPixelCorrectCBL(nn.Module):
     '''
     def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5],extractor_channel=256):
         super(ContrastPixelCorrectCBL,self).__init__()
-
+        self.extractor_channel = extractor_channel
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
         self.weights = weights
