@@ -92,7 +92,7 @@ class Base(pl.LightningModule):
         if cfg.MODEL.stage1_ckpt_path is not None and cfg.MODEL.uda_pretrained:
             self.init_from_ckpt(self,cfg.MODEL.stage1_ckpt_path, ignore_keys='')
         if cfg.MODEL.retraining:
-            self.init_from_ckpt(self,cfg.MODEL.stage2_ckpt_path, ignore_keys='')
+            self.init_from_ckpt(self,cfg.MODEL.stage2_ckpt_path, ignore_keys='decode_head')
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         out = self.model(x)
