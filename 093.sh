@@ -7,6 +7,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_su
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_backbone_pretrained_flip_DCBDFCrotateCrossContrastpixelCBLLossV3
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup512x512/unet/random1_ODOC_backbone_pretrained_flip_rotate_scale_cutoutDCBDFCLoss
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup512x512/unet/random1_ODOC_backbone_pretrained_flip_rotate_scaleDCBDFCLoss
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup512x512/segformer/random1_ODOC_backbone_b5_pretrained_flip_rotateDCBDFCLoss
 
 
 

@@ -164,12 +164,12 @@ class my_resnet_unet(nn.Module):
         self.BN_enable = BN_enable
         self.backbone = resnet50(pretrained=resnet_pretrain)
         filters = [64, 256, 512, 1024, 2048]
-        self.center = DecoderBlock(in_channels=filters[3], mid_channels=filters[3] * 4, out_channels=filters[3],
+        self.center = DecoderBlock(in_channels=filters[4], mid_channels=filters[4] * 4, out_channels=filters[4],
                                    BN_enable=self.BN_enable)
-        self.decoder1 = DecoderBlock(in_channels=filters[3] + filters[2], mid_channels=filters[2] * 4,
+        self.decoder1 = DecoderBlock(in_channels=filters[4] + filters[3], mid_channels=filters[3] * 4,
+                                     out_channels=filters[3], BN_enable=self.BN_enable)
+        self.decoder2 = DecoderBlock(in_channels=filters[3] + filters[2], mid_channels=filters[2] * 4,
                                      out_channels=filters[2], BN_enable=self.BN_enable)
-        self.decoder2 = DecoderBlock(in_channels=filters[2] + filters[1], mid_channels=filters[1] * 4,
-                                     out_channels=filters[1], BN_enable=self.BN_enable)
         self.decoder3 = DecoderBlock(in_channels=filters[1] + filters[0], mid_channels=filters[0] * 4,
                                      out_channels=filters[0], BN_enable=self.BN_enable)
         if self.BN_enable:
@@ -189,13 +189,16 @@ class my_resnet_unet(nn.Module):
             )
     def forward(self,x):
         backbone_out = self.backbone.base_forward(x)
-        x_relu,x, c1, c2, c3 = backbone_out['x_relu'],backbone_out['x'],backbone_out['c1'],backbone_out['c2'],backbone_out['c3']
-        center = self.center(c3)
+        x_relu,x, c1, c2, c3,c4 = backbone_out['x_relu'],backbone_out['x'],backbone_out['c1'],backbone_out['c2'],backbone_out['c3'],backbone_out['c4']
+        center = self.center(c4)
 
-        c2 = F.interpolate(c2, size=center.shape[-2:], mode="bilinear", align_corners=True)
-        d2 = self.decoder1(torch.cat([center, c2], dim=1))
-        c1 = F.interpolate(c1, size=d2.shape[-2:], mode="bilinear", align_corners=True)
-        d3 = self.decoder2(torch.cat([d2, c1], dim=1))
+        c3 = F.interpolate(c3, size=center.shape[-2:], mode="bilinear", align_corners=True)
+        d2 = self.decoder1(torch.cat([center, c3], dim=1))
+
+        c2 = F.interpolate(c2, size=d2.shape[-2:], mode="bilinear", align_corners=True)
+        d3 = self.decoder2(torch.cat([d2, c2], dim=1))
+
+
         x_relu = F.interpolate(x_relu, size=d3.shape[-2:], mode="bilinear", align_corners=True)
         d4 = self.decoder3(torch.cat([d3, x_relu], dim=1))
         out = self.final(d4)
