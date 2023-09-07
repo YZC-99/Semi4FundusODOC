@@ -36,6 +36,7 @@ dataset:
                     translate: True
                     noise: False
                     scale: True
+                    cutout: True
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
