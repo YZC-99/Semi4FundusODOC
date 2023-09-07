@@ -55,7 +55,7 @@ class SegFormerHead(nn.Module):
             k=1,
         )
 
-        self.linear_pred    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
+        self.classifier    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
         self.dropout        = nn.Dropout2d(dropout_ratio)
     
     def forward(self, inputs):
