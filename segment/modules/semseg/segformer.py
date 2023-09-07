@@ -78,7 +78,7 @@ class SegFormerHead(nn.Module):
         _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
         out_feat = self.dropout(_c)
-        x = self.linear_pred(out_feat)
+        x = self.classifier(out_feat)
 
         return out_feat,x
 
