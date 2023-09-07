@@ -164,7 +164,7 @@ class my_resnet_unet(nn.Module):
     def __init__(self,num_classes = 3, resnet_pretrain=False,BN_enable=True):
         super().__init__()
         self.BN_enable = BN_enable
-        self.backbone = models.resnet50(pretrained=resnet_pretrain)
+        self.backbone = resnet50(pretrained=resnet_pretrain)
         filters = [64, 256, 512, 1024, 2048]
         self.center = DecoderBlock(in_channels=filters[3], mid_channels=filters[3] * 4, out_channels=filters[3],
                                    BN_enable=self.BN_enable)
