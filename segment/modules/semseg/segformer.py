@@ -101,12 +101,14 @@ class SegFormer(nn.Module):
 
     def forward(self, inputs):
         H, W = inputs.size(2), inputs.size(3)
-        
-        x = self.backbone.forward(inputs)
-        x = self.decode_head.forward(x)
+
+        backbone_feats = self.backbone.forward(inputs)
+        x = self.decode_head.forward(backbone_feats)
         
         x = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True)
-        return x
+
+        return {'out':x,
+                'backbone_features':backbone_feats}
 if __name__ == '__main__':
     model = SegFormer(num_classes=3, phi='b5', pretrained=False)
     img = torch.randn(2,3,512,512)
