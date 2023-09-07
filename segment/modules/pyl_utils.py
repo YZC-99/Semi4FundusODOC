@@ -453,7 +453,7 @@ def optimizer_config(pl_module: pl.LightningModule):
             {'params': pl_module.model.backbone.parameters(), 'lr': lr},
             {'params': non_backbone_params, 'lr': lr * 10}
         ]
-        optimizers = [AdamW(param_groups, momentum=0.9, weight_decay=1e-4)]
+        optimizers = [AdamW(param_groups,weight_decay=1e-2)]
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0],T_max=total_iters)
         schedulers = [
             {
