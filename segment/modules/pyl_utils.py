@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 from torch.distributions import normal
-from torch.optim import SGD
+from torch.optim import SGD,AdamW
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import LambdaLR
 from segment.util import meanIOU
@@ -440,6 +440,47 @@ def uda_train(pl_module: pl.LightningModule, batch):
 
         return loss
 
+def optimizer_config(pl_module: pl.LightningModule):
+    lr = pl_module.learning_rate
+    total_iters = pl_module.train_steps
+    # 获取backbone的参数
+    backbone_params = set(pl_module.model.backbone.parameters())
+    # 获取非backbone的参数
+    non_backbone_params = [p for p in pl_module.model.parameters() if p not in backbone_params]
+
+    if pl_module.model == 'SegFormer':
+        param_groups = [
+            {'params': pl_module.model.backbone.parameters(), 'lr': lr},
+            {'params': non_backbone_params, 'lr': lr * 10}
+        ]
+        optimizers = [AdamW(param_groups, momentum=0.9, weight_decay=1e-4)]
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0],T_max=total_iters)
+        schedulers = [
+            {
+                'scheduler': scheduler,
+                'interval': 'step',
+                'frequency': 1
+            }
+        ]
+    else:
+        # 创建两个参数组，一个用于backbone，一个用于非backbone部分
+        param_groups = [
+            {'params': pl_module.model.backbone.parameters(), 'lr': lr},
+            {'params': non_backbone_params, 'lr': lr * 10}
+        ]
+
+        optimizers = [SGD(param_groups, momentum=0.9, weight_decay=1e-4)]
+        scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
+        schedulers = [
+            {
+                'scheduler': scheduler,
+                'interval': 'step',
+                'frequency': 1
+            }
+        ]
+
+        print(">>>>>>>>>>>>>total iters:{}<<<<<<<<<<<<<<<<".format(total_iters))
+    return optimizers, schedulers
 
 def gray2rgb(pl_module: pl.LightningModule,y,predict):
     # Convert labels and predictions to color images.
