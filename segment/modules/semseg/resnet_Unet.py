@@ -173,21 +173,14 @@ class my_resnet_unet(nn.Module):
                                      out_channels=filters[1], BN_enable=self.BN_enable)
         self.decoder3 = DecoderBlock(in_channels=filters[1] + filters[0], mid_channels=filters[0] * 4,
                                      out_channels=filters[0], BN_enable=self.BN_enable)
-        if self.BN_enable:
-            self.final = nn.Sequential(
-                nn.Conv2d(in_channels=filters[0], out_channels=32, kernel_size=3, padding=1),
-                nn.BatchNorm2d(32),
-                nn.ReLU(inplace=False),
-                nn.Conv2d(in_channels=32, out_channels=num_classes, kernel_size=1),
-                nn.Sigmoid()
-            )
-        else:
-            self.final = nn.Sequential(
-                nn.Conv2d(in_channels=filters[0], out_channels=32, kernel_size=3, padding=1),
-                nn.ReLU(inplace=False),
-                nn.Conv2d(in_channels=32, out_channels=num_classes, kernel_size=1),
-                nn.Sigmoid()
-            )
+        self.final = nn.Sequential(
+            nn.Conv2d(in_channels=filters[0], out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=False),
+            nn.Conv2d(in_channels=32, out_channels=num_classes, kernel_size=1),
+            nn.Sigmoid()
+        )
+
     def forward(self,x):
         backbone_out = self.backbone(x)
         x, c1, c2, c3 = backbone_out['x_relu'],backbone_out['c1'],backbone_out['c2'],backbone_out['c3']
