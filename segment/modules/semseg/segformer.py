@@ -6,6 +6,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt
 
 from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
 
@@ -40,20 +41,36 @@ class SegFormerHead(nn.Module):
     """
     SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers
     """
-    def __init__(self, num_classes=20, in_channels=[32, 64, 160, 256], embedding_dim=768, dropout_ratio=0.1):
+    def __init__(self, num_classes=20, in_channels=[32, 64, 160, 256], embedding_dim=768, dropout_ratio=0.1,attention='subv1'):
         super(SegFormerHead, self).__init__()
         c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels = in_channels
+
+        self.attention = attention
 
         self.linear_c4 = MLP(input_dim=c4_in_channels, embed_dim=embedding_dim)
         self.linear_c3 = MLP(input_dim=c3_in_channels, embed_dim=embedding_dim)
         self.linear_c2 = MLP(input_dim=c2_in_channels, embed_dim=embedding_dim)
         self.linear_c1 = MLP(input_dim=c1_in_channels, embed_dim=embedding_dim)
 
-        self.linear_fuse = ConvModule(
-            c1=embedding_dim*4,
-            c2=embedding_dim,
-            k=1,
-        )
+        if self.attention == 'subv1':
+            # 我自己加的
+            self.criss_cross_attention_sub1 = CrissCrossAttention(embedding_dim)
+            self.criss_cross_attention_sub2 = CrissCrossAttention(embedding_dim)
+            self.criss_cross_attention_sub1_cross_sub2 = CrissCrossAttention(embedding_dim)
+
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*5,
+                c2=embedding_dim,
+                k=1,
+            )
+        else:
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*4,
+                c2=embedding_dim,
+                k=1,
+            )
+
 
         # self.classifier    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
         self.dropout        = nn.Dropout2d(dropout_ratio)
@@ -75,7 +92,16 @@ class SegFormerHead(nn.Module):
 
         _c1 = self.linear_c1(c1).permute(0,2,1).reshape(n, -1, c1.shape[2], c1.shape[3])
 
-        _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
+        #
+        if self.attention == 'subv1':
+            sub1 = _c1 - _c2
+            sub2 = _c3 - _c4
+            sub1_att = self.criss_cross_attention_sub1(sub1)
+            sub2_att = self.criss_cross_attention_sub2(sub2)
+            sub1_cross_sub2_att = self.criss_cross_attention_sub1_cross_sub2.cross_forward(sub1_att,sub2_att)
+            _c = self.linear_fuse(torch.cat([sub1_cross_sub2_att,_c4, _c3, _c2, _c1], dim=1))
+        else:
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
         out_feat = self.dropout(_c)
         # x = self.classifier(out_feat)
@@ -118,7 +144,7 @@ class org_SegFormer(nn.Module):
                 'backbone_features':backbone_feats}
 
 class SegFormer(nn.Module):
-    def __init__(self, num_classes = 21, phi = 'b0', pretrained = False,seghead_last=False):
+    def __init__(self, num_classes = 21, phi = 'b0', pretrained = False,seghead_last=False,attention='subv1'):
         super(SegFormer, self).__init__()
         self.seghead_last = seghead_last
         self.in_channels = {
@@ -133,7 +159,7 @@ class SegFormer(nn.Module):
             'b0': 256, 'b1': 256, 'b2': 768,
             'b3': 768, 'b4': 768, 'b5': 768,
         }[phi]
-        self.decode_head = SegFormerHead(num_classes, self.in_channels, self.embedding_dim)
+        self.decode_head = SegFormerHead(num_classes, self.in_channels, self.embedding_dim,attention=attention)
 
         # self.reduct4loss = ConvModule(
         #     c1=self.embedding_dim,
@@ -171,7 +197,7 @@ if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
 
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False)
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='subv1')
     img = torch.randn(2,3,512,512)
     out = model(img)
     logits = out['out']
