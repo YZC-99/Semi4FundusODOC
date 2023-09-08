@@ -133,7 +133,7 @@ class SemiDataset(Dataset):
                 mask = Image.fromarray(mask_arr.astype(np.uint8))
             else:
                 mask = get_labels(self.task,mask_path)
-            img, mask = resize(img, mask, 512)
+            img, mask = resize(img, mask, self.size)
             img, mask = normalize(img, mask)
             boundary = dist_transform(mask)
             return {'img':img, 'mask':mask, 'id':id,'boundary':boundary,'classification_label':classification_label}
