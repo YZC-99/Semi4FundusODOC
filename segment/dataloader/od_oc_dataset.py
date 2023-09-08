@@ -158,8 +158,7 @@ class SemiDataset(Dataset):
             img, mask = random_scale(img, mask,p=0.2)
         if self.aug.weak.cutout:
             img, mask = cutout(img, mask, p=0.5)
-        if self.aug.weak.blur:
-            img = blur(img, p=0.5)
+
 
         img, mask = resize(img, mask, self.size)
 
