@@ -144,7 +144,7 @@ class org_SegFormer(nn.Module):
                 'backbone_features':backbone_feats}
 
 class SegFormer(nn.Module):
-    def __init__(self, num_classes = 21, phi = 'b0', pretrained = False,seghead_last=False,attention='subv1'):
+    def __init__(self, num_classes = 21, phi = 'b0', pretrained = False,seghead_last=False,attention=None):
         super(SegFormer, self).__init__()
         self.seghead_last = seghead_last
         self.in_channels = {

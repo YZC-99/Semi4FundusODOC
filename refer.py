@@ -13,16 +13,18 @@ from skimage import measure,draw
 import numpy as np
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus,My_DeepLabV3PlusPlus
+from segment.modules.semseg.segformer import SegFormer
 from segment.modules.semseg.pspnet import PSPNet
 from segment.dataloader.od_oc_dataset import SupTrain
 from torch.utils.data import DataLoader
 
 #
 num_classes = 3
-ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/Drishti-GS/cropped_sup512x512/res50deeplabv3plus/random1_ODOC_backbone_pretrained_Criss_attentionR2_V1_flip_rotateDCBDFCLoss_segheadlast/lightning_logs/version_0/ckpt/epoch=37-val_OD_dice=0.967840-val_OD_mIoU=0.947283.ckpt'
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/Drishti-GS/cropped_sup256x256/segformer/backbone_b2_pretrained_whole_inVOC_flip_rotate_scale_translateDCBDFCLoss/lightning_logs/version_0/ckpt/epoch=170-val_OD_dice=0.976533-val_OD_mIoU=0.963480.ckpt'
 log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus,'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
-model = model_zoo['deeplabv3plus']('resnet50', num_classes,attention='Criss_Attention_R2_V1',seghead_last=True)
+# model = model_zoo['deeplabv3plus']('resnet50', num_classes,attention='Criss_Attention_R2_V1',seghead_last=True)
+model = SegFormer(num_classes=num_classes, phi='b2')
 sd = torch.load(ckpt_path,map_location='cpu')
 
 if 'state_dict' in sd:
@@ -42,10 +44,10 @@ model.to('cuda:0')
 model.eval()
 
 dataset = SupTrain(task='od_oc',
-                    name='Drishti-GS/cropped_sup',
-                    root='./data/fundus_datasets/od_oc/Drishti-GS/',
+                    name='RIM-ONE/cropped_sup',
+                    root='./data/fundus_datasets/od_oc/RIM-ONE/',
                     mode='test',
-                    size=512
+                    size=256
                              )
 dataloader = DataLoader(dataset, batch_size=1, shuffle=False,
                                   pin_memory=True, num_workers=8, drop_last=False)

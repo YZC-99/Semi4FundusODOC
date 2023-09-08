@@ -1,11 +1,16 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 200
+  epochs: 300
   lr: 0.001 # 0.004/16*batch_size
-  backbone: 'resnet50'
-  model: 'deeplabv3plus'
-  ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.05]
+  resume_whole_path: './pretrained/segformer_b2_weights_voc.pth'
+  backbone: 'resbet50'
+  backbone_pretrained: True
+  model: 'unet'
+  optimizer: 'AdamW'
+  DC_loss: True
+  BD_loss: True
+  FC_loss: True
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -13,7 +18,7 @@ MODEL:
 dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
-        batch_size: 16
+        batch_size: 8
         num_workers: 8
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
@@ -24,6 +29,14 @@ dataset:
                 labeled_id_path: 'dataset/Drishti-GS/cropped_sup/training.txt'
                 size: 256
                 mode: 'train'
+                aug:
+                  weak:
+                    flip: True
+                    rotate: True
+                    translate: True
+                    noise: False
+                    scale: True
+                    cutout: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
