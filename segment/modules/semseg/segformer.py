@@ -118,8 +118,9 @@ class org_SegFormer(nn.Module):
                 'backbone_features':backbone_feats}
 
 class SegFormer(nn.Module):
-    def __init__(self, num_classes = 21, phi = 'b0', pretrained = False):
+    def __init__(self, num_classes = 21, phi = 'b0', pretrained = False,seghead_last=False):
         super(SegFormer, self).__init__()
+        self.seghead_last = seghead_last
         self.in_channels = {
             'b0': [32, 64, 160, 256], 'b1': [64, 128, 320, 512], 'b2': [64, 128, 320, 512],
             'b3': [64, 128, 320, 512], 'b4': [64, 128, 320, 512], 'b5': [64, 128, 320, 512],
@@ -152,9 +153,14 @@ class SegFormer(nn.Module):
         # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
         out_feat = self.decode_head.forward(backbone_feats)
         # out_feat = self.reduct4loss(out_feat)
-        out_classifier = self.classifier(out_feat)
+        if self.seghead_last:
+            out_classifier = F.interpolate(out_feat, size=(H, W), mode='bilinear', align_corners=True)
+            x = self.classifier(out_classifier)
+        else:
+            out_classifier = self.classifier(out_feat)
 
-        x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
+            x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
+
 
         return {'out':x,
                 'out_features':out_feat,
