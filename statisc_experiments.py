@@ -39,7 +39,7 @@ with open(csv_path, 'w', newline='') as csvfile:
                     key = key.strip()  # 去除键的前后空格
                     value = value.replace(".ckpt","")  # 去除文件扩展名
                     result[key] = value
-            w.writerow([root.replace(path,""),
+            w.writerow([root.replace(path,"").replace("/lightning_logs/version_0/ckpt",""),
                         round(float(result['OD_dice']) * 100,2),
                         round(float(result['OD_mIoU']) * 100,2),
                         round(float(result['OC_dice']) * 100,2),
