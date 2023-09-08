@@ -21,24 +21,31 @@ import csv
 import os
 import csv
 
-path = 'experiments/REFUGE/cropped_sup512x512'
+path = 'experiments/Drishti-GS/cropped_sup256x256'
 csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','epoch', 'OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU'])
+    w.writerow(['experiment','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU'])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
-            experiment = file[-1].replace('.ckpt', '').replace('val_','')
-            results_list = experiment.split('-')
-            results_dict = {i.split('=')[0]:round(float(i.split('=')[1])*100,2) for i in results_list}
-            print(results_dict)
-            w.writerow([root,
-                        results_dict['epoch'] / 100,
-                        results_dict['OD_dice'],
-                        results_dict['OD_mIoU'],
-                        results_dict['OC_dice'],
-                        results_dict['OC_mIoU']])
+            file = [ i for i in file if 'valloss' not in i]
+            file = [ i for i in file if 'last' not in i]
+            data = [i.replace("val_","").split('-')[1:] for i in file]
+            result = {}
+            for sublist in data:
+                for item in sublist:
+                    key, value = item.split('=')
+                    key = key.strip()  # 去除键的前后空格
+                    value = value.replace(".ckpt","")  # 去除文件扩展名
+                    result[key] = value
+            w.writerow([root.replace(path,""),
+                        round(float(result['OD_dice']) * 100,2),
+                        round(float(result['OD_mIoU']) * 100,2),
+                        round(float(result['OC_dice']) * 100,2),
+                        round(float(result['OC_mIoU']) * 100,2)
+                       ]
+                        )
 
 
 
