@@ -1,5 +1,6 @@
 #20230908
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup512x512/segformer/backbone_b2_pretrained_flip_rotateDCBDFCLoss
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 --config Drishti-GS/cropped_sup256x256/segformer/backbone_b2_pretrained_flip_rotateDCBDFCLoss
 
 
 #
