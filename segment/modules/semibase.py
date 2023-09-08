@@ -64,7 +64,7 @@ class Base(pl.LightningModule):
             else:
                 self.model = UNet(self.num_classes)
         if model == 'SegFormer':
-            self.model = SegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last)
+            self.model = SegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention)
         self.init_from_ckpt = init_from_ckpt
 
         if cfg.MODEL.weightCE_loss is not None:
