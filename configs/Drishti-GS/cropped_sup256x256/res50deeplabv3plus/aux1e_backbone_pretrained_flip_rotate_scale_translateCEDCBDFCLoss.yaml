@@ -1,17 +1,14 @@
 MODEL:
-  sup: False
   NUM_CLASSES: 3
-  epochs: 300
+  epochs: 100
   lr: 0.001 # 0.004/16*batch_size
-  resume_whole_path: './pretrained/segformer_b2_weights_voc.pth'
-  backbone: 'b2'
+  backbone: 'resnet50'
   backbone_pretrained: True
-  model: 'SegFormer'
-  optimizer: 'AdamW'
+  model: 'deeplabv3plus'
   DC_loss: True
   BD_loss: True
   FC_loss: True
-  ContrastPixelCorrectCBL_loss: [2.0,0.1,0.3]
+  aux: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -34,9 +31,9 @@ dataset:
                   weak:
                     flip: True
                     rotate: True
-                    translate: True
+                    translate: False
                     noise: False
-                    scale: True
+                    scale: False
                     cutout: False
 
         validation:

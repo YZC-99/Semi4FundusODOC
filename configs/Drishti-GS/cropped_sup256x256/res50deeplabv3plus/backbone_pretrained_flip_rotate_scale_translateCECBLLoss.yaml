@@ -1,15 +1,11 @@
 MODEL:
-  sup: False
   NUM_CLASSES: 3
-  epochs: 80
+  epochs: 100
   lr: 0.001 # 0.004/16*batch_size
-  backbone: 'b5'
+  backbone: 'resnet50'
   backbone_pretrained: True
-  model: 'SegFormer'
-  optimizer: 'AdamW'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  model: 'deeplabv3plus'
+  CBL_loss: [2.0,0.1,0.05]
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -32,9 +28,9 @@ dataset:
                   weak:
                     flip: True
                     rotate: True
-                    translate: True
+                    translate: False
                     noise: False
-                    scale: True
+                    scale: False
                     cutout: False
 
         validation:
