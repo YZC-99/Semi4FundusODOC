@@ -36,6 +36,8 @@ dataset:
                     noise: True
                     scale: True
                     cutout: True
+                  strong:
+
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
