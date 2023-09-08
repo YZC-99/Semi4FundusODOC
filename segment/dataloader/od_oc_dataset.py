@@ -148,13 +148,13 @@ class SemiDataset(Dataset):
         # img, mask = crop(img, mask, self.size)
         if self.aug.weak.flip:
             img, mask = hflip(img, mask, p=0.5)
-        elif self.aug.weak.rotate:
+        if self.aug.weak.rotate:
             img, mask = random_rotate(img, mask,p=0.5)
-        elif self.aug.weak.translate:
+        if self.aug.weak.translate:
             img, mask = random_translate(img, mask,p=0.2)
-        elif self.aug.weak.noise:
+        if self.aug.weak.noise:
             img, mask = add_salt_pepper_noise(img, mask,p=0.2)
-        elif self.aug.weak.scale:
+        if self.aug.weak.scale:
             img, mask = random_scale(img, mask,p=0.2)
         if self.aug.weak.cutout:
             img, mask = cutout(img, mask, p=0.5)
