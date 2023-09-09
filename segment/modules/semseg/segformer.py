@@ -192,7 +192,7 @@ class SegFormerHead(nn.Module):
             sub2_att = self.criss_cross_attention_sub2(sub2)
             sub1_att_cca = self.cca_sub1(sub1_att)
             sub2_att_cca = self.cca_sub2(sub2_att)
-            sub1_sub2_att_cca = self.cca_sub1_sub2(sub1_att_cca,sub2_att_cca)
+            sub1_sub2_att_cca = self.cca_sub1_sub2.cross_forward(sub1_att_cca,sub2_att_cca)
             _c = self.linear_fuse(torch.cat([sub1_sub2_att_cca, _c4, _c3, _c2, _c1], dim=1))
         elif self.attention == 'subv2':
             sub1 = _c1 - _c2
