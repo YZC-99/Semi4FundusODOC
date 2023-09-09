@@ -75,7 +75,7 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
-        if self.attention == 'subv1-2':
+        elif self.attention == 'subv1-2':
             self.criss_cross_attention_sub1 = CrissCrossAttention(embedding_dim)
             self.criss_cross_attention_sub2 = CrissCrossAttention(embedding_dim)
             self.cca_sub1 = CrissCrossAttention(embedding_dim)
@@ -137,6 +137,12 @@ class SegFormerHead(nn.Module):
 
             self.linear_fuse = ConvModule(
                 c1=embedding_dim * 4,
+                c2=embedding_dim,
+                k=1,
+            )
+        elif attention == 'sub_addv1':
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim * 6,
                 c2=embedding_dim,
                 k=1,
             )
@@ -236,6 +242,10 @@ class SegFormerHead(nn.Module):
             _c3 = self.cca1(_c3)
             _c4 = self.cca1(_c4)
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
+        elif self.attention == 'sub_addv1':
+            sub1 = _c1 - _c2
+            sub2 = _c3 - _c4
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1,sub1,sub2], dim=1))
         else:
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
@@ -243,7 +253,12 @@ class SegFormerHead(nn.Module):
         # x = self.classifier(out_feat)
 
         # return out_feat,x
-        return out_feat
+        # return out_feat
+        return {"out_feat":out_feat,
+                "_c1":_c1,
+                "_c2":_c2,
+                "_c3":_c3,
+                "_c4":_c4,}
 
 class org_SegFormer(nn.Module):
     def __init__(self, num_classes = 21, phi = 'b0', pretrained = False):
@@ -269,7 +284,7 @@ class org_SegFormer(nn.Module):
 
         backbone_feats = self.backbone.forward(inputs)
         # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
-        out_feat = self.decode_head.forward(backbone_feats)
+        out_feat = self.decode_head.forward(backbone_feats)['out_feat']
         out_classifier = self.classifier(out_feat)
 
         x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
@@ -313,7 +328,8 @@ class SegFormer(nn.Module):
 
         backbone_feats = self.backbone.forward(inputs)
         # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
-        out_feat = self.decode_head.forward(backbone_feats)
+        decodehead_out = self.decode_head.forward(backbone_feats)
+        out_feat = decodehead_out['out_feat']
         # out_feat = self.reduct4loss(out_feat)
         if self.seghead_last:
             out_classifier = F.interpolate(out_feat, size=(H, W), mode='bilinear', align_corners=True)
@@ -327,6 +343,7 @@ class SegFormer(nn.Module):
         return {'out':x,
                 'out_features':out_feat,
                 'out_classifier':out_classifier,
+                'decodehead_out':decodehead_out,
                 'backbone_features':backbone_feats}
 
 if __name__ == '__main__':

@@ -43,11 +43,23 @@ input_t = input_t.unsqueeze(0).to("cuda")
 # print(input_t.shape)
 out = model(input_t)
 features = out['out_features']
-backbone_features = out['backbone_features']
-c1 = backbone_features[0]
-c1 = c1.squeeze()
+decodehead_out = out['decodehead_out']
+decodehead_out.update({"_c1-_c2":decodehead_out["_c1"]-decodehead_out["_c2"]})
+decodehead_out.update({"_c3-_c4":decodehead_out["_c3"]-decodehead_out["_c4"]})
+# 可视化从c1-c4
+for key,value in decodehead_out.items():
+    c = value.squeeze()
+    channels_num = 0
+    for chann in range(c.shape[0]):
+        min_value = float(torch.min(c[chann, ...]))
+        vis.heatmap(c[chann, ...], opts={'title': 'Visualization of c{}-{}'.format(key,chann), 'vmin': min_value})
+        channels_num += 1
+        if channels_num > 10:
+            break
 
-vis.heatmap(c1[0,...], opts={'title': 'My Tensor Visualization'})
+
+
+
 
 #
 # preds = torch.argmax(out['out'], dim=1).cpu()
