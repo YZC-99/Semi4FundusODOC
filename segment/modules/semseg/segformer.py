@@ -96,6 +96,16 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif self.attention == 'subv4':
+            # 我自己加的
+            self.criss_cross_attention_sub1 = CrissCrossAttention(embedding_dim)
+            self.criss_cross_attention_sub2 = CrissCrossAttention(embedding_dim)
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*6,
+                c2=embedding_dim,
+                k=1,
+            )
         else:
             self.linear_fuse = ConvModule(
                 c1=embedding_dim*4,
@@ -162,7 +172,12 @@ class SegFormerHead(nn.Module):
 
             _c = self.linear_fuse(torch.cat([sub3_cross_sub4_att, _c4, _c3, _c2, _c1], dim=1))
 
-
+        elif self.attention == 'subv4':
+            sub1 = _c1 - _c2
+            sub2 = _c3 - _c4
+            sub1_att = self.criss_cross_attention_sub1(sub1)
+            sub2_att = self.criss_cross_attention_sub2(sub2)
+            _c = self.linear_fuse(torch.cat([sub1_att,sub2_att, _c4, _c3, _c2, _c1], dim=1))
         else:
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
