@@ -7,7 +7,7 @@ MODEL:
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
-  Attention: 'subv2'
+  Attention: 'subv3'
   DC_loss: True
   BD_loss: True
   FC_loss: True
