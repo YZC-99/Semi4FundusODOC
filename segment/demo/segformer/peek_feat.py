@@ -3,7 +3,10 @@ import torch
 from PIL import Image
 import torchvision.transforms as T
 from segment.util import count_params, meanIOU, color_map
-import numpy  as np
+import visdom
+import numpy as np
+# 初始化Visdom客户端
+vis = visdom.Visdom()
 
 cmap = color_map("c")
 num_classes = 3
@@ -44,7 +47,7 @@ backbone_features = out['backbone_features']
 c1 = backbone_features[0]
 c1 = c1.squeeze()
 
-print(features)
+vis.heatmap(c1[0,...], opts={'title': 'My Tensor Visualization'})
 
 #
 # preds = torch.argmax(out['out'], dim=1).cpu()
