@@ -1,7 +1,7 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 300
+  epochs: 200
   lr: 0.001 # 0.004/16*batch_size
   backbone: 'b2'
   backbone_pretrained: True
