@@ -182,7 +182,18 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
-
+        elif attention == 'backbone_subv2':
+            self.lateral_c1 = ConvModule(c1_in_channels,768)
+            self.lateral_c2 = ConvModule(c2_in_channels,768)
+            self.lateral_c3 = ConvModule(c3_in_channels,768)
+            self.lateral_c4 = ConvModule(c4_in_channels,768)
+            self.cca1 = CrissCrossAttention(embedding_dim)
+            self.cca2 = CrissCrossAttention(embedding_dim)
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*6,
+                c2=embedding_dim,
+                k=1,
+            )
         else:
             self.linear_fuse = ConvModule(
                 c1=embedding_dim*4,
@@ -314,6 +325,25 @@ class SegFormerHead(nn.Module):
             result = self.linear_sub_fuse(torch.cat([cca_result1,cca_result2],dim=1))
             result = result.permute(0,2,1).reshape(n, -1, _c1.shape[2], _c1.shape[3])
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1,result], dim=1))
+        elif self.attention == 'backbone_subv2':
+            # 先统一通道
+            lateral_c1 = self.lateral_c1(c1)
+            lateral_c2 = self.lateral_c2(c2)
+            lateral_c3 = self.lateral_c3(c3)
+            lateral_c4 = self.lateral_c4(c4)
+            # 全部上采样到128*128
+            lateral_c2 = F.interpolate(lateral_c2, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c3 = F.interpolate(lateral_c3, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c4 = F.interpolate(lateral_c4, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            # 做相减
+            lateral_sub1 = lateral_c1 - lateral_c2
+            lateral_sub2 = lateral_c3 - lateral_c4
+            mlp_sub1 = _c1 - _c2
+            mlp_sub2 = _c3 - _c4
+            # 做crisscross attention
+            cca_result1 = self.cca1.cross_forward(lateral_sub1, mlp_sub1)
+            cca_result2 = self.cca1.cross_forward(lateral_sub2, mlp_sub2)
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, cca_result1,cca_result2], dim=1))
         else:
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
@@ -418,7 +448,7 @@ if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
 
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv1')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv2')
     img = torch.randn(2,3,512,512)
     out = model(img)
     logits = out['out']
