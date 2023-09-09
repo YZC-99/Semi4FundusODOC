@@ -79,6 +79,7 @@ class CrissCrossAttention(nn.Module):
     """ Criss-Cross Attention Module"""
     def __init__(self, in_dim):
         super(CrissCrossAttention,self).__init__()
+        # 用于特征降维
         self.query_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
         self.key_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
         self.value_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim, kernel_size=1)
@@ -89,9 +90,11 @@ class CrissCrossAttention(nn.Module):
 
     def forward(self, x):
         m_batchsize, _, height, width = x.size()
+        # 特征降维，8倍
         proj_query = self.query_conv(x)
         proj_query_H = proj_query.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height).permute(0, 2, 1)
         proj_query_W = proj_query.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width).permute(0, 2, 1)
+        # 特征降维，8倍
         proj_key = self.key_conv(x)
         proj_key_H = proj_key.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height)
         proj_key_W = proj_key.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width)
@@ -110,6 +113,7 @@ class CrissCrossAttention(nn.Module):
         out_W = torch.bmm(proj_value_W, att_W.permute(0, 2, 1)).view(m_batchsize,height,-1,width).permute(0,2,1,3)
         #print(out_H.size(),out_W.size())
         return self.gamma*(out_H + out_W) + x
+
     def cross_forward(self,y, x):
         m_batchsize, _, height, width = x.size()
         proj_query = self.query_conv(y)
