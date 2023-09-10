@@ -18,6 +18,7 @@ _C.MODEL.BD_loss = 0.0
 _C.MODEL.BD_loss_reblance_alpha = -1.0
 _C.MODEL.BD_loss_increase_alpha = -1.0
 _C.MODEL.FC_loss = 0.0
+_C.MODEL.FC_stop_epoch = 1000
 _C.MODEL.ABL_loss = False
 _C.MODEL.CBL_loss = None
 _C.MODEL.ContrastCenterCBL_loss = None
