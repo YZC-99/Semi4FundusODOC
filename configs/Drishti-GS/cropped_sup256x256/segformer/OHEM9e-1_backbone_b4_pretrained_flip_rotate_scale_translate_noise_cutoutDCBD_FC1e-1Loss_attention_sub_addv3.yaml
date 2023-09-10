@@ -2,7 +2,7 @@ MODEL:
   sup: False
   NUM_CLASSES: 3
   epochs: 200
-  lr: 0.000174 # 0.004/16*batch_size
+  lr: 0.00001 # 0.004/16*batch_size
   backbone: 'b4'
   backbone_pretrained: True
   model: 'SegFormer'
