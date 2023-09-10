@@ -278,7 +278,7 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
 
     if pl_module.cfg.MODEL.aux != 0.0:
         classification_logits,classification_lables = outputs['classification_logits'],outputs['classification_label']
-        classification_preds = nn.functional.softmax(classification_logits,dim=1).argmax(1)
+        classification_preds = nn.functional.sigmoid(classification_logits).argmax(1)
         pl_module.classification_acc.update(classification_preds,classification_lables)
         pl_module.classification_recall.update(classification_preds,classification_lables)
         pl_module.classification_f1.update(classification_preds,classification_lables)
