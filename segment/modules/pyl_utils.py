@@ -505,6 +505,7 @@ def optimizer_config(pl_module: pl.LightningModule):
     # 获取非backbone的参数
     non_backbone_params = [p for p in pl_module.model.parameters() if p not in backbone_params]
 
+
     if pl_module.cfg.MODEL.optimizer_decoupling:
         param_groups = [
             {'params': pl_module.model.backbone.parameters(), 'lr': lr},
@@ -522,7 +523,7 @@ def optimizer_config(pl_module: pl.LightningModule):
         # ]
         optimizers = [AdamW(param_groups,weight_decay=1e-2)]
 
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters - pl_module.cfg.MODEL.lr_warmup_steps,eta_min=pl_module.cfg.MODEL.eta_min)
         if pl_module.cfg.MODEL.scheduler == 'poly':
             scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
         schedulers = [
@@ -542,7 +543,7 @@ def optimizer_config(pl_module: pl.LightningModule):
         optimizers = [SGD(param_groups, momentum=0.9, weight_decay=1e-4)]
         scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
         if pl_module.cfg.MODEL.scheduler == 'cosine':
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters - pl_module.cfg.MODEL.lr_warmup_steps,eta_min=pl_module.cfg.MODEL.eta_min)
         schedulers = [
             {
                 'scheduler': scheduler,
