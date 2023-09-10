@@ -106,31 +106,30 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
     backbone_feat, logits = output['backbone_features'], output['out']
     out_soft = nn.functional.softmax(logits, dim=1)
     ce_loss = pl_module.loss(logits, y)
-    loss = ce_loss
+
+    _CE = ce_loss
     if pl_module.cfg.MODEL.DC_loss > 0.0:
-        loss = ce_loss + pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
+        _DC =  pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
     if pl_module.cfg.MODEL.BD_loss > 0.0:
         dist = batch['boundary']
-
         if pl_module.cfg.MODEL.BD_loss_reblance_alpha > 0.0:
-            loss = loss * (1 - pl_module.BD_loss_reblance_alpha) + pl_module.BD_loss_reblance_alpha *  pl_module.BD_loss(out_soft, dist)
+            _DC = _DC * (1 - pl_module.BD_loss_reblance_alpha) + pl_module.BD_loss_reblance_alpha *  pl_module.BD_loss(out_soft, dist)
             pl_module.BD_loss_reblance_alpha = pl_module.BD_loss_reblance_alpha * pl_module.current_epoch
         elif pl_module.cfg.MODEL.BD_loss_increase_alpha > 0.0:
-            loss = loss  + pl_module.BD_loss_increase_alpha * pl_module.BD_loss(
+            _DC = _DC  + pl_module.BD_loss_increase_alpha * pl_module.BD_loss(
                 out_soft, dist)
             pl_module.BD_loss_increase_alpha = pl_module.BD_loss_increase_alpha * pl_module.current_epoch
         else:
-            loss = loss + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
+            _DC = _DC + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
 
     if pl_module.cfg.MODEL.FC_loss > 0.0:
-        loss = loss + pl_module.cfg.MODEL.FC_loss * pl_module.FC_loss(logits, y)
+        _FC =  pl_module.cfg.MODEL.FC_loss * pl_module.FC_loss(logits, y)
     if pl_module.cfg.MODEL.LOVASZ_loss > 0.0:
-        loss = loss + pl_module.cfg.MODEL.LOVASZ_loss * lovasz_softmax(out_soft, y, ignore=255)
+        _IoU = pl_module.cfg.MODEL.LOVASZ_loss * lovasz_softmax(out_soft, y, ignore=255)
+    loss = _CE + _DC + _FC + _IoU
 
     if pl_module.cfg.MODEL.Pairwise_CBL_loss:
         loss = loss + pl_module.Pairwise_CBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
-
-
     if pl_module.cfg.MODEL.ABL_loss:
         if pl_module.ABL_loss(logits, y) is not None:
             loss = loss + pl_module.ABL_loss(logits, y)
