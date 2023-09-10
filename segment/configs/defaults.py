@@ -60,6 +60,7 @@ _C.MODEL.backbone_pretrained = False
 
 _C.MODEL.model = 'deeplabv3plus'
 _C.MODEL.optimizer = 'SGD'
+_C.MODEL.optimizer_decoupling = True
 _C.MODEL.scheduler = 'cosine'
 _C.MODEL.labeled_id_path = ''
 _C.MODEL.labeled_id_path_2 = ''

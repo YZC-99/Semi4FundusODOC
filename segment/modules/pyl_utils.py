@@ -479,12 +479,21 @@ def optimizer_config(pl_module: pl.LightningModule):
     # 获取非backbone的参数
     non_backbone_params = [p for p in pl_module.model.parameters() if p not in backbone_params]
 
-
-    if pl_module.cfg.MODEL.optimizer == 'AdamW':
+    if pl_module.cfg.MODEL.optimizer_decoupling:
         param_groups = [
             {'params': pl_module.model.backbone.parameters(), 'lr': lr},
             {'params': non_backbone_params, 'lr': lr * 10}
         ]
+    else:
+        param_groups = [
+            {'params': pl_module.model.parameters(), 'lr': lr},
+        ]
+
+    if pl_module.cfg.MODEL.optimizer == 'AdamW':
+        # param_groups = [
+        #     {'params': pl_module.model.backbone.parameters(), 'lr': lr},
+        #     {'params': non_backbone_params, 'lr': lr * 10}
+        # ]
         optimizers = [AdamW(param_groups,weight_decay=1e-2)]
 
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
@@ -499,10 +508,10 @@ def optimizer_config(pl_module: pl.LightningModule):
         ]
     elif pl_module.cfg.MODEL.optimizer == 'SGD':
         # 创建两个参数组，一个用于backbone，一个用于非backbone部分
-        param_groups = [
-            {'params': pl_module.model.backbone.parameters(), 'lr': lr},
-            {'params': non_backbone_params, 'lr': lr * 10}
-        ]
+        # param_groups = [
+        #     {'params': pl_module.model.backbone.parameters(), 'lr': lr},
+        #     {'params': non_backbone_params, 'lr': lr * 10}
+        # ]
 
         optimizers = [SGD(param_groups, momentum=0.9, weight_decay=1e-4)]
         scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
