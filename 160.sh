@@ -43,6 +43,8 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -tune -alf --config Drishti-GS
 
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -tune -alf --config Drishti-GS/cropped_sup256x256/segformer/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDC3e_IoU3e_FC1e-1_Loss_attention_sub_addv3
 
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -tune -alf --config Drishti-GS/cropped_sup256x256/segformer/OHEM9e-1_WeightCE_backbone_b4_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1Loss_attention_sub_addv3
+
 
 
 
