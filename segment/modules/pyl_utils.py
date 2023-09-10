@@ -50,13 +50,15 @@ def init_from_ckpt(pl_module: pl.LightningModule, path: str, ignore_keys: List[s
     print(f"Restored from {path}")
 
 def init_loss(pl_module: pl.LightningModule):
-    if pl_module.cfg.MODEL.ABL_loss:
+    if pl_module.cfg.MODEL.ABL_loss > 0.0:
         pl_module.ABL_loss = ABL()
-    if pl_module.cfg.MODEL.DC_loss:
+    if pl_module.cfg.MODEL.DC_loss > 0.0:
         pl_module.Dice_loss = DiceLoss(n_classes=pl_module.num_classes)
-    if pl_module.cfg.MODEL.BD_loss:
+    if pl_module.cfg.MODEL.BD_loss > 0.0:
         pl_module.BD_loss = SurfaceLoss(idc=[1, 2])
-    if pl_module.cfg.MODEL.FC_loss:
+    if pl_module.cfg.MODEL.BD_loss_reblance_alpha > 0.0:
+        pl_module.BD_loss_reblance_alpha = pl_module.cfg.MODEL.BD_loss_reblance_alpha
+    if pl_module.cfg.MODEL.FC_loss > 0.0:
         pl_module.FC_loss = FocalLoss()
     if pl_module.cfg.MODEL.BlvLoss:
         pl_module.sampler = normal.Normal(0, 4)
@@ -107,7 +109,13 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         loss = ce_loss + pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
     if pl_module.cfg.MODEL.BD_loss > 0.0:
         dist = batch['boundary']
-        loss =  loss + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
+
+        if pl_module.cfg.MODEL.BD_loss_reblance:
+            loss = loss * (1 - pl_module.BD_loss_reblance_alpha) + pl_module.BD_loss_reblance_alpha * pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
+            pl_module.BD_loss_reblance_alpha += pl_module.BD_loss_reblance_alpha  * pl_module.current_epoch
+        else:
+            loss = loss + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
+
     if pl_module.cfg.MODEL.FC_loss > 0.0:
         loss = loss + pl_module.cfg.MODEL.FC_loss * pl_module.FC_loss(logits, y)
     if pl_module.cfg.MODEL.LOVASZ_loss > 0.0:
