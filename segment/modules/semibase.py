@@ -82,8 +82,8 @@ class Base(pl.LightningModule):
         self.step_end_compute_update_metrics = step_end_compute_update_metrics
         self.epoch_end_show_metrics = epoch_end_show_metrics
         if cfg.MODEL.aux != 0.0:
-            self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
-            self.binary_classifier = nn.Linear(1024, self.num_classes)
+            self.global_avg_pool = nn.AdaptiveAvgPool2d(output_size=(1,1))
+            self.binary_classifier = nn.Linear(320, self.num_classes)
 
 
 

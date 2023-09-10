@@ -1,10 +1,15 @@
 import torch
+import torchvision.models
+
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 from segment.modules.semseg.pspnet import PSPNet
 from segment.modules.semseg.unet import UNet
 from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 import torch.nn as nn
+model = torchvision.models.resnet50()
+print(model)
+
 num_classes = 3
 input = torch.randn(2,3,256,256)
 # --------------------------测试resnet的 7x7更换为 三个3x3

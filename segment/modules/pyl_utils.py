@@ -20,7 +20,7 @@ from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
 import torchmetrics
-from torchmetrics import JaccardIndex,Dice
+from torchmetrics import JaccardIndex,Dice,Accuracy,Recall,F1Score
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 
@@ -101,6 +101,7 @@ def init_loss(pl_module: pl.LightningModule):
         )
         pl_module.logit_scale = nn.Parameter(torch.ones(1, pl_module.num_classes, 1, 1))
         pl_module.logit_bias = nn.Parameter(torch.zeros(1, pl_module.num_classes, 1, 1))
+
 def compute_loss(pl_module: pl.LightningModule,output,batch):
     y = batch['mask']
     backbone_feat, logits = output['backbone_features'], output['out']
@@ -174,6 +175,11 @@ def init_metrics(pl_module: pl.LightningModule):
     配置文件中的v2是指dice开了multiclass=True
     配置文件中的v3是指dice开了multiclass=False
     '''
+    if pl_module.cfg.aux != 0.0:
+        pl_module.classification_acc = Accuracy(num_classes=2,task='binary',average='samples')
+        pl_module.classification_recall = Recall(num_classes=2,task='binary',average='samples')
+        pl_module.classification_f1 = F1Score(num_classes=2,task='binary',average='samples')
+
     pl_module.od_dice_score = Dice(num_classes=1, multiclass=False,average='samples').to(pl_module.device)
     pl_module.od_withB_dice_score = Dice(num_classes=2,average='samples').to(pl_module.device)
     pl_module.od_multiclass_jaccard = JaccardIndex(num_classes=2, task='multiclass',average='micro').to(pl_module.device)
@@ -269,6 +275,12 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
 
     pl_module.od_rmOC_dice_score.update(od_preds, od_y)
     pl_module.od_rmOC_jaccard.update(od_preds, od_y)
+
+    if pl_module.cfg.aux != 0.0:
+        classification_preds,classification_lables = outputs['classification_logits'],outputs['classification_label']
+        pl_module.classification_acc.update(classification_preds,classification_lables)
+        pl_module.classification_recall.update(classification_preds,classification_lables)
+        pl_module.classification_f1.update(classification_preds,classification_lables)
 
 def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
     od_miou = pl_module.od_multiclass_jaccard.compute()
@@ -379,6 +391,19 @@ def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
              on_epoch=True, sync_dist=True, rank_zero_only=True)
     pl_module.log("{}/OD_rm_OC_dice".format(tag), od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
              on_epoch=True, sync_dist=True, rank_zero_only=True)
+    if pl_module.cfg.aux != 0.0:
+        acc = pl_module.classification_acc.compute()
+        pl_module.classification_acc.reset()
+        recall = pl_module.classification_recall.compute()
+        pl_module.classification_recall.reset()
+        f1 = pl_module.classification_f1.compute()
+        pl_module.classification_f1.reset()
+        pl_module.log("{}/acc_classification".format(tag), acc, prog_bar=False, logger=True, on_step=False,
+                      on_epoch=True, sync_dist=True, rank_zero_only=True)
+        pl_module.log("{}/recall_classification".format(tag), recall, prog_bar=False, logger=True, on_step=False,
+                      on_epoch=True, sync_dist=True, rank_zero_only=True)
+        pl_module.log("{}/f1_classification".format(tag), f1, prog_bar=False, logger=True, on_step=False,
+                      on_epoch=True, sync_dist=True, rank_zero_only=True)
 
 def uda_train(pl_module: pl.LightningModule, batch):
         src, tgt = batch

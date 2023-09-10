@@ -442,7 +442,9 @@ class SegFormer(nn.Module):
                 'out_features':out_feat,
                 'out_classifier':out_classifier,
                 'decodehead_out':decodehead_out,
-                'backbone_features':backbone_feats}
+                'backbone_features':backbone_feats,
+                'c3': backbone_feats[2],
+                }
 
 if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
