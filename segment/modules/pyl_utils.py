@@ -516,6 +516,14 @@ def optimizer_config(pl_module: pl.LightningModule):
             {'params': pl_module.model.parameters(), 'lr': lr},
         ]
 
+    import math
+    # 为param_groups[0] (即model.layer2) 设置学习率调整规则 - Warm up + Cosine Anneal
+    warmup_cosine = lambda cur_iter: cur_iter / pl_module.cfg.MODEL.lr_warmup_steps if cur_iter < pl_module.cfg.MODEL.lr_warmup_steps else \
+        (pl_module.cfg.MODEL.lr_min + 0.5 * (pl_module.cfg.MODEL.lr_max - pl_module.cfg.MODEL.lr_min) * (
+                    1.0 + math.cos((cur_iter - pl_module.cfg.MODEL.lr_warmup_steps) / (total_iters - pl_module.cfg.MODEL.lr_warmup_steps) * math.pi))) / 0.1
+
+    # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizers[0], lr_lambda=warmup_cosine)
+
     if pl_module.cfg.MODEL.optimizer == 'AdamW':
         # param_groups = [
         #     {'params': pl_module.model.backbone.parameters(), 'lr': lr},
@@ -523,7 +531,8 @@ def optimizer_config(pl_module: pl.LightningModule):
         # ]
         optimizers = [AdamW(param_groups,weight_decay=1e-2)]
 
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters - pl_module.cfg.MODEL.lr_warmup_steps,eta_min=pl_module.cfg.MODEL.eta_min)
+        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
+        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizers[0], lr_lambda=warmup_cosine)
         if pl_module.cfg.MODEL.scheduler == 'poly':
             scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
         schedulers = [
@@ -543,7 +552,7 @@ def optimizer_config(pl_module: pl.LightningModule):
         optimizers = [SGD(param_groups, momentum=0.9, weight_decay=1e-4)]
         scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
         if pl_module.cfg.MODEL.scheduler == 'cosine':
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters - pl_module.cfg.MODEL.lr_warmup_steps,eta_min=pl_module.cfg.MODEL.eta_min)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
         schedulers = [
             {
                 'scheduler': scheduler,
