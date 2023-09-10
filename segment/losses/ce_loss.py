@@ -34,6 +34,8 @@ class OhemCrossEntropy(nn.Module):
     def __init__(self, ignore_label=-1, thres=0.7,
                  min_kept=100000, weight=None):
         super(OhemCrossEntropy, self).__init__()
+        if not isinstance(weight, torch.Tensor):
+            weight = torch.tensor(weight)
         self.thresh = thres
         self.min_kept = max(1, min_kept)
         self.ignore_label = ignore_label
