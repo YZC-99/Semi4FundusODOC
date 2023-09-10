@@ -20,7 +20,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_su
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup256x256/segformer/backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1_stop10_Loss_attention_sub_addv3
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup256x256/segformer/backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDC_IoU_FC1e-1_stop10_Loss_attention_sub_addv3
 
-CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup256x256/segformer/backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_increase_FC1e-1_stop10_Loss_attention_sub_addv3
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 --config Drishti-GS/cropped_sup256x256/segformer/backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDC_IoU_FC1e-1_stop20_Loss_attention_sub_addv3
 
 
 
