@@ -18,8 +18,8 @@ def compute_mean_std():
             channel_sum += np.sum(img_arr, axis=(0, 1))
             num_images += 1
 
-    mean = channel_sum / (num_images * img_arr.shape[0] * img_arr.shape[1])
-    std = np.nanstd(img_arr, axis=(0, 1))
+    mean = channel_sum / (num_images * img_arr.shape[0] * img_arr.shape[1]) / 255.0
+    std = np.nanstd(img_arr, axis=(0, 1)) / 255.0
 
     return mean, std
 
