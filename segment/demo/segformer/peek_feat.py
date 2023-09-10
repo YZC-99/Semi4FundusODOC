@@ -44,6 +44,8 @@ input_t = input_t.unsqueeze(0).to("cuda")
 out = model(input_t)
 features = out['out_features']
 decodehead_out = out['decodehead_out']
+
+
 decodehead_out.update({"_c1-_c2":decodehead_out["_c1"]-decodehead_out["_c2"]})
 decodehead_out.update({"_c3-_c4":decodehead_out["_c3"]-decodehead_out["_c4"]})
 # 可视化从c1-c4
