@@ -175,7 +175,7 @@ def init_metrics(pl_module: pl.LightningModule):
     配置文件中的v2是指dice开了multiclass=True
     配置文件中的v3是指dice开了multiclass=False
     '''
-    if pl_module.cfg.aux != 0.0:
+    if pl_module.cfg.MODEL.aux != 0.0:
         pl_module.classification_acc = Accuracy(num_classes=2,task='binary',average='samples')
         pl_module.classification_recall = Recall(num_classes=2,task='binary',average='samples')
         pl_module.classification_f1 = F1Score(num_classes=2,task='binary',average='samples')
@@ -276,7 +276,7 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
     pl_module.od_rmOC_dice_score.update(od_preds, od_y)
     pl_module.od_rmOC_jaccard.update(od_preds, od_y)
 
-    if pl_module.cfg.aux != 0.0:
+    if pl_module.cfg.MODEL.aux != 0.0:
         classification_preds,classification_lables = outputs['classification_logits'],outputs['classification_label']
         pl_module.classification_acc.update(classification_preds,classification_lables)
         pl_module.classification_recall.update(classification_preds,classification_lables)
@@ -391,7 +391,7 @@ def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
              on_epoch=True, sync_dist=True, rank_zero_only=True)
     pl_module.log("{}/OD_rm_OC_dice".format(tag), od_rm_oc_dice, prog_bar=False, logger=True, on_step=False,
              on_epoch=True, sync_dist=True, rank_zero_only=True)
-    if pl_module.cfg.aux != 0.0:
+    if pl_module.cfg.MODEL.aux != 0.0:
         acc = pl_module.classification_acc.compute()
         pl_module.classification_acc.reset()
         recall = pl_module.classification_recall.compute()
