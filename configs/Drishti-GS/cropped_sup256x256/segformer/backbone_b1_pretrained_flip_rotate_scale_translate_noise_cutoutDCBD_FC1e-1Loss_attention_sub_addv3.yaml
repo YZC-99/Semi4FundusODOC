@@ -3,7 +3,7 @@ MODEL:
   NUM_CLASSES: 3
   epochs: 200
   lr: 0.000174 # 0.004/16*batch_size
-  backbone: 'b2'
+  backbone: 'b1'
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
