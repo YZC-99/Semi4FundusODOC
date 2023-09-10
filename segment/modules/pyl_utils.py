@@ -58,7 +58,7 @@ def init_loss(pl_module: pl.LightningModule):
         pl_module.BD_loss = SurfaceLoss(idc=[1, 2])
     if pl_module.cfg.MODEL.BD_loss_reblance_alpha > 0.0:
         pl_module.BD_loss_reblance_alpha = pl_module.cfg.MODEL.BD_loss_reblance_alpha
-    if pl_module.cfg.MODEL.BD_loss_increase_alpha > 1.0:
+    if pl_module.cfg.MODEL.BD_loss_increase_alpha > 0.0:
         pl_module.BD_loss_increase_alpha = pl_module.cfg.MODEL.BD_loss_increase_alpha
     if pl_module.cfg.MODEL.FC_loss > 0.0:
         pl_module.FC_loss = FocalLoss()
