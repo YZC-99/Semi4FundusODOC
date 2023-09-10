@@ -147,12 +147,18 @@ class Base(pl.LightningModule):
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.compute_loss(self,output,batch)
-        return {'val_loss':loss,
-                'preds':preds,
-                'y':y,
-                "classification_logits":output['classification_logits'],
-                "classification_label":batch['classification_label'],
-            }
+        if self.cfg.MODEL.aux != 0.0:
+            return {'val_loss':loss,
+                    'preds':preds,
+                    'y':y,
+                    "classification_logits":output['classification_logits'],
+                    "classification_label":batch['classification_label'],
+                }
+        else:
+            return {'val_loss': loss,
+                    'preds': preds,
+                    'y': y,
+                    }
 
     def validation_step_end(self, outputs):
         loss = outputs['val_loss']
