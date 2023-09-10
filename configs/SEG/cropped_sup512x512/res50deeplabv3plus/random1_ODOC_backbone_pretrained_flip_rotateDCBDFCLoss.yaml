@@ -6,9 +6,9 @@ MODEL:
   backbone: 'resnet50'
   backbone_pretrained: True
   model: 'deeplabv3plus'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
+  FC_loss: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 

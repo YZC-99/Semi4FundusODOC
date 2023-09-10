@@ -1,14 +1,16 @@
 MODEL:
+  sup: False
   NUM_CLASSES: 3
-  epochs: 100
-  lr: 0.001 # 0.004/16*batch_size
-  backbone: 'resnet50'
+  epochs: 200
+  lr: 0.000174 # 0.004/16*batch_size
+  backbone: 'b2'
   backbone_pretrained: True
-  model: 'deeplabv3plus'
-  Attention: 'Criss_Attention_R2_V1'
+  model: 'SegFormer'
+  optimizer: 'AdamW'
+  Attention: 'sub_addv3'
   DC_loss: 1.0
   BD_loss: 1.0
-  FC_loss: 1.0
+  FC_loss: 0.1
   loss:
     target: torch.nn.CrossEntropyLoss
 
@@ -17,7 +19,7 @@ dataset:
     target: segment.dataloader.DataModuleFromConfig
     params:
         batch_size: 8
-        num_workers: 4
+        num_workers: 8
         train:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
@@ -35,8 +37,6 @@ dataset:
                     noise: True
                     scale: True
                     cutout: True
-                  strong:
-                    blur: True
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain

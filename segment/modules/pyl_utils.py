@@ -103,21 +103,24 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
     out_soft = nn.functional.softmax(logits, dim=1)
     ce_loss = pl_module.loss(logits, y)
     loss = ce_loss
-    if pl_module.cfg.MODEL.DC_loss:
-        loss = ce_loss + pl_module.Dice_loss(out_soft, y)
-    if pl_module.cfg.MODEL.BD_loss:
+    if pl_module.cfg.MODEL.DC_loss > 0.0:
+        loss = ce_loss + pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
+    if pl_module.cfg.MODEL.BD_loss > 0.0:
         dist = batch['boundary']
-        loss = 0.5 * loss + 0.5 * pl_module.BD_loss(out_soft, dist)
-    if pl_module.cfg.MODEL.FC_loss:
-        loss = loss + pl_module.FC_loss(logits, y)
+        loss =  loss + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
+    if pl_module.cfg.MODEL.FC_loss > 0.0:
+        loss = loss + pl_module.cfg.MODEL.FC_loss * pl_module.FC_loss(logits, y)
+    if pl_module.cfg.MODEL.LOVASZ_loss > 0.0:
+        loss = loss + pl_module.cfg.MODEL.LOVASZ_loss * lovasz_softmax(out_soft, y, ignore=255)
+
     if pl_module.cfg.MODEL.Pairwise_CBL_loss:
         loss = loss + pl_module.Pairwise_CBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
+
 
     if pl_module.cfg.MODEL.ABL_loss:
         if pl_module.ABL_loss(logits, y) is not None:
             loss = loss + pl_module.ABL_loss(logits, y)
-    if pl_module.cfg.MODEL.LOVASZ_loss:
-        loss = loss + lovasz_softmax(out_soft, y, ignore=255)
+
     if pl_module.cfg.MODEL.LOVASZPlus_loss:
         loss = loss + lovasz_softmaxPlus(out_soft, y, ignore=255)
     if pl_module.current_epoch > pl_module.cfg.MODEL.CBLcontrast_start_epoch:

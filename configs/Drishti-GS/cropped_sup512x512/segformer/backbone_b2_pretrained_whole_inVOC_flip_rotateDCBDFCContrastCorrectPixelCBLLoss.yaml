@@ -8,9 +8,9 @@ MODEL:
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
+  FC_loss: 1.0
   ContrastPixelCorrectCBL_loss: [2.0,0.1,0.3]
   loss:
     target: torch.nn.CrossEntropyLoss

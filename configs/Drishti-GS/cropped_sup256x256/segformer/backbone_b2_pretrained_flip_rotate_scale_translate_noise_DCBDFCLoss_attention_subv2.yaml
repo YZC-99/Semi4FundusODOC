@@ -8,9 +8,9 @@ MODEL:
   model: 'SegFormer'
   optimizer: 'AdamW'
   Attention: 'subv2'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
+  FC_loss: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 

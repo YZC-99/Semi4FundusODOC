@@ -6,8 +6,8 @@ MODEL:
   epochs: 300
   lr: 0.001 # 0.004/16*batch_size
   stage1_ckpt_path: 'experiments/SEG/cropped_sup512x512/random1_ODOC_sup10_DCBDFCLoss/ckpt/epoch=445-val_OD_dice=0.920649.ckpt'
-  DC_loss: True
-  BD_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 

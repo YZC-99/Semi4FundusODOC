@@ -7,9 +7,9 @@ MODEL:
   backbone_pretrained: True
   model: 'deeplabv3plus'
   Attention: 'Criss_Attention_R2_V1'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
+  FC_loss: 1.0
   seghead_last: True
   loss:
     target: torch.nn.CrossEntropyLoss

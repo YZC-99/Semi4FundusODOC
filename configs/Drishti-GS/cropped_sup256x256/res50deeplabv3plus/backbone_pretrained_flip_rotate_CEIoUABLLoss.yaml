@@ -6,7 +6,7 @@ MODEL:
   backbone_pretrained: True
   model: 'deeplabv3plus'
   ABL_loss: True
-  LOVASZ_loss: True
+  LOVASZ_loss: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 

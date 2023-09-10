@@ -5,7 +5,7 @@ MODEL:
   lr: 0.001 # 0.004/16*batch_size
   backbone: 'resnet50'
   model: 'deeplabv3plus'
-  DC_loss: True
+  DC_loss: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 

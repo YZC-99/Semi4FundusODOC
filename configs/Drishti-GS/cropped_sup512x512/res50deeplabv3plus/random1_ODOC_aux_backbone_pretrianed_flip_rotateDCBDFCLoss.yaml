@@ -7,9 +7,9 @@ MODEL:
   backbone_pretrained: True
   backbone_inplace_seven: False
   model: 'deeplabv3plus'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
+  FC_loss: 1.0
   aux: 0.5
   loss:
     target: torch.nn.CrossEntropyLoss

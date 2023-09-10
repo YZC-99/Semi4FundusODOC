@@ -8,9 +8,9 @@ MODEL:
   uda_pretrained: False
   lr: 0.002 # 0.004/16*batch_size
   stage1_ckpt_path: 'experiments/SEG/cropped_sup512x512/random1_ODOC_sup10_backbone_pretrained_DCBDFCLoss/lightning_logs/version_1/ckpt/epoch=18-val_OD_dice=0.946168-val_OD_mIoU=0.932403.ckpt'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
+  FC_loss: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 

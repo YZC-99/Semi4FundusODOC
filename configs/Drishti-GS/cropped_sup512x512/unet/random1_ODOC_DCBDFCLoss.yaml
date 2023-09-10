@@ -4,9 +4,9 @@ MODEL:
   epochs: 150
   lr: 0.001 # 0.004/16*batch_size
   model: 'unet'
-  DC_loss: True
-  BD_loss: True
-  FC_loss: True
+  DC_loss: 1.0
+  BD_loss: 1.0
+  FC_loss: 1.0
   loss:
     target: torch.nn.CrossEntropyLoss
 
