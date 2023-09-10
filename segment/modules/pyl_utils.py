@@ -58,6 +58,8 @@ def init_loss(pl_module: pl.LightningModule):
         pl_module.BD_loss = SurfaceLoss(idc=[1, 2])
     if pl_module.cfg.MODEL.BD_loss_reblance_alpha > 0.0:
         pl_module.BD_loss_reblance_alpha = pl_module.cfg.MODEL.BD_loss_reblance_alpha
+    if pl_module.cfg.MODEL.BD_loss_increase_alpha > 1.0:
+        pl_module.BD_loss_increase_alpha = pl_module.cfg.MODEL.BD_loss_increase_alpha
     if pl_module.cfg.MODEL.FC_loss > 0.0:
         pl_module.FC_loss = FocalLoss()
     if pl_module.cfg.MODEL.BlvLoss:
@@ -113,6 +115,10 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         if pl_module.cfg.MODEL.BD_loss_reblance_alpha > 0.0:
             loss = loss * (1 - pl_module.BD_loss_reblance_alpha) + pl_module.BD_loss_reblance_alpha *  pl_module.BD_loss(out_soft, dist)
             pl_module.BD_loss_reblance_alpha = pl_module.BD_loss_reblance_alpha * pl_module.current_epoch
+        elif pl_module.cfg.MODEL.BD_loss_increase_alpha > 1.0:
+            loss = loss  + pl_module.BD_loss_increase_alpha * pl_module.BD_loss(
+                out_soft, dist)
+            pl_module.BD_loss_increase_alpha = pl_module.BD_loss_increase_alpha * pl_module.current_epoch
         else:
             loss = loss + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
 
