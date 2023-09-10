@@ -17,6 +17,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -tune -alf --config Drishti-GS
 #
 #REFUGE
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -tune -alf --config REFUGE/cropped_sup256x256/segformer/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDC_IoU_FC1e-1_stop10_Loss_attention_sub_addv3
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -tune -alf --config RIM-ONE/cropped_sup256x256/segformer/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDC_IoU_FC1e-1_stop10_Loss_attention_sub_addv3
 
 
 
