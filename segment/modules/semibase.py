@@ -150,10 +150,9 @@ class Base(pl.LightningModule):
         return {'val_loss':loss,
                 'preds':preds,
                 'y':y,
-                "classification_logits":output['classification_logits',
-                "classification_label":batch['classification_label']
-                ]
-}
+                "classification_logits":output['classification_logits'],
+                "classification_label":batch['classification_label'],
+            }
 
     def validation_step_end(self, outputs):
         loss = outputs['val_loss']
