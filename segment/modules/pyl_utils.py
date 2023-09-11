@@ -144,8 +144,8 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
     if pl_module.cfg.MODEL.LOVASZPlus_loss:
         loss = loss + lovasz_softmaxPlus(out_soft, y, ignore=255)
     if pl_module.current_epoch > pl_module.cfg.MODEL.CBLcontrast_start_epoch:
-        if pl_module.cfg.MODEL.CBL_loss:
-            loss = loss + pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
+        if pl_module.cfg.MODEL.CBL_loss > 0.0:
+            loss = loss + pl_module.cfg.MODEL.CBL_loss * pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
         if pl_module.cfg.MODEL.ContrastCenterCBL_loss:
             loss = loss + pl_module.ContrastCenterCBL_loss(output, y, pl_module.model.classifier.weight, pl_module.model.classifier.bias)
         if pl_module.cfg.MODEL.ContrastPixelCBL_loss:
