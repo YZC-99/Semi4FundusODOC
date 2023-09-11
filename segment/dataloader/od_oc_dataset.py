@@ -134,7 +134,7 @@ class SemiDataset(Dataset):
             else:
                 mask = get_labels(self.task,mask_path)
             img, mask = resize(img, mask, self.size)
-            img, mask = normalize(img, mask)
+            img, mask = normalize(img, mask,mean=self.aug.normal_weight[0],std=self.aug.normal_weight[1])
             boundary = dist_transform(mask)
             return {'img':img, 'mask':mask, 'id':id,'boundary':boundary,'classification_label':classification_label}
 
@@ -165,7 +165,7 @@ class SemiDataset(Dataset):
         # strong augmentation on unlabeled images
         if (self.mode == 'semi_train' or self.mode == 'src_tgt_train' and id in self.unlabeled_ids) and self.aug :
             if self.aug.strong.Not:
-                img, mask = normalize(img, mask)
+                img, mask = normalize(img, mask,mean=self.aug.normal_weight[0],std=self.aug.normal_weight[1])
                 boundary = dist_transform(mask)
                 return {'img':img, 'mask':mask,'boundary':boundary,'classification_label':classification_label}
 
@@ -184,10 +184,10 @@ class SemiDataset(Dataset):
             if self.aug.strong.cutout:
                 img, mask = cutout(img, mask, p=1.0)
 
-            img, mask = normalize(img, mask)
+            img, mask = normalize(img, mask,mean=self.aug.normal_weight[0],std=self.aug.normal_weight[1])
             boundary = dist_transform(mask)
             return {'img':img, 'mask':mask,'boundary':boundary,'classification_label':classification_label}
-        img, mask = normalize(img, mask)
+        img, mask = normalize(img, mask,mean=self.aug.normal_weight[0],std=self.aug.normal_weight[1])
         boundary = dist_transform(mask)
         return {'img':img, 'mask':mask,'boundary':boundary,'classification_label':classification_label}
 

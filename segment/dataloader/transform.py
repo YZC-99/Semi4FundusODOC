@@ -96,7 +96,7 @@ def random_translate(img, mask, p=0.5, max_translate_percent=0.15):
 
     return img, mask
 
-def normalize(img, mask=None):
+def normalize(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
     """
     :param img: PIL image
     :param mask: PIL image, corresponding mask
@@ -106,7 +106,7 @@ def normalize(img, mask=None):
         transforms.ToTensor(),
         # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         # transforms.Normalize([0.595,0.293,0.0931], [0.112,0.060,0.020]),
-        transforms.Normalize((0.0,), (1.0,))
+        transforms.Normalize(mean=mean, std=std)
     ])(img)
     if mask is not None:
         mask = torch.from_numpy(np.array(mask)).long()

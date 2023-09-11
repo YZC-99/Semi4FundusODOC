@@ -130,6 +130,7 @@ _C.dataset.params.train.params.pseudo_mask_path = None
 _C.dataset.params.train.params.cfg = CN()
 
 _C.dataset.params.train.params.aug = CN()
+_C.dataset.params.train.params.aug.normal_weight = [(0.0,0.0,0.0),(1.0,1.0,1.0)]
 _C.dataset.params.train.params.aug.weak = CN()
 _C.dataset.params.train.params.aug.weak.flip = True
 _C.dataset.params.train.params.aug.weak.rotate = True
