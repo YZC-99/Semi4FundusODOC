@@ -11,7 +11,7 @@ MODEL:
   DC_loss: 1.0
   BD_loss: 1.0
   FC_loss: 0.1
-  CBL_loss: 1.0
+  CBL_loss: [2.0,0.1,0.3]
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
