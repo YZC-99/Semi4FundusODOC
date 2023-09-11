@@ -154,7 +154,7 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         if pl_module.cfg.MODEL.ContrastPixelCorrectCBL_loss:
             loss = loss + pl_module.ContrastPixelCorrectCBL_loss(output, y, pl_module.model.classifier.weight,
                                                       pl_module.model.classifier.bias)
-        if pl_module.cfg.MODEL.ContrastCrossPixelCorrectCBL_loss:
+        if pl_module.cfg.MODEL.ContrastCrossPixelCorrectCBL_loss is not None:
             loss = loss + pl_module.ContrastCrossPixelCorrectCBL_loss(output, y, pl_module.model.classifier.weight,
                                                             pl_module.model.classifier.bias)
 
