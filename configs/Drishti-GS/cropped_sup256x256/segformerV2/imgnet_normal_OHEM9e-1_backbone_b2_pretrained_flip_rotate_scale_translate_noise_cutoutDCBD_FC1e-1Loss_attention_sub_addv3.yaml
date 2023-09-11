@@ -51,6 +51,8 @@ dataset:
                 root: './data/fundus_datasets/od_oc/Drishti-GS/'
                 size: 256
                 mode: 'val'
+                aug:
+                  normal_weight: [ [ 0.485, 0.456, 0.406 ], [ 0.229, 0.224, 0.225 ] ]
         test:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
