@@ -450,8 +450,9 @@ if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
 
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv2')
-    img = torch.randn(2,3,512,512)
-    out = model(img)
-    logits = out['out']
-    print(logits.shape)
+    model = SegFormer(num_classes=3, phi='b2', pretrained=True)
+    # model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv2')
+    # img = torch.randn(2,3,512,512)
+    # out = model(img)
+    # logits = out['out']
+    # print(logits.shape)
