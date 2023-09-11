@@ -21,19 +21,17 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -tune -alf --config RIM-ONE/cr
 
 #
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformer/OHEM9e-1_backbone_b4_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1Loss_attention_sub_addv3
-
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1Loss_attention_sub_addv3
-
-
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/OHEM9e-1_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1Loss_attention_sub_addv3
-
-
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/imgnet_normal_OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1Loss_attention_sub_addv3
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/self_normal_OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1Loss_attention_sub_addv3
-
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1_CBL_Loss_attention_sub_addv3
 
+
+#
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutDCBD_FC1e-1_Contrast_Pixel_CBL_Loss_attention_sub_addv3
+
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutoutCE_CBL_Loss_attention_sub_addv3
 
 
 

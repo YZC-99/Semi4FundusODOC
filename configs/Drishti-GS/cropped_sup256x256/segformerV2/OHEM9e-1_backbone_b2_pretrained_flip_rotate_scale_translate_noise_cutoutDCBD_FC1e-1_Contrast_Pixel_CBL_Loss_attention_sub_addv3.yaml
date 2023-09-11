@@ -1,3 +1,5 @@
+info:
+  setting: "使用改进的CBL损失函数进行训练，CBL权重默认为1，当前配置下需要17G显存.改进的地方是：将原始的CBL中context loss改为了邻居像素的对比损失，注意：这里的像素是被分类正确的"
 MODEL:
   sup: False
   NUM_CLASSES: 3
