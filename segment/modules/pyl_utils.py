@@ -517,10 +517,11 @@ def optimizer_config(pl_module: pl.LightningModule):
         ]
 
     import math
-    # 为param_groups[0] (即model.layer2) 设置学习率调整规则 - Warm up + Cosine Anneal
-    warmup_cosine = lambda cur_iter: cur_iter / pl_module.cfg.MODEL.lr_warmup_steps if cur_iter < pl_module.cfg.MODEL.lr_warmup_steps else \
+    warmup_iter = int(round(pl_module.cfg.MODEL.lr_warmup_steps_ratio * total_iters))
+    # 设置学习率调整规则 - Warm up + Cosine Anneal
+    warmup_cosine = lambda cur_iter: cur_iter / warmup_iter if cur_iter < warmup_iter else \
         (pl_module.cfg.MODEL.lr_min + 0.5 * (pl_module.cfg.MODEL.lr_max - pl_module.cfg.MODEL.lr_min) * (
-                    1.0 + math.cos((cur_iter - pl_module.cfg.MODEL.lr_warmup_steps) / (total_iters - pl_module.cfg.MODEL.lr_warmup_steps) * math.pi))) / 0.1
+                    1.0 + math.cos((cur_iter - warmup_iter) / (total_iters - warmup_iter) * math.pi))) / 0.1
 
     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizers[0], lr_lambda=warmup_cosine)
 
