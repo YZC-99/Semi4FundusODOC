@@ -5,13 +5,14 @@ MODEL:
   lr: 0.00006 # 0.004/16*batch_size
   lr_warmup_steps_ratio: 0.25 # 0.004/16*batch_size
   backbone: 'b2'
+  backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
   Attention: 'sub_addv3'
   DC_loss: 1.0
   BD_loss: 1.0
   FC_loss: 0.1
-  CBL_loss: [2.0,0.1,0.3]
+  ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.3]
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
