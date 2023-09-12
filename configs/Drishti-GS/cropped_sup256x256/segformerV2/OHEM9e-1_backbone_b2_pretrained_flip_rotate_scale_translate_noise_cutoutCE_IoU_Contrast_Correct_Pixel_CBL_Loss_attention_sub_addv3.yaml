@@ -12,8 +12,7 @@ MODEL:
   optimizer: 'AdamW'
   Attention: 'sub_addv3'
   ContrastCrossPixelCorrectCBL_loss: [1.0,0.1,0.05]
-  DC_loss: 1.0
-  BD_loss: 1.0
+  LOVASZ_loss: 1.0
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
