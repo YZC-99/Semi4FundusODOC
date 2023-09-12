@@ -1,0 +1,61 @@
+info:
+  setting: "使用改进的CBL损失函数进行训练，CBL权重默认为1，当前配置下需要17G显存.改进的地方是：将原始的CBL中context loss改为了邻居像素的对比损失，注意：这里的像素是被分类正确的"
+MODEL:
+  sup: False
+  NUM_CLASSES: 3
+  epochs: 150
+  lr: 0.00006 # 0.004/16*batch_size
+  lr_warmup_steps_ratio: 0.10 # 0.004/16*batch_size
+  backbone: 'b2'
+  backbone_pretrained: True
+  model: 'SegFormer'
+  optimizer: 'AdamW'
+  Attention: 'sub_addv3'
+  ContrastCrossPixelCorrectCBL_loss: [1.0,0.1,0.1]
+  BD_loss: 1.0
+  loss:
+    target: segment.losses.ce_loss.OhemCrossEntropy
+    params:
+      thres: 0.9
+      weight: [1.0,2.8,3.0]
+
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 8
+        num_workers: 8
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'cropped_sup'
+                root: './data/fundus_datasets/od_oc/Drishti-GS/'
+                labeled_id_path: 'dataset/Drishti-GS/cropped_sup/training.txt'
+                size: 256
+                mode: 'train'
+                aug:
+                  weak:
+                    flip: True
+                    rotate: True
+                    translate: True
+                    noise: True
+                    scale: True
+                    cutout: True
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'Drishti-GS/cropped_sup'
+                root: './data/fundus_datasets/od_oc/Drishti-GS/'
+                size: 256
+                mode: 'val'
+        test:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+              task: 'od_oc'
+              name: 'Drishti-GS/cropped_sup'
+              root: './data/fundus_datasets/od_oc/Drishti-GS/'
+              size: 256
+              mode: 'test'

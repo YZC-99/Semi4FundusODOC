@@ -30,6 +30,7 @@ _C.MODEL.LOVASZ_loss = 0.0
 _C.MODEL.LOVASZPlus_loss = False
 
 _C.MODEL.CBLcontrast_start_epoch = 0
+_C.MODEL.CBL_increase = -1
 _C.MODEL.Isdysample = False
 _C.MODEL.Attention = None
 _C.MODEL.seghead_last = False
