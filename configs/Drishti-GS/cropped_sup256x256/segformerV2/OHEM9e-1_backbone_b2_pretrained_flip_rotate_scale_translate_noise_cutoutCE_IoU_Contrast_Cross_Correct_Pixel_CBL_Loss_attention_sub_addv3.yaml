@@ -11,7 +11,7 @@ MODEL:
   model: 'SegFormer'
   optimizer: 'AdamW'
   Attention: 'sub_addv3'
-  ContrastPixelCorrectCBL_loss: [1.0,0.1,0.05]
+  ContrastCrossPixelCorrectCBL_loss: [1.0,0.1,0.05]
   LOVASZ_loss: 1.0
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
