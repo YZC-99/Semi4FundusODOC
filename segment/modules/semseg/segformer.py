@@ -169,6 +169,24 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'sub_addv4':
+            self.linear_sub_fuse1 = ConvModule(
+                c1=embedding_dim * 2,
+                c2=embedding_dim,
+                k=1,
+            )
+            self.linear_sub_fuse2 = ConvModule(
+                c1=embedding_dim * 2,
+                c2=embedding_dim,
+                k=1,
+            )
+            self.linear_sub_fuse_cca1 = CrissCrossAttention(embedding_dim)
+            self.linear_sub_fuse_cca2 = CrissCrossAttention(embedding_dim)
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim * 6,
+                c2=embedding_dim,
+                k=1,
+            )
         elif attention == 'backbone_subv1':
             self.lateral_c1 = ConvModule(c1_in_channels,768)
             self.lateral_c2 = ConvModule(c2_in_channels,768)
@@ -304,6 +322,16 @@ class SegFormerHead(nn.Module):
             _sub = self.linear_sub_fuse(torch.cat([sub1,sub2],dim=1))
             _sub = self.linear_sub_fuse_cca(_sub)
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, _sub], dim=1))
+        elif self.attention == 'sub_addv4':
+            sub1 = _c1 - _c2
+            sub2 = _c3 - _c4
+            sub3 = _c1 - _c3
+            sub4 = _c2 - _c4
+            _sub1 = self.linear_sub_fuse1(torch.cat([sub1,sub2],dim=1))
+            _sub1 = self.linear_sub_fuse_cca1(_sub1)
+            _sub2 = self.linear_sub_fuse1(torch.cat([sub3,sub4],dim=1))
+            _sub2 = self.linear_sub_fuse_cca1(_sub2)
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, _sub1,_sub2], dim=1))
         elif self.attention == 'backbone_subv1':
             # 先统一通道
             lateral_c1 = self.lateral_c1(c1)
