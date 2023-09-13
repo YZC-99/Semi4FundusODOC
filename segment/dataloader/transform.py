@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image, ImageOps, ImageFilter
+from PIL import Image, ImageOps, ImageFilter,ImageEnhance
 import random
 import torch
 from torchvision import transforms
@@ -95,6 +95,28 @@ def random_translate(img, mask, p=0.5, max_translate_percent=0.15):
         )
 
     return img, mask
+
+
+def color_distortion(img, min_factor=-0.1, max_factor=0.1):
+    # 随机生成亮度、对比度和饱和度的调整因子
+    brightness_factor = random.uniform(min_factor, max_factor)
+    contrast_factor = random.uniform(min_factor, max_factor)
+    saturation_factor = random.uniform(min_factor, max_factor)
+
+    # 调整亮度
+    enhancer = ImageEnhance.Brightness(img)
+    img = enhancer.enhance(1 + brightness_factor)
+
+    # 调整对比度
+    enhancer = ImageEnhance.Contrast(img)
+    img = enhancer.enhance(1 + contrast_factor)
+
+    # 调整饱和度
+    enhancer = ImageEnhance.Color(img)
+    img = enhancer.enhance(1 + saturation_factor)
+
+    return img
+
 
 def normalize(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
     """
