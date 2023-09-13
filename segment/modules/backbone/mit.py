@@ -511,8 +511,6 @@ class mit_b2(MixVisionTransformer):
             drop_rate=0.0, drop_path_rate=0.1)
         if pretrained:
             print("Load backbone weights")
-            # self.load_state_dict(torch.load("pretrained/segformer_b2_backbone_weights.pth"), strict=False)
-            # self.load_state_dict(torch.load("pretrained/segformer_b2_backbone_weights.pth"), strict=False)
             self.load_state_dict(torch.load("pretrained/segformer_b2_backbone_weights.pth"), strict=False)
 
 class mit_b3(MixVisionTransformer):
