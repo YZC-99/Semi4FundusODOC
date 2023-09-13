@@ -245,9 +245,8 @@ class SegFormerHead(nn.Module):
         elif attention == 'sub_addv8':
             self.sub_cca1 = CrissCrossAttention(embedding_dim*3)
             self.sub_cca2 = CrissCrossAttention(embedding_dim*2)
-            self.sub_cca3 = CrissCrossAttention(embedding_dim)
             self.cca_fuse = ConvModule(
-                c1=embedding_dim * 3,
+                c1=embedding_dim * 6,
                 c2=embedding_dim,
                 k=1,
             )
