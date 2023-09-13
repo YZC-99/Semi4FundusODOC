@@ -224,6 +224,24 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'sub_addv7':
+            self.sub_cca1 = CrissCrossAttention(embedding_dim)
+            self.sub_cca2 = CrissCrossAttention(embedding_dim)
+            self.sub_cca3 = CrissCrossAttention(embedding_dim)
+            self.sub_cca4 = CrissCrossAttention(embedding_dim)
+            self.sub_cca5 = CrissCrossAttention(embedding_dim)
+            self.sub_cca6 = CrissCrossAttention(embedding_dim)
+            self.cca_fuse = ConvModule(
+                c1=embedding_dim * 6,
+                c2=embedding_dim,
+                k=1,
+            )
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim * 5,
+                c2=embedding_dim,
+                k=1,
+            )
         elif attention == 'backbone_subv1':
             self.lateral_c1 = ConvModule(c1_in_channels,768)
             self.lateral_c2 = ConvModule(c2_in_channels,768)
@@ -388,6 +406,21 @@ class SegFormerHead(nn.Module):
             sub5 = _c2 - _c4
             sub6 = _c3 - _c4
             cca_fuse = self.cca_fuse(torch.cat([sub1,sub2,sub3,sub4,sub5,sub6], dim=1))
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, cca_fuse], dim=1))
+        elif self.attention == 'sub_addv7':
+            sub1 = _c1 - _c2
+            sub2 = _c1 - _c3
+            sub3 = _c1 - _c4
+            sub4 = _c2 - _c3
+            sub5 = _c2 - _c4
+            sub6 = _c3 - _c4
+            sub_cca1 = self.sub_cca1(sub1)
+            sub_cca2 = self.sub_cca1(sub2)
+            sub_cca3 = self.sub_cca1(sub3)
+            sub_cca4 = self.sub_cca1(sub4)
+            sub_cca5 = self.sub_cca1(sub5)
+            sub_cca6 = self.sub_cca1(sub6)
+            cca_fuse = self.cca_fuse(torch.cat([sub_cca1,sub_cca2,sub_cca3,sub_cca4,sub_cca5,sub_cca6], dim=1))
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, cca_fuse], dim=1))
 
         elif self.attention == 'backbone_subv1':
