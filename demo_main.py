@@ -14,13 +14,24 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import torch
 import pytorch_lightning as pl
-
-from utils.general import get_config_from_file, initialize_from_config, setup_callbacks,merge_cfg
-
+from yacs.config import CfgNode
+from utils.general import get_config_from_file,merge_cfg
+#
+# def merge_cfg(cfg_node, config_dict):
+#     for key, value in config_dict.items():
+#         if isinstance(value, dict):
+#             # 如果键不存在于cfg_node中，或者cfg_node中的值不是CfgNode对象，创建一个新的CfgNode
+#             if key not in cfg_node or not isinstance(cfg_node[key], CfgNode):
+#                 cfg_node[key] = CfgNode()
+#             # 递归融合
+#             merge_cfg(cfg_node[key], value)
+#         else:
+#             # 否则，直接使用config_dict中的值更新cfg_node中的值
+#             cfg_node[key] = value
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/strong1/G1R7R4_B_CJ_semi')
+    parser.add_argument('-c', '--config', type=str, default='test')
     parser.add_argument('-s', '--seed', type=int, default=42)
 
     parser.add_argument('-nn', '--num_nodes', type=int, default=1)
@@ -42,6 +53,7 @@ if __name__ == '__main__':
     # cfg.merge_from_file(Path("configs")/(args.config+".yaml"))
     # Load configuration
     config = get_config_from_file(Path("configs")/(args.config+".yaml"))
+    base = get_config_from_file(Path("configs")/("base.yaml"))
     config_dict = OmegaConf.to_container(config, resolve=True)
     # 将新的配置字典中的键添加到之前的CfgNode对象中
     merge_cfg(cfg, config_dict)
@@ -53,8 +65,11 @@ if __name__ == '__main__':
                                     "use_amp": args.use_amp, "batch_frequency": args.batch_frequency,
                                    "max_images": args.max_images})
 
-
+    from omegaconf import DictConfig
+    cfg_node_dict = cfg.__dict__
+    DictConfig(cfg_node_dict)
     print(config)
+    print(cfg)
 
 
 

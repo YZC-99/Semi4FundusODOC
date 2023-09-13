@@ -139,6 +139,7 @@ _C.dataset.params.train.params.aug.weak.translate = True
 _C.dataset.params.train.params.aug.weak.noise = True
 _C.dataset.params.train.params.aug.weak.scale = True
 _C.dataset.params.train.params.aug.weak.cutout = False
+_C.dataset.params.train.params.aug.weak.color_distortion = False
 _C.dataset.params.train.params.aug.strong = CN()
 _C.dataset.params.train.params.aug.strong.Not = False
 _C.dataset.params.train.params.aug.strong.default = True
