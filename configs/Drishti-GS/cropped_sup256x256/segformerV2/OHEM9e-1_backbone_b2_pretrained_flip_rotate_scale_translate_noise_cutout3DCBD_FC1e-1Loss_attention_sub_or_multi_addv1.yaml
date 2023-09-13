@@ -10,7 +10,7 @@ MODEL:
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
-  Attention: 'sub_multi_addv1'
+  Attention: 'sub_or_multi_addv1'
   DC_loss: 3.0
   BD_loss: 3.0
   FC_loss: 0.1
