@@ -212,6 +212,18 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'sub_addv6':
+            self.cca_fuse = ConvModule(
+                c1=embedding_dim * 6,
+                c2=embedding_dim,
+                k=1,
+            )
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim * 5,
+                c2=embedding_dim,
+                k=1,
+            )
         elif attention == 'backbone_subv1':
             self.lateral_c1 = ConvModule(c1_in_channels,768)
             self.lateral_c2 = ConvModule(c2_in_channels,768)
@@ -368,6 +380,16 @@ class SegFormerHead(nn.Module):
             _sub2 = self.linear_sub_fuse_cca1(_sub2)
             cca_fuse = self.cca_fuse(torch.cat([_sub1,_sub2], dim=1))
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1,cca_fuse], dim=1))
+        elif self.attention == 'sub_addv6':
+            sub1 = _c1 - _c2
+            sub2 = _c1 - _c3
+            sub3 = _c1 - _c4
+            sub4 = _c2 - _c3
+            sub5 = _c2 - _c4
+            sub6 = _c3 - _c4
+            cca_fuse = self.cca_fuse(torch.cat([sub1,sub2,sub3,sub4,sub5,sub6], dim=1))
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, cca_fuse], dim=1))
+
         elif self.attention == 'backbone_subv1':
             # 先统一通道
             lateral_c1 = self.lateral_c1(c1)
