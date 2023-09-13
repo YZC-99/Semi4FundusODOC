@@ -488,7 +488,7 @@ class SegFormerHead(nn.Module):
             sub_cca2 = self.sub_cca2(torch.cat([sub4, sub5], dim=1))
             cca_fuse = self.cca_fuse(torch.cat([sub_cca1, sub_cca2, sub6], dim=1))
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, cca_fuse], dim=1))
-        elif self.attention == 'sub_multi_addv1':
+        elif self.attention == 'sub_or_multi_addv1':
             p = 0.5
             sub1 = _c1 * _c2 if random.random() < p else _c1 - _c2
             sub2 = _c1 * _c3 if random.random() < p else _c1 - _c3
