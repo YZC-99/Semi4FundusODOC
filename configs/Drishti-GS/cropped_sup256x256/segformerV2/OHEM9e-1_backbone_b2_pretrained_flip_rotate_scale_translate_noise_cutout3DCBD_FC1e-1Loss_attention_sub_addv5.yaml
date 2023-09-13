@@ -1,5 +1,5 @@
 info:
-  setting: "探究subaddv5方案
+  setting: "探究subaddv5方案"
 MODEL:
   sup: False
   NUM_CLASSES: 3
