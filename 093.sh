@@ -46,9 +46,11 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_s
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/augs/OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_scale_cutout_CE_Loss_attention_sub_addv8
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/losses/OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_2DC_Loss_attention_sub_addv8
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/losses/OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_3DC_Loss_attention_sub_addv8
-
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/losses/OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_DC_Loss_attention_sub_addv8
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/normal/OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_Loss_attention_sub_addv8
+
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/losses/OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_Contrast_Cross_Correct_Pixel_CBL_Loss_attention_sub_addv8
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/losses/OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_IoU_Loss_attention_sub_addv8
 
 
 

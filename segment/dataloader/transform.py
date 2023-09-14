@@ -136,6 +136,24 @@ def normalize(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
         mask = torch.from_numpy(np.array(mask)).long()
         return img, mask
     return img
+def normalize4val(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
+    """
+    :param img: PIL image
+    :param mask: PIL image, corresponding mask
+    :return: normalized torch tensor of image and mask
+    """
+    img = transforms.Compose([
+        transforms.ToTensor(),
+        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        # transforms.Normalize([151.818,74.596,23.749], [28.438,15.263 ,5.225]),
+        # Mean: [151.81788834  74.5958448   23.74884842]
+        # Std: [28.43763701 15.26303392  5.22472751]
+        transforms.Normalize(mean=mean, std=std)
+    ])(img)
+    if mask is not None:
+        mask = torch.from_numpy(np.array(mask)).long()
+        return img, mask
+    return img
 
 def resize(img, mask,size):
     img = img.resize((size, size), Image.BILINEAR)
