@@ -8,7 +8,7 @@ MODEL:
   lr_warmup_steps_ratio: 0.25 # 0.004/16*batch_size
   backbone: 'b2'
   backbone_pretrained: True
-  model: 'SegFormer'
+  model: 'ResSegFormer'
   optimizer: 'AdamW'
   DC_loss: 4.0
   BD_loss: 4.0
