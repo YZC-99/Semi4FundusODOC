@@ -1,8 +1,8 @@
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 200
-  lr: 0.000174 # 0.004/16*batch_size
+  epochs: 100
+  lr: 0.001 # 0.004/16*batch_size
   backbone: 'b2'
   backbone_pretrained: True
   model: 'SegFormer'
@@ -11,9 +11,12 @@ MODEL:
   DC_loss: 1.0
   BD_loss: 1.0
   FC_loss: 0.1
-  aux: 0.5
+  aux: 1.0
   loss:
-    target: torch.nn.CrossEntropyLoss
+    target: segment.losses.ce_loss.OhemCrossEntropy
+    params:
+      thres: 0.9
+      weight: [1.0,2.8,3.0]
 
 
 dataset:
