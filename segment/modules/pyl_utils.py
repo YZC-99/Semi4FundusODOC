@@ -4,6 +4,7 @@ from torch.nn import CrossEntropyLoss
 from torch.distributions import normal
 from torch.optim import SGD,AdamW
 import torch.nn.functional as F
+import math
 from torch.optim.lr_scheduler import LambdaLR
 from segment.util import meanIOU
 from segment.losses.loss import PrototypeContrastiveLoss
@@ -508,6 +509,15 @@ def uda_train(pl_module: pl.LightningModule, batch):
 
         return loss
 
+def warmup_cosine(current_step, initial_lr,total_iters, warmup_steps):
+    if current_step < warmup_steps:
+        # 在 warm-up 阶段使用线性学习率增加
+        return initial_lr * (float(current_step) / float(max(1, warmup_steps)))
+    else:
+        # 在余弦退火阶段使用余弦退火函数
+        progress = float(current_step - warmup_steps) / float(max(1, total_iters - warmup_steps))
+        return initial_lr * 0.5 * (1.0 + math.cos(math.pi * progress))
+
 def optimizer_config(pl_module: pl.LightningModule):
     lr = pl_module.learning_rate
     total_iters = pl_module.train_steps
@@ -527,13 +537,12 @@ def optimizer_config(pl_module: pl.LightningModule):
             {'params': pl_module.model.parameters(), 'lr': lr},
         ]
 
-    import math
     warmup_iter = int(round(pl_module.cfg.MODEL.lr_warmup_steps_ratio * total_iters))
     # 设置学习率调整规则 - Warm up + Cosine Anneal
-    warmup_cosine = lambda cur_iter: cur_iter / warmup_iter if cur_iter < warmup_iter else \
-        (pl_module.cfg.MODEL.lr_min + 0.5 * (pl_module.cfg.MODEL.lr_max - pl_module.cfg.MODEL.lr_min) * (
-                    1.0 + math.cos((cur_iter - warmup_iter) / (total_iters - warmup_iter) * math.pi))) / 0.1
-
+    # warmup_cosine = lambda cur_iter: cur_iter / warmup_iter if cur_iter < warmup_iter else \
+    #     (pl_module.cfg.MODEL.lr_min + 0.5 * (pl_module.cfg.MODEL.lr_max - pl_module.cfg.MODEL.lr_min) * (
+    #                 1.0 + math.cos((cur_iter - warmup_iter) / (total_iters - warmup_iter) * math.pi))) / 0.1
+    warmup_cosine = lambda step: warmup_cosine(step, lr, warmup_iter)
     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizers[0], lr_lambda=warmup_cosine)
 
     if pl_module.cfg.MODEL.optimizer == 'AdamW':
