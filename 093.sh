@@ -28,8 +28,9 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_s
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/dual_backbone/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutout4DCBD_FC1e-1Loss
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/dual_backbone/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutout4DCBD_FC1e-1Loss-V1
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/dual_backbone/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutout4DCBD_FC1e-1Loss-V2
-
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/dual_backbone/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutout4DCBD_FC1e-1Loss-V3
+
+VICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/dual_backbone/OHEM9e-1_backbone_b2_pretrained_flip_rotate_scale_translate_noise_cutout4DCBD_FC1e-1Loss-V1-1
 
 
 
