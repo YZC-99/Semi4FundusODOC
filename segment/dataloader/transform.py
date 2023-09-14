@@ -127,7 +127,9 @@ def normalize(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
     img = transforms.Compose([
         transforms.ToTensor(),
         # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        # transforms.Normalize([0.595,0.293,0.0931], [0.112,0.060,0.020]),
+        # transforms.Normalize([151.818,74.596,23.749], [28.438,15.263 ,5.225]),
+        # Mean: [151.81788834  74.5958448   23.74884842]
+        # Std: [28.43763701 15.26303392  5.22472751]
         transforms.Normalize(mean=mean, std=std)
     ])(img)
     if mask is not None:
