@@ -4,12 +4,11 @@
 # This work is licensed under the NVIDIA Source Code License
 # ---------------------------------------------------------------
 import random
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt
-
+from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
 
 
@@ -659,13 +658,147 @@ class SegFormer(nn.Module):
                 'c3': backbone_feats[2],
                 }
 
+
+class SegFormerHead4Dualbackbone(nn.Module):
+    """
+    SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers
+    """
+
+    def __init__(self, num_classes=20, former_in_channels=[32, 64, 160, 256],resnet_in_channels = [64, 128, 256, 512], embedding_dim=768, dropout_ratio=0.1,
+                 attention='subv1'):
+        super(SegFormerHead4Dualbackbone, self).__init__()
+        former_c1_in_channels, former_c2_in_channels, former_c3_in_channels, former_c4_in_channels = former_in_channels
+        resnet_c1_in_channels, resnet_c2_in_channels, resnet_c3_in_channels, resnet_c4_in_channels = resnet_in_channels
+
+        self.attention = attention
+
+        self.linear_c4 = MLP(input_dim=former_c4_in_channels+resnet_c4_in_channels, embed_dim=embedding_dim)
+        self.linear_c3 = MLP(input_dim=former_c3_in_channels+resnet_c3_in_channels, embed_dim=embedding_dim)
+        self.linear_c2 = MLP(input_dim=former_c2_in_channels+resnet_c2_in_channels, embed_dim=embedding_dim)
+        self.linear_c1 = MLP(input_dim=former_c1_in_channels+resnet_c1_in_channels, embed_dim=embedding_dim)
+
+
+
+        self.linear_fuse = ConvModule(
+            c1=embedding_dim * 4,
+            c2=embedding_dim,
+            k=1,
+        )
+
+        # self.classifier    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
+        self.dropout = nn.Dropout2d(dropout_ratio)
+
+    def forward(self, former_backbone_feats,resnet_backbone_feats):
+        former_c1, former_c2, former_c3, former_c4 = former_backbone_feats
+        resnet_c1, resnet_c2, resnet_c3, resnet_c4 = resnet_backbone_feats['c1'],resnet_backbone_feats['c2'],resnet_backbone_feats['c3'],resnet_backbone_feats['c4']
+        c1 = torch.cat([former_c1,resnet_c1],dim=1)
+        c2 = torch.cat([former_c2,resnet_c2],dim=1)
+        c3 = torch.cat([former_c3,resnet_c3],dim=1)
+        c4 = torch.cat([former_c4,resnet_c4],dim=1)
+
+        ############## MLP decoder on C1-C4 ###########
+        n, _, h, w = c4.shape
+
+        _c4 = self.linear_c4(c4).permute(0, 2, 1).reshape(n, -1, c4.shape[2], c4.shape[3])
+        _c4 = F.interpolate(_c4, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+        _c3 = self.linear_c3(c3).permute(0, 2, 1).reshape(n, -1, c3.shape[2], c3.shape[3])
+        _c3 = F.interpolate(_c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+        _c2 = self.linear_c2(c2).permute(0, 2, 1).reshape(n, -1, c2.shape[2], c2.shape[3])
+        _c2 = F.interpolate(_c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+        _c1 = self.linear_c1(c1).permute(0, 2, 1).reshape(n, -1, c1.shape[2], c1.shape[3])
+
+        #
+        _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
+
+        out_feat = self.dropout(_c)
+        # x = self.classifier(out_feat)
+
+        # return out_feat,x
+        # return out_feat
+        return {"out_feat": out_feat,
+                "_c1": _c1,
+                "_c2": _c2,
+                "_c3": _c3,
+                "_c4": _c4, }
+
+
+class dual_backbones(nn.Module):
+    def __init__(self,phi = 'b0',res='resnet34',pretrained = False):
+        super(dual_backbones, self).__init__()
+        self.backbone_former = {
+            'b0': mit_b0, 'b1': mit_b1, 'b2': mit_b2,
+            'b3': mit_b3, 'b4': mit_b4, 'b5': mit_b5,}[phi](pretrained)
+        self.backbone_resnet = {
+            'resnet18':resnet18,'resnet34':resnet34
+        }[res](pretrained=pretrained)
+    def forward(self):
+        pass
+
+class ResSegFormer(nn.Module):
+    def __init__(self, num_classes = 21, phi = 'b0',res='resnet34', pretrained = False,seghead_last=False,attention=None):
+        super(ResSegFormer, self).__init__()
+        self.seghead_last = seghead_last
+        self.former_in_channels = {
+            'b0': [32, 64, 160, 256], 'b1': [64, 128, 320, 512], 'b2': [64, 128, 320, 512],
+            'b3': [64, 128, 320, 512], 'b4': [64, 128, 320, 512], 'b5': [64, 128, 320, 512],
+        }[phi]
+        self.resnet_in_channels = {
+            'resnet18': [64, 128, 256, 512], 'resnet34': [64, 128, 256, 512]
+        }[res]
+        self.backbone   = dual_backbones(phi=phi,res=res,pretrained=pretrained)
+        self.embedding_dim   = {
+            'b0': 256, 'b1': 256, 'b2': 768,
+            'b3': 768, 'b4': 768, 'b5': 768,
+        }[phi]
+        self.decode_head = SegFormerHead4Dualbackbone(num_classes, self.former_in_channels,self.resnet_in_channels, self.embedding_dim,attention=attention)
+
+        # self.reduct4loss = ConvModule(
+        #     c1=self.embedding_dim,
+        #     c2=256,
+        #     k=1,
+        # )
+
+        self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
+        # self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
+
+
+
+    def forward(self, inputs):
+        H, W = inputs.size(2), inputs.size(3)
+
+        former_backbone_feats = self.backbone.backbone_former.forward(inputs)
+        resnet_backbone_feats = self.backbone.backbone_resnet.base_forward(inputs)
+        decodehead_out = self.decode_head.forward(former_backbone_feats,resnet_backbone_feats)
+        out_feat = decodehead_out['out_feat']
+        # out_feat = self.reduct4loss(out_feat)
+        if self.seghead_last:
+            out_classifier = F.interpolate(out_feat, size=(H, W), mode='bilinear', align_corners=True)
+            x = self.classifier(out_classifier)
+        else:
+            out_classifier = self.classifier(out_feat)
+
+            x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
+
+
+        return {'out':x,
+                'out_features':out_feat,
+                'out_classifier':out_classifier,
+                'decodehead_out':decodehead_out,
+                'backbone_features':former_backbone_feats,
+                'c3': former_backbone_feats[2],
+                }
+
+
 if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
 
-    model = SegFormer(num_classes=3, phi='b2', pretrained=True)
+    model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False)
     # model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv2')
-    # img = torch.randn(2,3,512,512)
-    # out = model(img)
-    # logits = out['out']
+    img = torch.randn(2,3,256,256)
+    out = model(img)
+    logits = out['out']
     # print(logits.shape)

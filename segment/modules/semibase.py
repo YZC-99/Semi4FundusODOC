@@ -26,7 +26,7 @@ from segment.modules.semseg.deeplabv2 import DeepLabV2
 
 # from segment.modules.semseg.unet import UNet,ResUNet
 from segment.modules.semseg.resnet_Unet import Unet
-from segment.modules.semseg.segformer import SegFormer
+from segment.modules.semseg.segformer import SegFormer,ResSegFormer
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -65,6 +65,8 @@ class Base(pl.LightningModule):
                 self.model = Unet(self.num_classes)
         if model == 'SegFormer':
             self.model = SegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention)
+        if model == 'ResSegFormer':
+            self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention)
         self.init_from_ckpt = init_from_ckpt
 
         if cfg.MODEL.weightCE_loss is not None:
