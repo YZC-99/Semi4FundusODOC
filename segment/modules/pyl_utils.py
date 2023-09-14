@@ -542,7 +542,7 @@ def optimizer_config(pl_module: pl.LightningModule):
     # warmup_cosine = lambda cur_iter: cur_iter / warmup_iter if cur_iter < warmup_iter else \
     #     (pl_module.cfg.MODEL.lr_min + 0.5 * (pl_module.cfg.MODEL.lr_max - pl_module.cfg.MODEL.lr_min) * (
     #                 1.0 + math.cos((cur_iter - warmup_iter) / (total_iters - warmup_iter) * math.pi))) / 0.1
-    warmup_cosine = lambda step: warmup_cosine_f(step, lr,total_iters, warmup_iter)
+    warmup_cosine = lambda step: warmup_cosine_f(step, pl_module.MODEL.lr,total_iters, warmup_iter)
     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizers[0], lr_lambda=warmup_cosine)
 
     if pl_module.cfg.MODEL.optimizer == 'AdamW':
