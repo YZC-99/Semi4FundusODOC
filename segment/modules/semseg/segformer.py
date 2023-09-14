@@ -713,6 +713,32 @@ class SegFormerHead4Dualbackbone(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif self.version == 'v3':
+            self.former_linear_c4 = MLP(input_dim=former_c4_in_channels, embed_dim=embedding_dim)
+            self.former_linear_c3 = MLP(input_dim=former_c3_in_channels, embed_dim=embedding_dim)
+            self.former_linear_c2 = MLP(input_dim=former_c2_in_channels, embed_dim=embedding_dim)
+            self.former_linear_c1 = MLP(input_dim=former_c1_in_channels, embed_dim=embedding_dim)
+            #
+            self.resnet_linear_c4 = MLP(input_dim=resnet_c4_in_channels, embed_dim=embedding_dim)
+            self.resnet_linear_c3 = MLP(input_dim=resnet_c3_in_channels, embed_dim=embedding_dim)
+            self.resnet_linear_c2 = MLP(input_dim=resnet_c2_in_channels, embed_dim=embedding_dim)
+            self.resnet_linear_c1 = MLP(input_dim=resnet_c1_in_channels, embed_dim=embedding_dim)
+            #
+            self.cca_c1 = CrissCrossAttention(embedding_dim)
+            self.cca_c2 = CrissCrossAttention(embedding_dim)
+            self.cca_c3 = CrissCrossAttention(embedding_dim)
+            self.cca_c4 = CrissCrossAttention(embedding_dim)
+
+            self.resnet_linear_fuse = ConvModule(
+                c1=embedding_dim * 4,
+                c2=embedding_dim,
+                k=1,
+            )
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim * 5,
+                c2=embedding_dim,
+                k=1,
+            )
         else:
             self.linear_c4 = MLP(input_dim=former_c4_in_channels+resnet_c4_in_channels, embed_dim=embedding_dim)
             self.linear_c3 = MLP(input_dim=former_c3_in_channels+resnet_c3_in_channels, embed_dim=embedding_dim)
@@ -802,6 +828,47 @@ class SegFormerHead4Dualbackbone(nn.Module):
             _cca3 = self.cca_c1.cross_forward(_resnet_c3,_former_c3)
             _cca4 = self.cca_c1.cross_forward(_resnet_c4,_former_c4)
             _c = self.linear_fuse(torch.cat([_cca1,_cca2,_cca3,_cca4], dim=1))
+            _c1, _c2, _c3, _c4 = _cca1, _cca2, _cca3, _cca4
+        elif self.version == 'v3':
+            n, _, h, w = former_c4.shape
+
+            _former_c4 = self.former_linear_c4(former_c4).permute(0, 2, 1).reshape(n, -1, former_c4.shape[2],
+                                                                                   former_c4.shape[3])
+            _former_c4 = F.interpolate(_former_c4, size=former_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _former_c3 = self.former_linear_c3(former_c3).permute(0, 2, 1).reshape(n, -1, former_c3.shape[2],
+                                                                                   former_c3.shape[3])
+            _former_c3 = F.interpolate(_former_c3, size=former_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _former_c2 = self.former_linear_c2(former_c2).permute(0, 2, 1).reshape(n, -1, former_c2.shape[2],
+                                                                                   former_c2.shape[3])
+            _former_c2 = F.interpolate(_former_c2, size=former_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _former_c1 = self.former_linear_c1(former_c1).permute(0, 2, 1).reshape(n, -1, former_c1.shape[2],
+                                                                                   former_c1.shape[3])
+
+            #
+
+            _resnet_c4 = self.resnet_linear_c4(resnet_c4).permute(0, 2, 1).reshape(n, -1, resnet_c4.shape[2],
+                                                                                   resnet_c4.shape[3])
+            _resnet_c4 = F.interpolate(_resnet_c4, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _resnet_c3 = self.resnet_linear_c3(resnet_c3).permute(0, 2, 1).reshape(n, -1, resnet_c3.shape[2],
+                                                                                   resnet_c3.shape[3])
+            _resnet_c3 = F.interpolate(_resnet_c3, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _resnet_c2 = self.resnet_linear_c2(resnet_c2).permute(0, 2, 1).reshape(n, -1, resnet_c2.shape[2],
+                                                                                   resnet_c2.shape[3])
+            _resnet_c2 = F.interpolate(_resnet_c2, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _resnet_c1 = self.resnet_linear_c1(resnet_c1).permute(0, 2, 1).reshape(n, -1, resnet_c1.shape[2],
+                                                                                   resnet_c1.shape[3])
+            _cca1 = self.cca_c1.cross_forward(_resnet_c1,_former_c1)
+            _cca2 = self.cca_c1.cross_forward(_resnet_c2,_former_c2)
+            _cca3 = self.cca_c1.cross_forward(_resnet_c3,_former_c3)
+            _cca4 = self.cca_c1.cross_forward(_resnet_c4,_former_c4)
+            _resnet_fuse_c = self.resnet_linear_fuse(torch.cat([_cca1,_cca2,_cca3,_cca4], dim=1))
+            _c = self.linear_fuse(torch.cat([_former_c1,_former_c2,_former_c3,_former_c4,_resnet_fuse_c], dim=1))
             _c1, _c2, _c3, _c4 = _cca1, _cca2, _cca3, _cca4
         else:
             c1 = torch.cat([former_c1,resnet_c1],dim=1)
