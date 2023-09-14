@@ -909,7 +909,7 @@ if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
 
-    model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v1')
+    model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
     # model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv2')
     img = torch.randn(2,3,256,256)
     out = model(img)
