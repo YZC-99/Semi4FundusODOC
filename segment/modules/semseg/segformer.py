@@ -664,7 +664,7 @@ class SegFormerHead4Dualbackbone(nn.Module):
     SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers
     """
 
-    def __init__(self, num_classes=20, former_in_channels=[32, 64, 160, 256],resnet_in_channels = [64, 128, 256, 512], embedding_dim=768, dropout_ratio=0.1,
+    def __init__(self,former_in_channels=[32, 64, 160, 256],resnet_in_channels = [64, 128, 256, 512], embedding_dim=768, dropout_ratio=0.1,
                  version='v1'):
         super(SegFormerHead4Dualbackbone, self).__init__()
         former_c1_in_channels, former_c2_in_channels, former_c3_in_channels, former_c4_in_channels = former_in_channels
@@ -729,13 +729,13 @@ class SegFormerHead4Dualbackbone(nn.Module):
 
             #
 
-            _resnet_c4 = self.resnet_linear_c4(former_c4).permute(0, 2, 1).reshape(n, -1, resnet_c4.shape[2], resnet_c4.shape[3])
+            _resnet_c4 = self.resnet_linear_c4(resnet_c4).permute(0, 2, 1).reshape(n, -1, resnet_c4.shape[2], resnet_c4.shape[3])
             _resnet_c4 = F.interpolate(_resnet_c4, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
 
-            _resnet_c3 = self.resnet_linear_c3(former_c3).permute(0, 2, 1).reshape(n, -1, resnet_c3.shape[2], resnet_c3.shape[3])
+            _resnet_c3 = self.resnet_linear_c3(resnet_c3).permute(0, 2, 1).reshape(n, -1, resnet_c3.shape[2], resnet_c3.shape[3])
             _resnet_c3 = F.interpolate(_resnet_c3, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
 
-            _resnet_c2 = self.resnet_linear_c2(former_c2).permute(0, 2, 1).reshape(n, -1, resnet_c2.shape[2], resnet_c2.shape[3])
+            _resnet_c2 = self.resnet_linear_c2(resnet_c2).permute(0, 2, 1).reshape(n, -1, resnet_c2.shape[2], resnet_c2.shape[3])
             _resnet_c2 = F.interpolate(_resnet_c2, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
 
             _resnet_c1 = self.resnet_linear_c1(resnet_c1).permute(0, 2, 1).reshape(n, -1, resnet_c1.shape[2], resnet_c1.shape[3])
@@ -805,7 +805,7 @@ class ResSegFormer(nn.Module):
             'b0': 256, 'b1': 256, 'b2': 768,
             'b3': 768, 'b4': 768, 'b5': 768,
         }[phi]
-        self.decode_head = SegFormerHead4Dualbackbone(num_classes, self.former_in_channels,self.resnet_in_channels, self.embedding_dim,version=version)
+        self.decode_head = SegFormerHead4Dualbackbone(self.former_in_channels,self.resnet_in_channels, self.embedding_dim,version=version)
 
         # self.reduct4loss = ConvModule(
         #     c1=self.embedding_dim,
@@ -848,7 +848,7 @@ if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
 
-    model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False)
+    model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v1')
     # model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv2')
     img = torch.randn(2,3,256,256)
     out = model(img)
