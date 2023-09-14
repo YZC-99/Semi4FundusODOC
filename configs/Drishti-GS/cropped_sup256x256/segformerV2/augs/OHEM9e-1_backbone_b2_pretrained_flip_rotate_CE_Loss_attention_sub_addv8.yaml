@@ -11,9 +11,6 @@ MODEL:
   model: 'SegFormer'
   optimizer: 'AdamW'
   Attention: 'sub_addv8'
-  DC_loss: 4.0
-  BD_loss: 4.0
-  FC_loss: 0.1
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
@@ -39,7 +36,7 @@ dataset:
                   weak:
                     flip: True
                     rotate: True
-                    translate: True
+                    translate: False
                     noise: False
                     scale: False
                     cutout: False
