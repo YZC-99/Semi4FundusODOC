@@ -742,6 +742,7 @@ class SegFormerHead4Dualbackbone(nn.Module):
 
             _resnet_c = self.resnet_linear_fuse(torch.cat([_resnet_c4, _resnet_c3, _resnet_c2, _resnet_c1], dim=1))
             _c = self.former_linear_fuse(torch.cat([_resnet_c4, _resnet_c3, _resnet_c2, _resnet_c1,_resnet_c], dim=1))
+            _c1,_c2,_c3,_c4 = _former_c1,_former_c2,_former_c3,_former_c4
         else:
             c1 = torch.cat([former_c1,resnet_c1],dim=1)
             c2 = torch.cat([former_c2,resnet_c2],dim=1)
