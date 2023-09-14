@@ -665,25 +665,47 @@ class SegFormerHead4Dualbackbone(nn.Module):
     """
 
     def __init__(self, num_classes=20, former_in_channels=[32, 64, 160, 256],resnet_in_channels = [64, 128, 256, 512], embedding_dim=768, dropout_ratio=0.1,
-                 attention='subv1'):
+                 version='v1'):
         super(SegFormerHead4Dualbackbone, self).__init__()
         former_c1_in_channels, former_c2_in_channels, former_c3_in_channels, former_c4_in_channels = former_in_channels
         resnet_c1_in_channels, resnet_c2_in_channels, resnet_c3_in_channels, resnet_c4_in_channels = resnet_in_channels
 
-        self.attention = attention
+        self.version = version
+        if version == 'v1':
+            self.former_linear_c4 = MLP(input_dim=former_c4_in_channels, embed_dim=embedding_dim)
+            self.former_linear_c3 = MLP(input_dim=former_c3_in_channels, embed_dim=embedding_dim)
+            self.former_linear_c2 = MLP(input_dim=former_c2_in_channels, embed_dim=embedding_dim)
+            self.former_linear_c1 = MLP(input_dim=former_c1_in_channels, embed_dim=embedding_dim)
+            #
+            self.resnet_linear_c4 = MLP(input_dim=resnet_c4_in_channels, embed_dim=embedding_dim)
+            self.resnet_linear_c3 = MLP(input_dim=resnet_c3_in_channels, embed_dim=embedding_dim)
+            self.resnet_linear_c2 = MLP(input_dim=resnet_c2_in_channels, embed_dim=embedding_dim)
+            self.resnet_linear_c1 = MLP(input_dim=resnet_c1_in_channels, embed_dim=embedding_dim)
+            #
+            self.resnet_linear_fuse = ConvModule(
+                c1=embedding_dim * 4,
+                c2=embedding_dim,
+                k=1,
+            )
+            #
+            self.former_linear_fuse = ConvModule(
+                c1=embedding_dim * 5,
+                c2=embedding_dim,
+                k=1,
+            )
+        else:
+            self.linear_c4 = MLP(input_dim=former_c4_in_channels+resnet_c4_in_channels, embed_dim=embedding_dim)
+            self.linear_c3 = MLP(input_dim=former_c3_in_channels+resnet_c3_in_channels, embed_dim=embedding_dim)
+            self.linear_c2 = MLP(input_dim=former_c2_in_channels+resnet_c2_in_channels, embed_dim=embedding_dim)
+            self.linear_c1 = MLP(input_dim=former_c1_in_channels+resnet_c1_in_channels, embed_dim=embedding_dim)
 
-        self.linear_c4 = MLP(input_dim=former_c4_in_channels+resnet_c4_in_channels, embed_dim=embedding_dim)
-        self.linear_c3 = MLP(input_dim=former_c3_in_channels+resnet_c3_in_channels, embed_dim=embedding_dim)
-        self.linear_c2 = MLP(input_dim=former_c2_in_channels+resnet_c2_in_channels, embed_dim=embedding_dim)
-        self.linear_c1 = MLP(input_dim=former_c1_in_channels+resnet_c1_in_channels, embed_dim=embedding_dim)
 
 
-
-        self.linear_fuse = ConvModule(
-            c1=embedding_dim * 4,
-            c2=embedding_dim,
-            k=1,
-        )
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim * 4,
+                c2=embedding_dim,
+                k=1,
+            )
 
         # self.classifier    = nn.Conv2d(embedding_dim, num_classes, kernel_size=1)
         self.dropout = nn.Dropout2d(dropout_ratio)
@@ -691,27 +713,57 @@ class SegFormerHead4Dualbackbone(nn.Module):
     def forward(self, former_backbone_feats,resnet_backbone_feats):
         former_c1, former_c2, former_c3, former_c4 = former_backbone_feats
         resnet_c1, resnet_c2, resnet_c3, resnet_c4 = resnet_backbone_feats['c1'],resnet_backbone_feats['c2'],resnet_backbone_feats['c3'],resnet_backbone_feats['c4']
-        c1 = torch.cat([former_c1,resnet_c1],dim=1)
-        c2 = torch.cat([former_c2,resnet_c2],dim=1)
-        c3 = torch.cat([former_c3,resnet_c3],dim=1)
-        c4 = torch.cat([former_c4,resnet_c4],dim=1)
+        if self.version == 'v1':
+            n, _, h, w = former_c4.shape
 
-        ############## MLP decoder on C1-C4 ###########
-        n, _, h, w = c4.shape
+            _former_c4 = self.former_linear_c4(former_c4).permute(0, 2, 1).reshape(n, -1, former_c4.shape[2], former_c4.shape[3])
+            _former_c4 = F.interpolate(_former_c4, size=former_c1.size()[2:], mode='bilinear', align_corners=False)
 
-        _c4 = self.linear_c4(c4).permute(0, 2, 1).reshape(n, -1, c4.shape[2], c4.shape[3])
-        _c4 = F.interpolate(_c4, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            _former_c3 = self.former_linear_c3(former_c3).permute(0, 2, 1).reshape(n, -1, former_c3.shape[2], former_c3.shape[3])
+            _former_c3 = F.interpolate(_former_c3, size=former_c1.size()[2:], mode='bilinear', align_corners=False)
 
-        _c3 = self.linear_c3(c3).permute(0, 2, 1).reshape(n, -1, c3.shape[2], c3.shape[3])
-        _c3 = F.interpolate(_c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            _former_c2 = self.former_linear_c2(former_c2).permute(0, 2, 1).reshape(n, -1, former_c2.shape[2], former_c2.shape[3])
+            _former_c2 = F.interpolate(_former_c2, size=former_c1.size()[2:], mode='bilinear', align_corners=False)
 
-        _c2 = self.linear_c2(c2).permute(0, 2, 1).reshape(n, -1, c2.shape[2], c2.shape[3])
-        _c2 = F.interpolate(_c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            _former_c1 = self.former_linear_c1(former_c1).permute(0, 2, 1).reshape(n, -1, former_c1.shape[2], former_c1.shape[3])
 
-        _c1 = self.linear_c1(c1).permute(0, 2, 1).reshape(n, -1, c1.shape[2], c1.shape[3])
+            #
 
-        #
-        _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
+            _resnet_c4 = self.resnet_linear_c4(former_c4).permute(0, 2, 1).reshape(n, -1, resnet_c4.shape[2], resnet_c4.shape[3])
+            _resnet_c4 = F.interpolate(_resnet_c4, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _resnet_c3 = self.resnet_linear_c3(former_c3).permute(0, 2, 1).reshape(n, -1, resnet_c3.shape[2], resnet_c3.shape[3])
+            _resnet_c3 = F.interpolate(_resnet_c3, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _resnet_c2 = self.resnet_linear_c2(former_c2).permute(0, 2, 1).reshape(n, -1, resnet_c2.shape[2], resnet_c2.shape[3])
+            _resnet_c2 = F.interpolate(_resnet_c2, size=resnet_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _resnet_c1 = self.resnet_linear_c1(resnet_c1).permute(0, 2, 1).reshape(n, -1, resnet_c1.shape[2], resnet_c1.shape[3])
+
+            _resnet_c = self.resnet_linear_fuse(torch.cat([_resnet_c4, _resnet_c3, _resnet_c2, _resnet_c1], dim=1))
+            _c = self.former_linear_fuse(torch.cat([_resnet_c4, _resnet_c3, _resnet_c2, _resnet_c1,_resnet_c], dim=1))
+        else:
+            c1 = torch.cat([former_c1,resnet_c1],dim=1)
+            c2 = torch.cat([former_c2,resnet_c2],dim=1)
+            c3 = torch.cat([former_c3,resnet_c3],dim=1)
+            c4 = torch.cat([former_c4,resnet_c4],dim=1)
+
+            ############## MLP decoder on C1-C4 ###########
+            n, _, h, w = c4.shape
+
+            _c4 = self.linear_c4(c4).permute(0, 2, 1).reshape(n, -1, c4.shape[2], c4.shape[3])
+            _c4 = F.interpolate(_c4, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _c3 = self.linear_c3(c3).permute(0, 2, 1).reshape(n, -1, c3.shape[2], c3.shape[3])
+            _c3 = F.interpolate(_c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _c2 = self.linear_c2(c2).permute(0, 2, 1).reshape(n, -1, c2.shape[2], c2.shape[3])
+            _c2 = F.interpolate(_c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _c1 = self.linear_c1(c1).permute(0, 2, 1).reshape(n, -1, c1.shape[2], c1.shape[3])
+
+            #
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
         out_feat = self.dropout(_c)
         # x = self.classifier(out_feat)
@@ -738,7 +790,7 @@ class dual_backbones(nn.Module):
         pass
 
 class ResSegFormer(nn.Module):
-    def __init__(self, num_classes = 21, phi = 'b0',res='resnet34', pretrained = False,seghead_last=False,attention=None):
+    def __init__(self, num_classes = 21, phi = 'b0',res='resnet34', pretrained = False,seghead_last=False,version=None):
         super(ResSegFormer, self).__init__()
         self.seghead_last = seghead_last
         self.former_in_channels = {
@@ -753,7 +805,7 @@ class ResSegFormer(nn.Module):
             'b0': 256, 'b1': 256, 'b2': 768,
             'b3': 768, 'b4': 768, 'b5': 768,
         }[phi]
-        self.decode_head = SegFormerHead4Dualbackbone(num_classes, self.former_in_channels,self.resnet_in_channels, self.embedding_dim,attention=attention)
+        self.decode_head = SegFormerHead4Dualbackbone(num_classes, self.former_in_channels,self.resnet_in_channels, self.embedding_dim,version=version)
 
         # self.reduct4loss = ConvModule(
         #     c1=self.embedding_dim,

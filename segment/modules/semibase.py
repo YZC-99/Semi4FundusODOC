@@ -66,7 +66,7 @@ class Base(pl.LightningModule):
         if model == 'SegFormer':
             self.model = SegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention)
         if model == 'ResSegFormer':
-            self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention)
+            self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,version=cfg.MODEL.version)
         self.init_from_ckpt = init_from_ckpt
 
         if cfg.MODEL.weightCE_loss is not None:
