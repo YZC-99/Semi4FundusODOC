@@ -4,13 +4,13 @@ MODEL:
   sup: False
   NUM_CLASSES: 3
   epochs: 100
-  lr: 0.001 # 0.004/16*batch_size
+  lr: 1e-4 # 0.004/16*batch_size
   lr_warmup_steps_ratio: 0.10 # 0.004/16*batch_size
   backbone: 'b2'
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
-  ContrastPixelCorrectCBL_loss: [2.0,0.1,0.05]
+  DC_loss: 2.0
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
