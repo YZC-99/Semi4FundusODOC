@@ -1,6 +1,6 @@
 import torch
 
-from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout,dist_transform
+from segment.dataloader.transform import crop, hflip, normalize, resize, blur, cutout,dist_transform,random_scale_and_crop
 from segment.dataloader.transform import random_rotate,random_translate,add_salt_pepper_noise,random_scale,color_distortion
 import cv2
 import math
@@ -155,7 +155,8 @@ class SemiDataset(Dataset):
         if self.aug.weak.noise:
             img, mask = add_salt_pepper_noise(img, mask,p=0.2)
         if self.aug.weak.scale:
-            img, mask = random_scale(img, mask,p=0.2)
+            img, mask = random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.5, max_scale=2, p=0.5)
+            # img, mask = random_scale(img, mask,p=0.2)
         if self.aug.weak.cutout:
             img, mask = cutout(img, mask, p=0.5)
         # if self.aug.weak.color_distortion:

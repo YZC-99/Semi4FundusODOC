@@ -72,6 +72,30 @@ def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
 
     return img, mask
 
+def random_scale_and_crop(img, mask, target_size=(256, 256), min_scale=0.8, max_scale=1.2, p=0.5):
+    if random.random() < p:
+        # 随机生成宽度和高度的缩放因子
+        w_scale_factor = random.uniform(min_scale, max_scale)
+        h_scale_factor = random.uniform(min_scale, max_scale)
+
+        # 计算新的宽度和高度
+        new_width = int(img.width * w_scale_factor)
+        new_height = int(img.height * h_scale_factor)
+
+        # 使用双线性插值对图像进行缩放
+        img = img.resize((new_width, new_height), Image.BILINEAR)
+        mask = mask.resize((new_width, new_height), Image.NEAREST)
+
+        # 随机裁剪到指定的目标尺寸
+        left = random.randint(0, new_width - target_size[0])
+        top = random.randint(0, new_height - target_size[1])
+        right = left + target_size[0]
+        bottom = top + target_size[1]
+        img = img.crop((left, top, right, bottom))
+        mask = mask.crop((left, top, right, bottom))
+
+    return img, mask
+
 def random_rotate(img, mask, p=0.5, max_rotation_angle=90):
     if random.random() < p:
         rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
