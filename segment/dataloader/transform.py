@@ -37,9 +37,15 @@ def crop(img, mask, size):
 
 
 def hflip(img, mask, p=0.5):
-    if random.random() < p:
-        img = img.transpose(Image.FLIP_LEFT_RIGHT)
-        mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
+    v_transform = transforms.RandomVerticalFlip(p)
+    h_transform = transforms.RandomVerticalFlip(p)
+    img = v_transform(img)
+    img = h_transform(img)
+
+    mask = v_transform(mask)
+    mask = h_transform(mask)
+    # img = img.transpose(Image.FLIP_LEFT_RIGHT)
+    # mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
     return img, mask
 
 def add_salt_pepper_noise(img,mask, p=0.5,noise_level=0.02):
@@ -82,9 +88,12 @@ def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_
 
 def random_rotate(img, mask, p=0.5, max_rotation_angle=90):
     if random.random() < p:
-        rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
-        img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
-        mask = mask.rotate(rotation_angle, resample=Image.NEAREST, expand=True)
+        transform = transforms.RandomRotation(degrees=max_rotation_angle)
+        img = transform(img)
+        mask = transform(mask)
+        # rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
+        # img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
+        # mask = mask.rotate(rotation_angle, resample=Image.NEAREST, expand=True)
 
     return img, mask
 
