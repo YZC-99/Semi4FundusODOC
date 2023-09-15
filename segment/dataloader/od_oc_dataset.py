@@ -147,7 +147,7 @@ class SemiDataset(Dataset):
         # basic augmentation on all training images
         # img, mask = crop(img, mask, self.size)
         if self.aug.weak.scale:
-            img, mask = random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.5, max_scale=2, p=0.5)
+            img, mask = random_scale_and_crop(img, mask, target_size=(self.size, self.size), min_scale=0.5, max_scale=2, p=0.5)
             # img, mask = random_scale(img, mask,p=0.2)
         if self.aug.weak.flip:
             img, mask = hflip(img, mask, p=0.5)
