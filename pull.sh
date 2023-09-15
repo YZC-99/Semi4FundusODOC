@@ -1,4 +1,6 @@
 #!/bin/bash
+unset http_proxy && unset https_proxy
+source /etc/network_turbo
 echo "Setting up Git user..."
 git add .
 
