@@ -59,7 +59,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_s
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/epochs_warmup/epochs100_warmup_10e-2_lr1e-5_OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_Loss_attention_sub_addv8
 
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/org_segformer/epochs100_warmup10e-2_OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_Loss
-CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  -tune -alf --config Drishti-GS/cropped_sup256x256/segformerV2/org_segformer/epochs100_warmup10e-2_OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_Loss
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/segformerV2/org_segformer/epochs100_warmup10e-2_lr1e-4_OHEM9e-1_backbone_b2_pretrained_flip_rotate_translate_CE_Loss
 
 
 
