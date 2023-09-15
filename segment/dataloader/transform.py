@@ -82,17 +82,28 @@ def random_scale_and_crop(img, mask, target_size=(256, 256), min_scale=0.8, max_
         new_width = int(img.width * w_scale_factor)
         new_height = int(img.height * h_scale_factor)
 
-        # 使用双线性插值对图像进行缩放
-        img = img.resize((new_width, new_height), Image.BILINEAR)
-        mask = mask.resize((new_width, new_height), Image.NEAREST)
+        # 计算需要填充的宽度和高度
+        pad_width = max(0, target_size[0] - new_width)
+        pad_height = max(0, target_size[1] - new_height)
 
-        # 随机裁剪到指定的目标尺寸
-        left = random.randint(0, new_width - target_size[0])
-        top = random.randint(0, new_height - target_size[1])
-        right = left + target_size[0]
-        bottom = top + target_size[1]
-        img = img.crop((left, top, right, bottom))
-        mask = mask.crop((left, top, right, bottom))
+        # 计算左上角填充位置
+        left_pad = random.randint(0, pad_width)
+        top_pad = random.randint(0, pad_height)
+
+        # 创建一个新的空白图像和掩码，大小为目标尺寸
+        padded_img = Image.new(img.mode, target_size, (0, 0, 0))
+        padded_mask = Image.new(mask.mode, target_size, 0)
+
+        # 将原始图像和掩码放置在填充后的位置
+        padded_img.paste(img, (left_pad, top_pad))
+        padded_mask.paste(mask, (left_pad, top_pad))
+
+        img = padded_img
+        mask = padded_mask
+
+        # 裁剪到指定的目标尺寸
+        img = img.crop((0, 0, target_size[0], target_size[1]))
+        mask = mask.crop((0, 0, target_size[0], target_size[1]))
 
     return img, mask
 
