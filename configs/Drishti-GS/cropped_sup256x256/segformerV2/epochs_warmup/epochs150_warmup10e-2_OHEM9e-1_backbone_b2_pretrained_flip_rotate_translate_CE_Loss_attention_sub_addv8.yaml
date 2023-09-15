@@ -3,7 +3,7 @@ info:
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 100
+  epochs: 150
   lr: 0.001 # 0.004/16*batch_size
   lr_warmup_steps_ratio: 0.10 # 0.004/16*batch_size
   backbone: 'b2'

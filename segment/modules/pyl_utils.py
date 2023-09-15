@@ -567,7 +567,7 @@ def optimizer_config(pl_module: pl.LightningModule):
         optimizers = [SGD(param_groups, momentum=0.9, weight_decay=1e-4)]
         scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=0.9)
         if pl_module.cfg.MODEL.scheduler == 'cosine':
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
+            scheduler = CosineAnnealingWarmupRestarts(optimizers[0],first_cycle_steps=total_iters,cycle_mult=1.0,max_lr=pl_module.cfg.MODEL.lr,min_lr=1e-6,warmup_steps=warmup_iter,gamma=1.0)
         schedulers = [
             {
                 'scheduler': scheduler,
