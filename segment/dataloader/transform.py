@@ -96,11 +96,12 @@ def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_
         img = img.resize((new_width, new_height), Image.BILINEAR)
         mask = mask.resize((new_width, new_height), Image.NEAREST)
 
-        img = pad_if_smaller(img, target_size[0])
-        mask = pad_if_smaller(mask, target_size[0], fill=0)
+        # img = pad_if_smaller(img, target_size[0])
+        # mask = pad_if_smaller(mask, target_size[0], fill=0)
+        img,mask = crop(img,mask,target_size[0])
         # 裁剪到指定的目标尺寸
-        img = transforms.functional.center_crop(img, target_size)
-        mask = transforms.functional.center_crop(mask, target_size)
+        # img = transforms.functional.center_crop(img, target_size)
+        # mask = transforms.functional.center_crop(mask, target_size)
 
     return img, mask
 
