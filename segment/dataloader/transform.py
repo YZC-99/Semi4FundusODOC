@@ -82,26 +82,53 @@ def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
 
     return img, mask
 
+# def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2, p=0.5):
+#     if random.random() < p:
+#         # 随机生成宽度和高度的缩放因子
+#         w_scale_factor = random.uniform(min_scale, max_scale)
+#         h_scale_factor = random.uniform(min_scale, max_scale)
+#
+#         # 计算新的宽度和高度
+#         new_width = int(img.width * w_scale_factor)
+#         new_height = int(img.height * h_scale_factor)
+#
+#         # 使用双线性插值对图像进行缩放
+#         img = img.resize((new_width, new_height), Image.BILINEAR)
+#         mask = mask.resize((new_width, new_height), Image.NEAREST)
+#
+#         # img = pad_if_smaller(img, target_size[0])
+#         # mask = pad_if_smaller(mask, target_size[0], fill=0)
+#         img,mask = crop(img,mask,target_size[0])
+#         # 裁剪到指定的目标尺寸
+#         # img = transforms.functional.center_crop(img, target_size)
+#         # mask = transforms.functional.center_crop(mask, target_size)
+#
+#     return img, mask
+
 def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2, p=0.5):
-    if random.random() < p:
-        # 随机生成宽度和高度的缩放因子
-        w_scale_factor = random.uniform(min_scale, max_scale)
-        h_scale_factor = random.uniform(min_scale, max_scale)
-
-        # 计算新的宽度和高度
-        new_width = int(img.width * w_scale_factor)
-        new_height = int(img.height * h_scale_factor)
-
-        # 使用双线性插值对图像进行缩放
-        img = img.resize((new_width, new_height), Image.BILINEAR)
-        mask = mask.resize((new_width, new_height), Image.NEAREST)
-
-        # img = pad_if_smaller(img, target_size[0])
-        # mask = pad_if_smaller(mask, target_size[0], fill=0)
-        img,mask = crop(img,mask,target_size[0])
-        # 裁剪到指定的目标尺寸
-        # img = transforms.functional.center_crop(img, target_size)
-        # mask = transforms.functional.center_crop(mask, target_size)
+    # random scale (short edge)
+    short_size = random.randint(int(img.width  * 0.5), int(img.width  * 2.0))
+    w, h = img.size
+    if h > w:
+        ow = short_size
+        oh = int(1.0 * h * ow / w)
+    else:
+        oh = short_size
+        ow = int(1.0 * w * oh / h)
+    img = img.resize((ow, oh), Image.BILINEAR)
+    mask = mask.resize((ow, oh), Image.NEAREST)
+    # pad crop
+    if short_size < target_size[0]:
+        padh = target_size[0] - oh if oh < target_size[0] else 0
+        padw = target_size[0] - ow if ow < target_size[0] else 0
+        img = ImageOps.expand(img, border=(0, 0, padw, padh), fill=0)
+        mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=0)
+    # random crop crop_size
+    w, h = img.size
+    x1 = random.randint(0, w - target_size[0])
+    y1 = random.randint(0, h - target_size[0])
+    img = img.crop((x1, y1, x1 + target_size[0], y1 + target_size[0]))
+    mask = mask.crop((x1, y1, x1 + target_size[0], y1 + target_size[0]))
 
     return img, mask
 
@@ -157,24 +184,6 @@ def color_distortion(img, min_factor=-0.1, max_factor=0.1):
 
 
 def normalize(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
-    """
-    :param img: PIL image
-    :param mask: PIL image, corresponding mask
-    :return: normalized torch tensor of image and mask
-    """
-    img = transforms.Compose([
-        transforms.ToTensor(),
-        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        # transforms.Normalize([151.818,74.596,23.749], [28.438,15.263 ,5.225]),
-        # Mean: [151.81788834  74.5958448   23.74884842]
-        # Std: [28.43763701 15.26303392  5.22472751]
-        transforms.Normalize(mean=mean, std=std)
-    ])(img)
-    if mask is not None:
-        mask = torch.from_numpy(np.array(mask)).long()
-        return img, mask
-    return img
-def normalize4val(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
     """
     :param img: PIL image
     :param mask: PIL image, corresponding mask
