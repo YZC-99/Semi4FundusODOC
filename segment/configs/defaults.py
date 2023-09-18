@@ -25,6 +25,7 @@ _C.MODEL.ContrastCenterCBL_loss = None
 _C.MODEL.ContrastPixelCBL_loss = None
 _C.MODEL.ContrastPixelCorrectCBL_loss = None
 _C.MODEL.ContrastCrossPixelCorrectCBL_loss = None
+_C.MODEL.ContrastCrossPixelCorrect_loss = 0.0
 _C.MODEL.Pairwise_CBL_loss = None
 _C.MODEL.LOVASZ_loss = 0.0
 _C.MODEL.LOVASZPlus_loss = False

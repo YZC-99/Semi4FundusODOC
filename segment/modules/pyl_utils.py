@@ -16,6 +16,7 @@ from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
 from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL
 from segment.losses.cbl import ContrastPixelCBL,ContrastPixelCorrectCBL,ContrastCrossPixelCorrectCBL
+from segment.losses.pixel_contrast import ContrastCrossPixelCorrect
 # from segment.losses.cbl import ContrastPixelCBLV2 as ContrastPixelCBL
 from segment.losses.lovasz_loss import lovasz_softmax,lovasz_softmaxPlus
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
@@ -52,6 +53,10 @@ def init_from_ckpt(pl_module: pl.LightningModule, path: str, ignore_keys: List[s
     print(f"Restored from {path}")
 
 def init_loss(pl_module: pl.LightningModule):
+    extractor_channel = 256
+    if pl_module.cfg.MODEL.model == 'SegFormer':
+        extractor_channel = 768
+
     if pl_module.cfg.MODEL.ABL_loss > 0.0:
         pl_module.ABL_loss = ABL()
     if pl_module.cfg.MODEL.DC_loss > 0.0:
@@ -69,12 +74,19 @@ def init_loss(pl_module: pl.LightningModule):
         cls_num_list = torch.tensor([200482, 42736, 18925])
         frequency_list = torch.log(cls_num_list)
         pl_module.frequency_list = (torch.log(sum(cls_num_list)) - frequency_list)
+
+    # --- 对比损失
+    if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0:
+        pl_module.ContrastCrossPixelCorrect_loss = ContrastCrossPixelCorrect(pl_module.num_classes,extractor_channel=extractor_channel)
+
+
     if pl_module.cfg.MODEL.CBL_loss is not None:
         extractor_channel = 256
         if pl_module.cfg.MODEL.model == 'SegFormer':
             extractor_channel = 768
         # pl_module.CBL_loss = Faster_CBL(pl_module.num_classes)
         pl_module.CBL_loss = CBL(pl_module.num_classes, pl_module.cfg.MODEL.CBL_loss,extractor_channel=extractor_channel)
+
     if pl_module.cfg.MODEL.ContrastCenterCBL_loss is not None:
         pl_module.ContrastCenterCBL_loss = ContrastCenterCBL(pl_module.num_classes, pl_module.cfg.MODEL.ContrastCenterCBL_loss)
     if pl_module.cfg.MODEL.ContrastPixelCBL_loss is not None:
@@ -156,6 +168,9 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         #     weight
         # else:
         weight = 1.0
+
+        if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0:
+            loss = loss + pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss * pl_module.ContrastCrossPixelCorrect_loss(output,y)
 
         if pl_module.cfg.MODEL.CBL_loss is not None:
             loss = loss + weight * pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
