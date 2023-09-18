@@ -484,7 +484,8 @@ class ContrastPixelCorrect(nn.Module):
             seg_logit=outputs['out_classifier'],
             gt_boundary_seg=gt_sem_boundary,
         )
-
+        if torch.isnan(pixel_contrast_loss):
+            print(">>>>>>>>>>>>>>>pixel_contrast_loss出现了nan<<<<<<<<<<<<<<<<<<<")
         return pixel_contrast_loss
 
 
