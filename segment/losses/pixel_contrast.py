@@ -107,6 +107,7 @@ class ContrastCrossPixelCorrect(nn.Module):
         except:
             pass
         # er_input = er_input.permute(0,2,3,1)
+        contrast_loss_total_final = torch.tensor(0.0, device=er_input.device)
         contrast_loss_total = torch.tensor(0.0, device=er_input.device)
         cal_class_num = len(shown_class)
         for i in range(len(shown_class)):
@@ -224,8 +225,12 @@ class ContrastCrossPixelCorrect(nn.Module):
 
 
         # 我的新对比损失：
+
         contrast_loss_total = contrast_loss_total / cal_class_num
-        return contrast_loss_total
+        if torch.isnan(contrast_loss_total):
+            return contrast_loss_total_final
+        else:
+            return contrast_loss_total
 
     def gt2boundary(self, gt, ignore_label=-1,boundary_width = 5):  # gt NHW
         gt_ud = gt[:, boundary_width:, :] - gt[:, :-boundary_width, :]  # NHW
