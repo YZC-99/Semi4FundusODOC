@@ -1,5 +1,5 @@
 info:
-  setting: "像素对比损失对边界像素的影响，这里version1代表positive和negative样本都是detach的"
+  setting: "像素对比损失对边界像素的影响，这里version1代表positive和negative样本都是detach的,version2是解决了损失中包含nan的bug"
 MODEL:
   sup: False
   NUM_CLASSES: 3

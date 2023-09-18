@@ -216,7 +216,11 @@ class ContrastCrossPixelCorrect(nn.Module):
                      contrast_negative.shape[2])
             # (1,N,D),(1,N,D),(25,N,D)
             nce_loss = pixel_info_nce_loss(anchor,contrast_positive.detach(),contrast_negative_unfold.detach())
-            contrast_loss_total = contrast_loss_total + nce_loss
+            if torch.isnan(nce_loss):
+                cal_class_num = cal_class_num - 1
+                continue
+            else :
+                contrast_loss_total = contrast_loss_total + nce_loss
 
 
         # 我的新对比损失：
