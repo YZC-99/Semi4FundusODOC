@@ -1,5 +1,5 @@
 info:
-  setting: "探究subaddv5方案"
+  setting: "像素对比损失对边界像素的影响，这里version1代表positive和negative样本都是detach的"
 MODEL:
   sup: False
   NUM_CLASSES: 3

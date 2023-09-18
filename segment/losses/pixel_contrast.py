@@ -215,7 +215,7 @@ class ContrastCrossPixelCorrect(nn.Module):
                 view(contrast_negative.shape[0] * (2 * num_neigh + 1), contrast_negative.shape[1],
                      contrast_negative.shape[2])
             # (1,N,D),(1,N,D),(25,N,D)
-            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative_unfold)
+            nce_loss = pixel_info_nce_loss(anchor,contrast_positive.detach(),contrast_negative_unfold.detach())
             contrast_loss_total = contrast_loss_total + nce_loss
 
 
@@ -247,6 +247,7 @@ class ContrastCrossPixelCorrect(nn.Module):
 
         )
         return pixel_contrast_loss
+
 if __name__ == '__main__':
     num_classes = 3
     ccbl = ContrastCrossPixelCorrect(num_classes)
