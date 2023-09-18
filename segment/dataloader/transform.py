@@ -105,9 +105,9 @@ def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
 #
 #     return img, mask
 
-def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2, p=0.5):
+def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2):
     # random scale (short edge)
-    short_size = random.randint(int(img.width  * 0.5), int(img.width  * 2.0))
+    short_size = random.randint(int(img.width  * min_scale), int(img.width  * max_scale))
     w, h = img.size
     if h > w:
         ow = short_size

@@ -157,7 +157,7 @@ class SemiDataset(Dataset):
         if self.aug.weak.cutout:
             img, mask = cutout(img, mask, p=0.5)
         if self.aug.weak.scale:
-            img, mask = random_scale_and_crop(img, mask, target_size=(self.size*2, self.size*2), min_scale=0.5, max_scale=2, p=0.5)
+            img, mask = random_scale_and_crop(img, mask, target_size=(self.size*2, self.size*2), min_scale=0.8, max_scale=1.2)
             # img, mask = random_scale(img, mask,p=0.2)
         # if self.aug.weak.color_distortion:
         #     img = color_distortion(img)
