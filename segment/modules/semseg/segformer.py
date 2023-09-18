@@ -7,7 +7,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt
+from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt,CBAMBlock
 from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
 
@@ -165,6 +165,20 @@ class SegFormerHead(nn.Module):
                 k=1,
             )
             self.linear_sub_fuse_cca = CrissCrossAttention(embedding_dim)
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim * 5,
+                c2=embedding_dim,
+                k=1,
+            )
+        elif attention == 'sub_addv3-1':
+            self.linear_sub_fuse = ConvModule(
+                c1=embedding_dim * 2,
+                c2=embedding_dim,
+                k=1,
+            )
+            self.linear_sub_fuse_cbam = CBAMBlock(channel=embedding_dim,
+                                                 reduction=16,
+                                                 kernel_size=65)
             self.linear_fuse = ConvModule(
                 c1=embedding_dim * 5,
                 c2=embedding_dim,
@@ -429,6 +443,12 @@ class SegFormerHead(nn.Module):
             sub2 = _c3 - _c4
             _sub = self.linear_sub_fuse(torch.cat([sub1,sub2],dim=1))
             _sub = self.linear_sub_fuse_cca(_sub)
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, _sub], dim=1))
+        elif self.attention == 'sub_addv3-1':
+            sub1 = _c1 - _c2
+            sub2 = _c3 - _c4
+            _sub = self.linear_sub_fuse(torch.cat([sub1,sub2],dim=1))
+            _sub = self.linear_sub_fuse_cbam(_sub)
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, _sub], dim=1))
         elif self.attention == 'sub_addv4':
             sub1 = _c1 - _c2
@@ -1031,8 +1051,8 @@ if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
 
-    model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    # model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_subv2')
+    # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='sub_addv3-1')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']

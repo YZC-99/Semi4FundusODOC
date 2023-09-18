@@ -94,7 +94,7 @@ class cft(nn.Module):
 
         self.cross_criss_attention = CrissCrossAttention(256)
         self.norm2 = nn.BatchNorm2d(256)
-        self.ffn = MixFeedForward(dim=256,expansion_factor=4)
+        self.ffn = MixFeedForward(dim=768,expansion_factor=4)
 
 
     def forward(self,x,prior_x):

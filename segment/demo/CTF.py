@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from segment.demo.attentions.criss_cross_attention import CrissCrossAttention
-
+# Category Feature Transformer for Semantic Segmentation
 
 def ASPPConv(in_channels, out_channels, atrous_rate):
     block = nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=atrous_rate,
