@@ -16,7 +16,7 @@ from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
 from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL
 from segment.losses.cbl import ContrastPixelCBL,ContrastPixelCorrectCBL,ContrastCrossPixelCorrectCBL
-from segment.losses.pixel_contrast import ContrastCrossPixelCorrect,loss_A2C_pair
+from segment.losses.pixel_contrast import ContrastCrossPixelCorrect,loss_A2C_pair,loss_A2C_SCE
 # from segment.losses.cbl import ContrastPixelCBLV2 as ContrastPixelCBL
 from segment.losses.lovasz_loss import lovasz_softmax,lovasz_softmaxPlus
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
@@ -82,6 +82,8 @@ def init_loss(pl_module: pl.LightningModule):
     # ---pair loss
     if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
         pl_module.A2C_pair_loss = loss_A2C_pair(pl_module.num_classes,extractor_channel=extractor_channel)
+    if pl_module.cfg.MODEL.A2C_SCE_loss > 0.0:
+        pl_module.A2C_SCE_loss = loss_A2C_SCE(pl_module.num_classes,extractor_channel=extractor_channel)
 
     if pl_module.cfg.MODEL.CBL_loss is not None:
         extractor_channel = 256
@@ -177,6 +179,8 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
 
         if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
             loss = loss + pl_module.cfg.MODEL.A2C_pair_loss * pl_module.A2C_pair_loss(output,y)
+        if pl_module.cfg.MODEL.A2C_SCE_loss > 0.0:
+            loss = loss + pl_module.cfg.MODEL.A2C_SCE_loss * pl_module.A2C_SCE_loss(output, y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
 
         if pl_module.cfg.MODEL.CBL_loss is not None:
             loss = loss + weight * pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)

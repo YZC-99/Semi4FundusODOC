@@ -259,12 +259,11 @@ class ContrastCrossPixelCorrect(nn.Module):
 
 
 class loss_A2C_SCE(nn.Module):
-    def __init__(self, num_classes=2, weights=0.1, extractor_channel=256):
+    def __init__(self, num_classes=2, extractor_channel=256):
         super(loss_A2C_SCE, self).__init__()
         self.extractor_channel = extractor_channel
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
-        self.weights = weights
         base_weight = np.array([[1, 1, 1, 1, 1],
                                 [1, 1, 1, 1, 1],
                                 [1, 1, 0, 1, 1],
