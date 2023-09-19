@@ -16,7 +16,7 @@ MODEL:
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
-      thres: 0.9
+      thres: 0.5
       weight: [1.0,2.8,3.0]
 
 
