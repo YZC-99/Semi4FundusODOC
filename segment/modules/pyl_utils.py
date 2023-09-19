@@ -534,20 +534,16 @@ def optimizer_config(pl_module: pl.LightningModule):
     # 获取非backbone的参数
     non_backbone_params = [p for p in pl_module.model.parameters() if p not in backbone_params]
 
-    param_groups = [
-        {'params': pl_module.model.backbone.parameters(), 'lr': lr},
-        {'params': non_backbone_params, 'lr': lr * 10}
-    ]
 
-    # if pl_module.cfg.MODEL.optimizer_decoupling > 0:
-    #     param_groups = [
-    #         {'params': pl_module.model.backbone.parameters(), 'lr': lr},
-    #         {'params': non_backbone_params, 'lr': lr * pl_module.cfg.MODEL.optimizer_decoupling}
-    #     ]
-    # else:
-    #     param_groups = [
-    #         {'params': pl_module.model.parameters(), 'lr': lr},
-    #     ]
+    if pl_module.cfg.MODEL.optimizer_decoupling > 0:
+        param_groups = [
+            {'params': pl_module.model.backbone.parameters(), 'lr': lr},
+            {'params': non_backbone_params, 'lr': lr * pl_module.cfg.MODEL.optimizer_decoupling}
+        ]
+    else:
+        param_groups = [
+            {'params': pl_module.model.parameters(), 'lr': lr},
+        ]
 
     warmup_iter = int(round(pl_module.cfg.MODEL.lr_warmup_steps_ratio * total_iters))
     # 设置学习率调整规则 - Warm up + Cosine Anneal
