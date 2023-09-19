@@ -545,13 +545,7 @@ def optimizer_config(pl_module: pl.LightningModule):
             {'params': pl_module.model.parameters(), 'lr': lr},
         ]
 
-    warmup_iter = int(round(pl_module.cfg.MODEL.lr_warmup_steps_ratio * total_iters))
-    # 设置学习率调整规则 - Warm up + Cosine Anneal
-    # warmup_cosine = lambda cur_iter: cur_iter / warmup_iter * pl_module.cfg.MODEL.lr if cur_iter < warmup_iter else \
-    #     (pl_module.cfg.MODEL.lr_min + 0.5 * (pl_module.cfg.MODEL.lr_max - pl_module.cfg.MODEL.lr_min) * (
-    #                 1.0 + math.cos((cur_iter - warmup_iter) / (total_iters - warmup_iter) * math.pi))) / 0.1
-    # warmup_cosine = lambda step: warmup_cosine_f(step, pl_module.cfg.MODEL.lr,total_iters, warmup_iter)
-    # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizers[0], lr_lambda=warmup_cosine)
+
 
     if pl_module.cfg.MODEL.optimizer == 'AdamW':
         # param_groups = [
@@ -563,6 +557,8 @@ def optimizer_config(pl_module: pl.LightningModule):
         # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_iters)
         # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizers[0], lr_lambda=warmup_cosine)
         first_cycle_steps = total_iters *  1 / pl_module.cfg.MODEL.optimizer_T
+        warmup_iter = int(round(pl_module.cfg.MODEL.lr_warmup_steps_ratio * first_cycle_steps))
+
         scheduler = CosineAnnealingWarmupRestarts(optimizers[0],first_cycle_steps=first_cycle_steps,cycle_mult=1.0,max_lr=pl_module.cfg.MODEL.lr,min_lr=pl_module.cfg.MODEL.lr_min,warmup_steps=warmup_iter,gamma=1.0)
         if pl_module.cfg.MODEL.scheduler == 'poly':
             scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=1.0)
