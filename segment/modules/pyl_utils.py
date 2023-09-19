@@ -170,12 +170,12 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         loss = loss + lovasz_softmaxPlus(out_soft, y, ignore=255)
 
     if pl_module.current_epoch > pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss_start_epoch:
-        if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0 and pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss_increase < 0:
+        if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0 :
             loss = loss + pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss * pl_module.ContrastCrossPixelCorrect_loss(
                 output, y)
-        else:
-            loss = loss + pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss_increase * pl_module.ContrastCrossPixelCorrect_loss(
-                output, y)
+        # else:
+        #     loss = loss + pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss_increase * pl_module.ContrastCrossPixelCorrect_loss(
+        #         output, y)
 
     if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
         loss = loss + pl_module.cfg.MODEL.A2C_pair_loss * pl_module.A2C_pair_loss(output, y)
