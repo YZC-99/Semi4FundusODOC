@@ -38,8 +38,9 @@ def crop(img, mask, size):
 
 
 def hflip(img, mask, p=0.5):
-    img = img.transpose(Image.FLIP_LEFT_RIGHT)
-    mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
+    if random.random() < p:
+        img = img.transpose(Image.FLIP_LEFT_RIGHT)
+        mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
     return img, mask
 
 def add_salt_pepper_noise(img,mask, p=0.5,noise_level=0.02):
