@@ -334,6 +334,18 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'backbone_addv1':
+            self.lateral_c1 = ConvModule(c1_in_channels,768)
+            self.lateral_c2 = ConvModule(c2_in_channels,768)
+            self.lateral_c3 = ConvModule(c3_in_channels,768)
+            self.lateral_c4 = ConvModule(c4_in_channels,768)
+            self.cca1 = CrissCrossAttention(embedding_dim)
+            self.cca2 = CrissCrossAttention(embedding_dim)
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*6,
+                c2=embedding_dim,
+                k=1,
+            )
         else:
             self.linear_fuse = ConvModule(
                 c1=embedding_dim*4,
@@ -572,6 +584,26 @@ class SegFormerHead(nn.Module):
             lateral_sub2 = lateral_c3 - lateral_c4
             mlp_sub1 = _c1 - _c2
             mlp_sub2 = _c3 - _c4
+            # 做crisscross attention
+            cca_result1 = self.cca1.cross_forward(lateral_sub1, mlp_sub1)
+            cca_result2 = self.cca1.cross_forward(lateral_sub2, mlp_sub2)
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, cca_result1,cca_result2], dim=1))
+        elif self.attention == 'backbone_addv1':
+            # 先统一通道
+            lateral_c1 = self.lateral_c1(c1)
+            lateral_c2 = self.lateral_c2(c2)
+            lateral_c3 = self.lateral_c3(c3)
+            lateral_c4 = self.lateral_c4(c4)
+            # 全部上采样到128*128
+            lateral_c2 = F.interpolate(lateral_c2, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c3 = F.interpolate(lateral_c3, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c4 = F.interpolate(lateral_c4, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            # 做相加
+            lateral_sub1 = lateral_c1 + lateral_c2
+            lateral_sub2 = lateral_c3 + lateral_c4
+            mlp_sub1 = _c1 + _c2
+            mlp_sub2 = _c3 + _c4
+
             # 做crisscross attention
             cca_result1 = self.cca1.cross_forward(lateral_sub1, mlp_sub1)
             cca_result2 = self.cca1.cross_forward(lateral_sub2, mlp_sub2)
