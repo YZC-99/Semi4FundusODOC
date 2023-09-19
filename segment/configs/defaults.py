@@ -63,6 +63,7 @@ _C.MODEL.backbone_pretrained = False
 _C.MODEL.model = 'deeplabv3plus'
 _C.MODEL.optimizer = 'SGD'
 _C.MODEL.optimizer_decoupling = 10
+_C.MODEL.optimizer_T = 1.0
 _C.MODEL.lr_warmup_steps_ratio = 0.10
 _C.MODEL.lr_min = 1e-6
 _C.MODEL.lr_max = 0.01
