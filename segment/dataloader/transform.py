@@ -3,7 +3,6 @@ from PIL import Image, ImageOps, ImageFilter,ImageEnhance
 import random
 import torch
 from torchvision import transforms
-from torchvision.transforms import functional as F
 from segment.dataloader.boundary_utils import class2one_hot,one_hot2dist
 
 
@@ -19,15 +18,6 @@ def dist_transform(mask):
     bounadry = one_hot2dist(mask_trans_arr, resolution=[1, 1])
     return bounadry
 
-def pad_if_smaller(img, size, fill=0):
-    # 如果图像最小边长小于给定size，则用数值fill进行padding
-    min_size = min(img.size)
-    if min_size < size:
-        ow, oh = img.size
-        padh = size - oh if oh < size else 0
-        padw = size - ow if ow < size else 0
-        img = F.pad(img, (0, 0, padw, padh), fill=fill)
-    return img
 
 def crop(img, mask, size):
     # padding height or width if smaller than cropping size
@@ -82,28 +72,7 @@ def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
 
     return img, mask
 
-# def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2, p=0.5):
-#     if random.random() < p:
-#         # 随机生成宽度和高度的缩放因子
-#         w_scale_factor = random.uniform(min_scale, max_scale)
-#         h_scale_factor = random.uniform(min_scale, max_scale)
-#
-#         # 计算新的宽度和高度
-#         new_width = int(img.width * w_scale_factor)
-#         new_height = int(img.height * h_scale_factor)
-#
-#         # 使用双线性插值对图像进行缩放
-#         img = img.resize((new_width, new_height), Image.BILINEAR)
-#         mask = mask.resize((new_width, new_height), Image.NEAREST)
-#
-#         # img = pad_if_smaller(img, target_size[0])
-#         # mask = pad_if_smaller(mask, target_size[0], fill=0)
-#         img,mask = crop(img,mask,target_size[0])
-#         # 裁剪到指定的目标尺寸
-#         # img = transforms.functional.center_crop(img, target_size)
-#         # mask = transforms.functional.center_crop(mask, target_size)
-#
-#     return img, mask
+
 
 def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2):
     # random scale (short edge)

@@ -538,7 +538,8 @@ def optimizer_config(pl_module: pl.LightningModule):
     if pl_module.cfg.MODEL.optimizer_decoupling > 0:
         param_groups = [
             {'params': pl_module.model.backbone.parameters(), 'lr': lr},
-            {'params': non_backbone_params, 'lr': lr * pl_module.cfg.MODEL.optimizer_decoupling}
+            # {'params': non_backbone_params, 'lr': lr * pl_module.cfg.MODEL.optimizer_decoupling}
+            {'params': non_backbone_params, 'lr': lr * 10}
         ]
     else:
         param_groups = [
