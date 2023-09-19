@@ -192,7 +192,7 @@ def normalize(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
         # transforms.Normalize([151.818,74.596,23.749], [28.438,15.263 ,5.225]),
         # Mean: [151.81788834  74.5958448   23.74884842]
         # Std: [28.43763701 15.26303392  5.22472751]
-        transforms.Normalize(mean=mean, std=std)
+        transforms.Normalize(mean=(0.0,), std=(1.0,))
     ])(img)
     if mask is not None:
         mask = torch.from_numpy(np.array(mask)).long()
