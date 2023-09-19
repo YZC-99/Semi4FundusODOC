@@ -148,7 +148,6 @@ class SemiDataset(Dataset):
         # img, mask = crop(img, mask, self.size)
         if self.aug.weak.flip:
             img, mask = hflip(img, mask, p=0.5)
-            #
             img, mask = vflip(img, mask, p=0.5)
         if self.aug.weak.rotate:
             img, mask = random_rotate(img, mask,p=0.5)
