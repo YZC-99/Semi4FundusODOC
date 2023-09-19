@@ -13,7 +13,7 @@ MODEL:
   Attention: 'sub_addv3'
   DC_loss: 2.0
   BD_loss: 2.0
-  ContrastCrossPixelCorrectCBL_loss: [1.0,0.1,0.05]
+  ContrastCrossPixelCorrectCBL_loss: [2.0,0.1,0.05]
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
@@ -41,7 +41,7 @@ dataset:
                     rotate: True
                     translate: True
                     noise: False
-                    scale: False
+                    scale: True
                     cutout: False
 
         validation:
