@@ -11,11 +11,13 @@ MODEL:
   model: 'SegFormer'
   optimizer: 'AdamW'
   Attention: 'sub_addv3'
+  DC_loss: 2.0
+  BD_loss: 2.0
   ContrastCrossPixelCorrect_loss: 0.1
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
-      thres: 0.9
+      thres: 0.5
       weight: [1.0,2.8,3.0]
 
 
@@ -39,7 +41,7 @@ dataset:
                     rotate: True
                     translate: True
                     noise: False
-                    scale: False
+                    scale: True
                     cutout: False
 
         validation:

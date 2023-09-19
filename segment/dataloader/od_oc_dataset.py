@@ -153,9 +153,11 @@ class SemiDataset(Dataset):
         if self.aug.weak.rotate:
             img, mask = random_rotate(img, mask,p=0.5)
         if self.aug.weak.translate:
-            img, mask = random_translate(img, mask,p=0.2)
+            # img, mask = random_translate(img, mask,p=0.2)
+            img, mask = random_translate(img, mask,p=0.5)
         if self.aug.weak.noise:
-            img, mask = add_salt_pepper_noise(img, mask,p=0.2)
+            # img, mask = add_salt_pepper_noise(img, mask,p=0.2)
+            img, mask = add_salt_pepper_noise(img, mask,p=0.5)
         if self.aug.weak.cutout:
             img, mask = cutout(img, mask, p=0.5)
         if self.aug.weak.scale:
