@@ -168,19 +168,25 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
 
     if pl_module.cfg.MODEL.LOVASZPlus_loss:
         loss = loss + lovasz_softmaxPlus(out_soft, y, ignore=255)
+
+    if pl_module.current_epoch > pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss_start_epoch:
+        if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0:
+            loss = loss + pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss * pl_module.ContrastCrossPixelCorrect_loss(
+                output, y)
+
+    if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
+        loss = loss + pl_module.cfg.MODEL.A2C_pair_loss * pl_module.A2C_pair_loss(output, y)
+    if pl_module.cfg.MODEL.A2C_SCE_loss > 0.0:
+        loss = loss + pl_module.cfg.MODEL.A2C_SCE_loss * pl_module.A2C_SCE_loss(output, y,
+                                                                                pl_module.model.classifier.weight,
+                                                                                pl_module.model.classifier.bias)
+
     if pl_module.current_epoch > pl_module.cfg.MODEL.CBLcontrast_start_epoch:
         # if pl_module.cfg.MODEL.CBL_increase > 0.0:
         #     weight
         # else:
         weight = 1.0
 
-        if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0:
-            loss = loss + pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss * pl_module.ContrastCrossPixelCorrect_loss(output,y)
-
-        if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
-            loss = loss + pl_module.cfg.MODEL.A2C_pair_loss * pl_module.A2C_pair_loss(output,y)
-        if pl_module.cfg.MODEL.A2C_SCE_loss > 0.0:
-            loss = loss + pl_module.cfg.MODEL.A2C_SCE_loss * pl_module.A2C_SCE_loss(output, y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
 
         if pl_module.cfg.MODEL.CBL_loss is not None:
             loss = loss + weight * pl_module.CBL_loss(output,y,pl_module.model.classifier.weight,pl_module.model.classifier.bias)
