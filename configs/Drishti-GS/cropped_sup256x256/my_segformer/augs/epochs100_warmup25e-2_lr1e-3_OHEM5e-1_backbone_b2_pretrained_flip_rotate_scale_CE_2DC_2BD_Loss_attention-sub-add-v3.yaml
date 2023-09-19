@@ -3,7 +3,7 @@ info:
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 200
+  epochs: 100
   lr: 1e-3 # 0.004/16*batch_size
   lr_warmup_steps_ratio: 0.25 # 0.004/16*batch_size
   backbone: 'b2'
@@ -37,7 +37,7 @@ dataset:
                 aug:
                   weak:
                     flip: True
-                    rotate: False
+                    rotate: True
                     translate: False
                     noise: False
                     scale: True
