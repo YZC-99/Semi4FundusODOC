@@ -81,30 +81,31 @@ def random_scale(img, mask, min_scale=0.8, p=0.5, max_scale=1.2):
 
 
 
-def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2):
-    # random scale (short edge)
-    short_size = random.randint(int(img.width  * min_scale), int(img.width  * max_scale))
-    w, h = img.size
-    if h > w:
-        ow = short_size
-        oh = int(1.0 * h * ow / w)
-    else:
-        oh = short_size
-        ow = int(1.0 * w * oh / h)
-    img = img.resize((ow, oh), Image.BILINEAR)
-    mask = mask.resize((ow, oh), Image.NEAREST)
-    # pad crop
-    if short_size < target_size[0]:
-        padh = target_size[0] - oh if oh < target_size[0] else 0
-        padw = target_size[0] - ow if ow < target_size[0] else 0
-        img = ImageOps.expand(img, border=(0, 0, padw, padh), fill=0)
-        mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=0)
-    # random crop crop_size
-    w, h = img.size
-    x1 = random.randint(0, w - target_size[0])
-    y1 = random.randint(0, h - target_size[0])
-    img = img.crop((x1, y1, x1 + target_size[0], y1 + target_size[0]))
-    mask = mask.crop((x1, y1, x1 + target_size[0], y1 + target_size[0]))
+def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_scale=1.2,p=0.5):
+    if random.random() < p:
+        # random scale (short edge)
+        short_size = random.randint(int(img.width  * min_scale), int(img.width  * max_scale))
+        w, h = img.size
+        if h > w:
+            ow = short_size
+            oh = int(1.0 * h * ow / w)
+        else:
+            oh = short_size
+            ow = int(1.0 * w * oh / h)
+        img = img.resize((ow, oh), Image.BILINEAR)
+        mask = mask.resize((ow, oh), Image.NEAREST)
+        # pad crop
+        if short_size < target_size[0]:
+            padh = target_size[0] - oh if oh < target_size[0] else 0
+            padw = target_size[0] - ow if ow < target_size[0] else 0
+            img = ImageOps.expand(img, border=(0, 0, padw, padh), fill=0)
+            mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=0)
+        # random crop crop_size
+        w, h = img.size
+        x1 = random.randint(0, w - target_size[0])
+        y1 = random.randint(0, h - target_size[0])
+        img = img.crop((x1, y1, x1 + target_size[0], y1 + target_size[0]))
+        mask = mask.crop((x1, y1, x1 + target_size[0], y1 + target_size[0]))
 
     return img, mask
 
