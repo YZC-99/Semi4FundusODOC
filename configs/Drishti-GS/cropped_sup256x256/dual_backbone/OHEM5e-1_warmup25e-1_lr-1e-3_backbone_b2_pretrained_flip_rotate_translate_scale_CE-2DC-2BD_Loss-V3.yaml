@@ -3,21 +3,20 @@ info:
 MODEL:
   sup: False
   NUM_CLASSES: 3
-  epochs: 150
+  epochs: 100
   lr: 0.001 # 0.004/16*batch_size
   lr_warmup_steps_ratio: 0.25 # 0.004/16*batch_size
   backbone: 'b2'
   backbone_pretrained: True
   model: 'ResSegFormer'
-  version: 'v2'
+  version: 'v3'
   optimizer: 'AdamW'
-  DC_loss: 4.0
-  BD_loss: 4.0
-  FC_loss: 0.1
+  DC_loss: 2.0
+  BD_loss: 2.0
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
-      thres: 0.9
+      thres: 0.5
       weight: [1.0,2.8,3.0]
 
 
@@ -40,9 +39,9 @@ dataset:
                     flip: True
                     rotate: True
                     translate: True
-                    noise: True
+                    noise: False
                     scale: True
-                    cutout: True
+                    cutout: False
 
         validation:
             target: segment.dataloader.od_oc_dataset.SupTrain
