@@ -5,7 +5,7 @@ MODEL:
   NUM_CLASSES: 3
   epochs: 100
   lr: 1e-3 # 0.004/16*batch_size
-  lr_warmup_steps_ratio: 0.10 # 0.004/16*batch_size
+  lr_warmup_steps_ratio: 0.25 # 0.004/16*batch_size
   backbone: 'b2'
   backbone_pretrained: True
   model: 'SegFormer'
@@ -40,7 +40,7 @@ dataset:
                     rotate: True
                     translate: True
                     noise: False
-                    scale: True
+                    scale: False
                     cutout: False
 
         validation:
