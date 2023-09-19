@@ -21,8 +21,6 @@ def info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
 
     return nll
 
-# 希望让这个损失函数的计算增加一个功能：
-# 每次进来的p_feat和n_feats都放入各自的队列，以方便每个epoch都是用
 def pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
     # BDHW BDHW BNDHW
     # 计算的时候再放入gpu
