@@ -36,15 +36,17 @@ def crop(img, mask, size):
 
     return img, mask
 
+def vflip(img, mask, p=0.5):
+    if random.random() < p:
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        mask = mask.transpose(Image.FLIP_TOP_BOTTOM)
+    return img, mask
 
 def hflip(img, mask, p=0.5):
     if random.random() < p:
         img = img.transpose(Image.FLIP_LEFT_RIGHT)
         mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
-        #
-    if random.random() < p:
-        img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        mask = mask.transpose(Image.FLIP_TOP_BOTTOM)
+
     return img, mask
 
 def add_salt_pepper_noise(img,mask, p=0.5,noise_level=0.02):
