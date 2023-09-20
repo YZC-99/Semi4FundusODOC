@@ -78,7 +78,6 @@ def init_loss(pl_module: pl.LightningModule):
     # --- 对比损失
     if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0:
         pl_module.ContrastCrossPixelCorrect_loss = ContrastCrossPixelCorrect(pl_module.num_classes,extractor_channel=extractor_channel)
-
     # ---pair loss
     if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
         pl_module.A2C_pair_loss = loss_A2C_pair(pl_module.num_classes,extractor_channel=extractor_channel)

@@ -27,18 +27,22 @@ def pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
     # dim:是当前参与计算特征的维度
     # 25:代表当前anchor有至少25个负样本
 
-    # 如果想要实现负样本在minibatch内交叉计算，则需要增加的是25，也就是将25--> 25*num,即
-    # (25*num,num,dim)
-    # 计算的时候再放入gpu
+    # 筛选非0
+    # 计算每个样本的元素之和，如果和不为0，则该样本不全为0
+    sum_per_sample = torch.sum(torch.abs(n_feats), dim=(1, 2))
+    # 找到不全为0的样本的索引
+    non_zero_indices = torch.nonzero(sum_per_sample != 0).squeeze()
+    # 根据非零索引筛选样本
+    filtered_n_feats = n_feats[non_zero_indices]
 
     # 标准化版本
     now_feat = F.normalize(now_feat,dim=2)
     p_feat = F.normalize(p_feat,dim=2)
-    n_feats = F.normalize(n_feats,dim=2)
+    filtered_n_feats = F.normalize(filtered_n_feats,dim=2)
 
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 
-    cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=0) / temperature
+    cos_similarities = F.cosine_similarity(now_feat, filtered_n_feats, dim=0) / temperature
 
     cos_sim_n = torch.logsumexp(cos_similarities, dim=0)
 
