@@ -22,13 +22,13 @@ class NeighborExtractor5(nn.Module):
         return output
 
 
-class ContrastCrossPixelCorrect1(nn.Module):
+class ContrastCrossPixelCorrect(nn.Module):
     '''
     考虑到边界像素周围假阴样本过多的极端情况，现在针对local center做进一步的改进
     改进的目标是：希望周围的local center应该是分类正确的，而不应该带有分类失败的样本
     '''
     def __init__(self,num_classes = 2,extractor_channel = 256):
-        super(ContrastCrossPixelCorrect1,self).__init__()
+        super(ContrastCrossPixelCorrect,self).__init__()
 
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
@@ -622,13 +622,13 @@ class loss_A2C_pair(nn.Module):
         return loss_A2C_pair
 
 
-class ContrastCrossPixelCorrect(nn.Module):
+class ContrastCrossPixelCorrect1(nn.Module):
     '''
     考虑到边界像素周围假阴样本过多的极端情况，现在针对local center做进一步的改进
     改进的目标是：希望周围的local center应该是分类正确的，而不应该带有分类失败的样本
     '''
     def __init__(self,num_classes = 2,weights = [2.0,0.1,0.5],extractor_channel=256):
-        super(ContrastCrossPixelCorrect,self).__init__()
+        super(ContrastCrossPixelCorrect1,self).__init__()
         self.extractor_channel = extractor_channel
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
