@@ -37,6 +37,23 @@ def pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
 
     return nll
 
+def cross_nagetive_pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
+    # BDHW BDHW BNDHW
+    # 计算的时候再放入gpu
+
+    cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
+
+    # 计算余弦相似度
+    cos_similarities_final = 0.0
+    cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=0) / temperature
+    cos_sim_n = torch.logsumexp(cos_similarities, dim=0)
+
+    nll = -cos_sim_p + cos_sim_n
+
+    nll = nll.mean()
+
+    return nll
+
 # def info_nce_loss(now_feat,p_feat,n_feats):
 
 
