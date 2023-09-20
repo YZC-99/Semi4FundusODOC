@@ -323,6 +323,21 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'backbone_multi-levelv2':
+            self.lateral_c1 = ConvModule(c1_in_channels,128)
+            self.lateral_c2 = ConvModule(c2_in_channels,128)
+            self.lateral_c3 = ConvModule(c3_in_channels,256)
+            self.lateral_c4 = ConvModule(c4_in_channels,768)
+            self.cca1 = CrissCrossAttention(128)
+            self.cca2 = CrissCrossAttention(embedding_dim)
+            self.cca3 = CrissCrossAttention(embedding_dim)
+            self.FFN_multi_level = ConvModule(512,768)
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*5,
+                c2=embedding_dim,
+                k=1,
+            )
 
         elif attention == 'backbone_subv1':
             self.lateral_c1 = ConvModule(c1_in_channels,768)
@@ -577,11 +592,29 @@ class SegFormerHead(nn.Module):
 
             # 做cross criss attention
             cca1 = self.cca1.cross_forward(lateral_c1,lateral_c2)
-            cca2 = self.cca1.cross_forward(cca1,lateral_c3)
-            cca1 = self.cca1.cross_forward(cca2,lateral_c4)
-            ffn_result = self.FFN_multi_level(cca1)
+            cca2 = self.cca2.cross_forward(cca1,lateral_c3)
+            cca3 = self.cca3.cross_forward(cca2,lateral_c4)
+            ffn_result = self.FFN_multi_level(cca3)
 
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, ffn_result], dim=1))
+
+        elif self.attention == 'backbone_multi-levelv2':
+            lateral_c1 = self.lateral_c1(c1) # 128
+            lateral_c2 = self.lateral_c2(c2) # 128
+            lateral_c3 = self.lateral_c3(c3) # 256
+            lateral_c4 = self.lateral_c4(c4) # 512
+
+            # 全部上采样到128*128
+            lateral_c2 = F.interpolate(lateral_c2, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c3 = F.interpolate(lateral_c3, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c4 = F.interpolate(lateral_c4, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            cca1 = self.cca1.cross_forward(lateral_c1,lateral_c2)
+            cca2 = self.cca2.cross_forward(torch.cat([cca1,lateral_c1],dim=1),lateral_c3)
+            cca3 = self.cca2.cross_forward(torch.cat([cca2,lateral_c2],dim=1),lateral_c4)
+
+            ffn_result = self.FFN_multi_level(cca3)
+
 
         elif self.attention == 'backbone_subv1':
             # 先统一通道
@@ -1119,7 +1152,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='sub_addv3-1')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_multi-levelv1')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
