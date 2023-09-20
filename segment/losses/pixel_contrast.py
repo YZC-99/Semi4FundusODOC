@@ -267,7 +267,8 @@ class ContrastCrossPixelCorrect(nn.Module):
         return gt_combine > 0
 
     def forward(self, outputs,gt_sem = None):
-        gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
+        # gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
+        gt_sem_boundary = self.gt2boundary(gt_sem)
         pixel_contrast_loss = self.pixel_contrast_loss(
             outputs['out_features'],
             seg_label=gt_sem,
