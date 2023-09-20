@@ -231,7 +231,7 @@ class ContrastCrossPixelCorrect(nn.Module):
             self.register_buffer('queue',torch.ones_like(contrast_negative_unfold,requires_grad=False,).detach())
             self.queue = self.queue.unsqueeze(dim=0).repeat(num, 1, 1, 1)
             self.queue = self.queue.reshape(-1, num, dim)
-            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,self.queue[:1000,...].detach())
+            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,self.queue[:100,...].detach())
 
             # (1,N,D),(1,N,D),(25,N,D)
             # 试一试 不要detach()的
