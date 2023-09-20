@@ -31,14 +31,15 @@ def pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
     # (25*num,num,dim)
     # 计算的时候再放入gpu
 
+    # 标准化版本
+    now_feat = F.normalize(now_feat,dim=2)
+    p_feat = F.normalize(p_feat,dim=2)
+    n_feats = F.normalize(n_feats,dim=2)
+
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 
-    # 计算余弦相似度 如果dim=1.则开启广播机制，正式实现cross
-    # cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=0) / temperature
-    b,num,dim = n_feats.size()
-    cross_minibatch_n_feats = n_feats.unsqueeze(dim=0).repeat(num,1,1,1)
-    cross_minibatch_n_feats = cross_minibatch_n_feats.reshape(-1,num,dim)
-    cos_similarities = F.cosine_similarity(now_feat, cross_minibatch_n_feats, dim=0) / temperature
+    cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=0) / temperature
+
     cos_sim_n = torch.logsumexp(cos_similarities, dim=0)
 
     nll = -cos_sim_p + cos_sim_n
