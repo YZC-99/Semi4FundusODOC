@@ -63,8 +63,8 @@ def cross_nagetive_pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1
     # dim=1貌似不太合理，因为这样就会导致触发广播机制，实际上还是一个样本一个样本的配对计算，没有达到跨minibatch
     b,num,dim = n_feats.size()
     # 模拟一下
-    self.register_buffer("queue",torch.randn(b*num,num,dim))
-    self.queue
+    # self.register_buffer("queue",torch.randn(b*num,num,dim))
+    # self.queue
 
     cross_minibatch_n_feats = n_feats.unsqueeze(dim=0).repeat(num,1,1,1)
     cross_minibatch_n_feats = cross_minibatch_n_feats.reshape(-1,num,dim)
