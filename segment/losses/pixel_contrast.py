@@ -234,7 +234,7 @@ class ContrastCrossPixelCorrect(nn.Module):
             # self.queue = self.queue[:100,...]
             # nce_loss = pixel_info_nce_loss(anchor,contrast_positive,self.queue[:100,...].detach())
 
-            contrast_negative_unfold_fliped = torch.flip(contrast_negative_unfold,dim=2)
+            contrast_negative_unfold_fliped = torch.flip(contrast_negative_unfold,dims=[1])
             contrast_negative_unfold = torch.cat([contrast_negative_unfold,contrast_negative_unfold_fliped],dim=0)
 
             # (1,N,D),(1,N,D),(25,N,D)
