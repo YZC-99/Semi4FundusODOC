@@ -29,16 +29,16 @@ def pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
 
     # 筛选非0
     # 计算每个样本的元素之和，如果和不为0，则该样本不全为0
-    sum_per_sample = torch.sum(torch.abs(n_feats), dim=(1, 2))
-    # 找到不全为0的样本的索引
-    non_zero_indices = torch.nonzero(sum_per_sample != 0).squeeze()
-    # 根据非零索引筛选样本
-    filtered_n_feats = n_feats[non_zero_indices]
+    # sum_per_sample = torch.sum(torch.abs(n_feats), dim=(1, 2))
+    # # 找到不全为0的样本的索引
+    # non_zero_indices = torch.nonzero(sum_per_sample != 0).squeeze()
+    # # 根据非零索引筛选样本
+    # filtered_n_feats = n_feats[non_zero_indices]
 
     # 标准化版本
     now_feat = F.normalize(now_feat,dim=2)
     p_feat = F.normalize(p_feat,dim=2)
-    filtered_n_feats = F.normalize(filtered_n_feats,dim=2)
+    filtered_n_feats = F.normalize(n_feats,dim=2)
 
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 
@@ -58,11 +58,18 @@ def cross_nagetive_pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1
 
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 
+
     # 计算余弦相似度
     # dim=1貌似不太合理，因为这样就会导致触发广播机制，实际上还是一个样本一个样本的配对计算，没有达到跨minibatch
     b,num,dim = n_feats.size()
+    # 模拟一下
+    self.register_buffer("queue",torch.randn(b*num,num,dim))
+    self.queue
+
     cross_minibatch_n_feats = n_feats.unsqueeze(dim=0).repeat(num,1,1,1)
     cross_minibatch_n_feats = cross_minibatch_n_feats.reshape(-1,num,dim)
+
+
     cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=0) / temperature
     cos_sim_n = torch.logsumexp(cos_similarities, dim=0)
 
