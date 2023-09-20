@@ -215,7 +215,7 @@ class ContrastCrossPixelCorrect(nn.Module):
                                                                   padding=padding). \
                 view(contrast_negative.shape[0] * (2 * num_neigh + 1), contrast_negative.shape[1],
                      contrast_negative.shape[2])
-            # 筛选非0的
+            # # 筛选非0的
             # sum_per_sample = torch.sum(torch.abs(contrast_negative_unfold), dim=(1, 2))
             # # 找到不全为0的样本的索引
             # non_zero_indices = torch.nonzero(sum_per_sample != 0).squeeze()
@@ -227,15 +227,15 @@ class ContrastCrossPixelCorrect(nn.Module):
 
             # 我想要让contrast_negative_unfold的值赋予给contrast_negative_unfold_final
             # 但我不想让contrast_negative_unfold_final参与到模型的梯度更新中，只是参与损失函数的计算，我该如何实现
-            # b,num,dim = contrast_negative_unfold.size()
-            # self.register_buffer('queue',torch.ones_like(contrast_negative_unfold,requires_grad=False,).detach())
-            # self.queue = self.queue.unsqueeze(dim=0).repeat(num, 1, 1, 1)
-            # self.queue = self.queue.reshape(-1, num, dim)
-            # nce_loss = pixel_info_nce_loss(anchor,contrast_positive,self.queue[:1000,...].detach())
+            b,num,dim = contrast_negative_unfold.size()
+            self.register_buffer('queue',torch.ones_like(contrast_negative_unfold,requires_grad=False,).detach())
+            self.queue = self.queue.unsqueeze(dim=0).repeat(num, 1, 1, 1)
+            self.queue = self.queue.reshape(-1, num, dim)
+            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,self.queue[:1000,...].detach())
 
             # (1,N,D),(1,N,D),(25,N,D)
             # 试一试 不要detach()的
-            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative_unfold)
+            # nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative_unfold)
             # nce_loss = pixel_info_nce_loss(anchor,contrast_positive.detach(),contrast_negative_unfold.detach())
             if torch.isnan(nce_loss):
                 cal_class_num = cal_class_num - 1
