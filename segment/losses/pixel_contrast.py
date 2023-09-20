@@ -228,7 +228,7 @@ class ContrastCrossPixelCorrect(nn.Module):
             # 我想要让contrast_negative_unfold的值赋予给contrast_negative_unfold_final
             # 但我不想让contrast_negative_unfold_final参与到模型的梯度更新中，只是参与损失函数的计算，我该如何实现
             b,num,dim = contrast_negative_unfold.size()
-            self.register_buffer('queue',torch.ones_like(contrast_negative_unfold,requires_grad=False).detach())
+            self.register_buffer('queue',torch.ones_like(contrast_negative_unfold,requires_grad=False,).detach())
             self.queue = self.queue.unsqueeze(dim=0).repeat(num, 1, 1, 1)
             self.queue = self.queue.reshape(-1, num, dim)
 
