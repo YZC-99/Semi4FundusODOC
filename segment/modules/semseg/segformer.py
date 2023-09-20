@@ -308,6 +308,21 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'backbone_multi-levelv1':
+            self.lateral_c1 = ConvModule(c1_in_channels,768)
+            self.lateral_c2 = ConvModule(c2_in_channels,768)
+            self.lateral_c3 = ConvModule(c3_in_channels,768)
+            self.lateral_c4 = ConvModule(c4_in_channels,768)
+            self.cca1 = CrissCrossAttention(embedding_dim)
+            self.cca2 = CrissCrossAttention(embedding_dim)
+            self.cca3 = CrissCrossAttention(embedding_dim)
+            self.FFN_multi_level = ConvModule(embedding_dim,768)
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*5,
+                c2=embedding_dim,
+                k=1,
+            )
 
         elif attention == 'backbone_subv1':
             self.lateral_c1 = ConvModule(c1_in_channels,768)
@@ -548,6 +563,26 @@ class SegFormerHead(nn.Module):
             sub_cca2 = self.sub_cca2(torch.cat([sub4, sub5], dim=1))
             cca_fuse = self.cca_fuse(torch.cat([sub_cca1, sub_cca2, sub6], dim=1))
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, cca_fuse], dim=1))
+        elif self.attention == 'backbone_multi-levelv1':
+            # 先统一通道
+            lateral_c1 = self.lateral_c1(c1)
+            lateral_c2 = self.lateral_c2(c2)
+            lateral_c3 = self.lateral_c3(c3)
+            lateral_c4 = self.lateral_c4(c4)
+
+            # 全部上采样到128*128
+            lateral_c2 = F.interpolate(lateral_c2, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c3 = F.interpolate(lateral_c3, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c4 = F.interpolate(lateral_c4, size=lateral_c1.size()[2:], mode='bilinear', align_corners=False)
+
+            # 做cross criss attention
+            cca1 = self.cca1.cross_forward(lateral_c1,lateral_c2)
+            cca2 = self.cca1.cross_forward(cca1,lateral_c3)
+            cca1 = self.cca1.cross_forward(cca2,lateral_c4)
+            ffn_result = self.FFN_multi_level(cca1)
+
+            _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1, ffn_result], dim=1))
+
         elif self.attention == 'backbone_subv1':
             # 先统一通道
             lateral_c1 = self.lateral_c1(c1)
