@@ -22,13 +22,20 @@ def info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
     return nll
 
 def pixel_info_nce_loss(now_feat,p_feat,n_feats,temperature = 0.1):
-    # BDHW BDHW BNDHW
+    # (1,num,dim),(1,num,dim),(25,num,dim)
+    # num:是当前参与计算的num数目
+    # dim:是当前参与计算特征的维度
+    # 25:代表当前anchor有至少25个负样本
+
+    # 如果想要实现负样本在minibatch内交叉计算，则需要增加的是25，也就是将25--> 25*num,即
+    # (25*num,num,dim)
     # 计算的时候再放入gpu
 
     cos_sim_p = F.cosine_similarity(now_feat,p_feat) / temperature
 
-    # 计算余弦相似度
-    cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=0) / temperature
+    # 计算余弦相似度 如果dim=1.则开启广播机制，正式实现cross
+    # cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=0) / temperature
+    cos_similarities = F.cosine_similarity(now_feat, n_feats, dim=1) / temperature
     cos_sim_n = torch.logsumexp(cos_similarities, dim=0)
 
     nll = -cos_sim_p + cos_sim_n
