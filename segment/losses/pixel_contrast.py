@@ -215,23 +215,7 @@ class ContrastCrossPixelCorrect(nn.Module):
                                                                   padding=padding). \
                 view(contrast_negative.shape[0] * (2 * num_neigh + 1), contrast_negative.shape[1],
                      contrast_negative.shape[2])
-            # 筛选非0的
-            # sum_per_sample = torch.sum(torch.abs(contrast_negative_unfold), dim=(1, 2))
-            # # 找到不全为0的样本的索引
-            # non_zero_indices = torch.nonzero(sum_per_sample != 0).squeeze()
-            # # 根据非零索引筛选样本
-            # contrast_negative_unfold = contrast_negative_unfold[non_zero_indices]
-            # if contrast_negative_unfold.shape[0] == 0:
-            #     cal_class_num = cal_class_num - 1
-            #     continue
 
-            # 我想要让contrast_negative_unfold的值赋予给contrast_negative_unfold_final
-            # 但我不想让contrast_negative_unfold_final参与到模型的梯度更新中，只是参与损失函数的计算，我该如何实现
-            # b,num,dim = contrast_negative_unfold.size()
-            # self.register_buffer('queue',torch.ones_like(contrast_negative_unfold,requires_grad=False,).detach())
-            # self.queue = self.queue.unsqueeze(dim=0).repeat(num, 1, 1, 1)
-            # self.queue = self.queue.reshape(-1, num, dim)
-            # nce_loss = pixel_info_nce_loss(anchor,contrast_positive,self.queue[:1000,...].detach())
 
             # (1,N,D),(1,N,D),(25,N,D)
             # 试一试 不要detach()的
@@ -243,9 +227,7 @@ class ContrastCrossPixelCorrect(nn.Module):
             else :
                 contrast_loss_total = contrast_loss_total + nce_loss
 
-
         # 我的新对比损失：
-
         contrast_loss_total = contrast_loss_total / cal_class_num
         if torch.isnan(contrast_loss_total):
             return contrast_loss_total_final
