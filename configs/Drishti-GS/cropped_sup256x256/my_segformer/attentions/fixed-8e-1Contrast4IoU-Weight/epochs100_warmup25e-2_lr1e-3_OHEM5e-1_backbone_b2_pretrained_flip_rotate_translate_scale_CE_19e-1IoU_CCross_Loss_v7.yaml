@@ -1,0 +1,61 @@
+info:
+  setting: "像素对比损失对边界像素的影响，这里version1代表positive和negative样本都是detach的,version2是解决了损失中包含nan的bug"
+MODEL:
+  sup: False
+  NUM_CLASSES: 3
+  epochs: 100
+  lr: 1e-3 # 0.004/16*batch_size
+  lr_warmup_steps_ratio: 0.25 # 0.004/16*batch_size
+  backbone: 'b2'
+  backbone_pretrained: True
+  model: 'SegFormer'
+  optimizer: 'AdamW'
+  Attention: 'backbone_multi-levelv7'
+  ContrastCrossPixelCorrect_loss: 0.8
+  LOVASZ_loss: 1.9
+  loss:
+    target: segment.losses.ce_loss.OhemCrossEntropy
+    params:
+      thres: 0.5
+      weight: [1.0,2.8,3.0]
+
+
+dataset:
+    target: segment.dataloader.DataModuleFromConfig
+    params:
+        batch_size: 8
+        num_workers: 8
+        train:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'cropped_sup'
+                root: './data/fundus_datasets/od_oc/Drishti-GS/'
+                labeled_id_path: 'dataset/Drishti-GS/cropped_sup/training.txt'
+                size: 256
+                mode: 'train'
+                aug:
+                  weak:
+                    flip: True
+                    rotate: True
+                    translate: True
+                    noise: False
+                    scale: True
+                    cutout: False
+
+        validation:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+                task: 'od_oc'
+                name: 'Drishti-GS/cropped_sup'
+                root: './data/fundus_datasets/od_oc/Drishti-GS/'
+                size: 256
+                mode: 'val'
+        test:
+            target: segment.dataloader.od_oc_dataset.SupTrain
+            params:
+              task: 'od_oc'
+              name: 'Drishti-GS/cropped_sup'
+              root: './data/fundus_datasets/od_oc/Drishti-GS/'
+              size: 256
+              mode: 'test'
