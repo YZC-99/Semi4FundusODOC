@@ -44,6 +44,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-u', '--update_every', type=int, default=1)
     parser.add_argument('-a', '--use_amp', default=False, action='store_true')
+    parser.add_argument('-gc', '--grad_clip', default=0.0, type=float)
+
     parser.add_argument('-b', '--batch_frequency', type=int, default=10000)
     parser.add_argument('-m', '--max_images', type=int, default=1)
     parser.add_argument('--limit_val_batches', type=int, default=8)
@@ -171,7 +173,7 @@ if __name__ == '__main__':
                          profiler= simple_Profiler,
                          check_val_every_n_epoch= args.check_val_every_n_epoch,
                          auto_lr_find=args.auto_lr_find,
-                         # gradient_clip_val=0.5,
+                         gradient_clip_val=args.gc,
                          )
 
     if args.auto_lr_find and args.tune:
