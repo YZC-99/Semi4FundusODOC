@@ -751,6 +751,132 @@ class CEpair_Loss(nn.Module):
 
         return loss_A2PN
 
+class MSEpair_Loss(nn.Module):
+    def __init__(self, num_classes=2):
+        super(MSEpair_Loss, self).__init__()
+
+        # 这里需要注意的是，conv_seg是最后一层网络
+        self.num_classes = num_classes
+        base_weight = np.array([[1, 1, 1, 1, 1],
+                                [1, 1, 1, 1, 1],
+                                [1, 1, 0, 1, 1],
+                                [1, 1, 1, 1, 1],
+                                [1, 1, 1, 1, 1], ])
+        base_weight = base_weight.reshape((1, 1, 5, 5))
+        self.same_class_extractor_weight = np.repeat(base_weight, 256, axis=0)
+        self.same_class_extractor_weight = torch.FloatTensor(self.same_class_extractor_weight)
+        # self.same_class_extractor_weight.requires_grad(False)
+        self.same_class_number_extractor_weight = base_weight
+        self.same_class_number_extractor_weight = torch.FloatTensor(self.same_class_number_extractor_weight)
+
+        '''
+        本质就是计算论文中的公式（14）
+
+       er_input: 从输入的形式来看，out['mask_features'],貌似是一个latent features,是的，它就是一个高维的features
+       seg_label：应该就是正常的ground truth
+       gt_boundary_seg：这里应该是通过某种方式计算出来的boundary的ground truth
+       kernel_size=5：计算邻近像素的矩阵大小，根据论文原论述可知，这里应该是采用一个中空的固定卷积。
+       '''
+
+    def context_loss(self, er_input, seg_label, gt_boundary_seg, kernel_size=5):
+        # 将seg_label的形状大小通过插值方式调整来与er_input相同
+        seg_label = F.interpolate(seg_label.unsqueeze(1).float(), size=er_input.shape[2:], mode='nearest').long()
+        # 同理，也需要对boundary gt的形状进行调整
+        gt_boundary_seg = F.interpolate(gt_boundary_seg.unsqueeze(1).float(), size=er_input.shape[2:],
+                                        mode='nearest').long()
+        context_loss_final = torch.tensor(0.0, device=er_input.device)
+        context_loss = torch.tensor(0.0, device=er_input.device)
+        # 获取参与运算的边缘像素mask gt_b (B,1,H,W)
+        gt_b = gt_boundary_seg
+        # 将ignore的像素置零，现在gt_b里面的0表示不参与loss计算
+        gt_b[gt_b == 255] = 0
+        seg_label_copy = seg_label.clone()
+        seg_label_copy[seg_label_copy == 255] = 0
+        gt_b = gt_b * seg_label_copy
+        seg_label_one_hot = F.one_hot(seg_label.squeeze(1), num_classes=256)[:, :, :, 0:self.num_classes].permute(0, 3,
+                                                                                                                  1, 2)
+
+        b, c, h, w = er_input.shape
+        scale_num = b
+        # 对batchsize中的每个对象进行操作
+        for i in range(b):
+            # 使用bool进行索引，方便后续进行像素position的选取
+            cal_mask = (gt_b[i][0] > 0).bool()
+            if cal_mask.sum() < 1:
+                scale_num = scale_num - 1
+                continue
+
+            # 这里position是一个元组，分别代表非0元素索引的行列坐标，因此len(position[0])就代表非0元素的个数
+            position = torch.where(gt_b[i][0])
+            '''
+            (kernel_size//2) <= position[0]：这个条件检查 x 坐标是否大于等于卷积核一半的尺寸。这是为了确保卷积核的中心不会超出图像的左边界。
+
+            position[0] <= (er_input.shape[-2] - 1 - (kernel_size//2))：这个条件检查 x 坐标是否小于等于图像行数减去卷积核一半的尺寸。这是为了确保卷积核的中心不会超出图像的右边界。
+
+            (kernel_size//2) <= position[1]：这个条件检查 y 坐标是否大于等于卷积核一半的尺寸。这是为了确保卷积核的中心不会超出图像的上边界。
+
+            position[1] <= (er_input.shape[-1] - 1 - (kernel_size//2))：这个条件检查 y 坐标是否小于等于图像列数减去卷积核一半的尺寸。这是为了确保卷积核的中心不会超出图像的下边界。
+            '''
+            position_mask = ((kernel_size // 2) <= position[0]) * (
+                    position[0] <= (er_input.shape[-2] - 1 - (kernel_size // 2))) * (
+                                    (kernel_size // 2) <= position[1]) * (
+                                    position[1] <= (er_input.shape[-1] - 1 - (kernel_size // 2)))
+            position_selected = (position[0][position_mask], position[1][position_mask])
+            position_shift_list = []  # 5*5-1 = 24
+            # position_shift_list中每一个元素又是一个行列坐标tuple
+            # 解释这里为什么能够在全图上起作用：这里的kernel_size = 5，因此有5*5-1 = 24个邻居，所以针对整个tensor而言
+            # 就有24个视图，其中很关键的一步：position_mask的操作又恰好留出了空间，十分巧妙
+            for ki in range(kernel_size):
+                for kj in range(kernel_size):
+                    if ki == kj == (kernel_size // 2):
+                        continue
+                    position_shift_list.append((position_selected[0] + ki - (kernel_size // 2),
+                                                position_selected[1] + kj - (kernel_size // 2)))
+            # context_loss_batchi = torch.zeros_like(er_input[i].permute(1,2,0)[position_selected][0])
+            context_loss_pi = torch.tensor(0.0, device=er_input.device)
+            for pi in range(len(position_shift_list)):
+                boudary_simi = F.cosine_similarity(er_input[i].permute(1, 2, 0)[position_selected],
+                                                   er_input[i].permute(1, 2, 0)[position_shift_list[pi]], dim=1)
+                boudary_simi_label = torch.sum(
+                    seg_label_one_hot[i].permute(1, 2, 0)[position_selected] * seg_label_one_hot[i].permute(1, 2, 0)[
+                        position_shift_list[pi]], dim=-1)
+                # 原方案求的是mse，那么我将其改为cross entropy
+                context_loss_pi = context_loss_pi + F.mse_loss(boudary_simi, boudary_simi_label.float())
+                # context_loss_pi = context_loss_pi + F.cross_entropy(boudary_simi, boudary_simi_label.float())
+            context_loss += (context_loss_pi / len(position_shift_list))
+        context_loss = context_loss / scale_num
+        if torch.isnan(context_loss):
+            return context_loss_final
+        else:
+            return context_loss
+
+
+    def gt2boundary(self, gt, ignore_label=-1, boundary_width=5):  # gt NHW
+        gt_ud = gt[:, boundary_width:, :] - gt[:, :-boundary_width, :]  # NHW
+        gt_lr = gt[:, :, boundary_width:] - gt[:, :, :-boundary_width]
+        gt_ud = torch.nn.functional.pad(gt_ud, [0, 0, 0, boundary_width, 0, 0], mode='constant', value=0) != 0
+        gt_lr = torch.nn.functional.pad(gt_lr, [0, boundary_width, 0, 0, 0, 0], mode='constant', value=0) != 0
+        gt_combine = gt_lr + gt_ud
+        del gt_lr
+        del gt_ud
+
+        # set 'ignore area' to all boundary
+        gt_combine += (gt == ignore_label)
+
+        return gt_combine > 0
+
+
+    def forward(self, outputs, gt_sem=None, conv_seg_weight=None, conv_seg_bias=None):
+        gt_sem_boundary = self.gt2boundary(gt_sem.squeeze())
+        # gt_sem_boundary = gt_sem_boundary.unsqueeze(1)
+
+        loss_A2PN = self.context_loss(
+            outputs['out_features'],
+            seg_label=gt_sem,
+            gt_boundary_seg=gt_sem_boundary)
+
+        return loss_A2PN
+
 
 class ContrastCrossPixelCorrect1(nn.Module):
     '''

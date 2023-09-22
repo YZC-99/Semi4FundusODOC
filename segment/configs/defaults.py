@@ -32,6 +32,7 @@ _C.MODEL.A2C_pair_loss = 0.0
 _C.MODEL.A2C_SCE_loss = 0.0
 _C.MODEL.Pairwise_CBL_loss = None
 _C.MODEL.CEpair_loss = 0.0
+_C.MODEL.MSEpair_loss = 0.0
 _C.MODEL.LOVASZ_loss = 0.0
 _C.MODEL.LOVASZPlus_loss = False
 

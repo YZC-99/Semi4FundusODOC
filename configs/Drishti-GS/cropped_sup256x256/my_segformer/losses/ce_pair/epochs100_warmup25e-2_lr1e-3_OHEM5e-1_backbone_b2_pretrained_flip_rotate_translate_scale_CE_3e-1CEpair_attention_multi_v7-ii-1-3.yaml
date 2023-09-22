@@ -10,8 +10,8 @@ MODEL:
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
-  Attention: 'backbone_multi-levelv7'
-  CEpair_loss: 0.7
+  Attention: 'backbone_multi-levelv7-ii-1-3'
+  CEpair_loss: 0.3
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
