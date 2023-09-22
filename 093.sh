@@ -135,8 +135,9 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_s
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/epochs100_warmup25e-2_lr1e-3_OHEM5e-1_backbone_b2_pretrained_flip_rotate_translate_scale_CE_IoU_5e-1ContrastCrossPixelCorrect_Loss_v7-ii-1
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/backbone_b2_pretrained_flip_rotate_translate_scale_CE_IoU_5e-1ContrastCrossPixelCorrect_Loss_v7-ii-1-1
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/backbone_b2_pretrained_flip_rotate_translate_scale_CE_IoU_5e-1ContrastCrossPixelCorrect_Loss_v7-ii-1-2
-
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/backbone_b2_pretrained_flip_rotate_translate_scale_CE_IoU_5e-1ContrastCrossPixelCorrect_Loss_v7-ii-1-3
+
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/backbone_b2_pretrained_flip_rotate_translate_scale_CE_IoU_5e-1ContrastCrossPixelCorrect_Loss_v7-ii-1-4
 
 
 # augs
