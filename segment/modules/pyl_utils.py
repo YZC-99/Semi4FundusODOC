@@ -184,7 +184,7 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
     if pl_module.cfg.MODEL.CEpair_loss > 0.0:
         loss = loss + pl_module.cfg.MODEL.CEpair_loss * pl_module.CEpair_loss(output, y)
     if pl_module.cfg.MODEL.MSEpair_loss > 0.0:
-        loss = loss + pl_module.cfg.MODEL.MSEpair_loss pl_module.MSEpair_loss(output, y)
+        loss = loss + pl_module.cfg.MODEL.MSEpair_loss * pl_module.MSEpair_loss(output, y)
 
     if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
         loss = loss + pl_module.cfg.MODEL.A2C_pair_loss * pl_module.A2C_pair_loss(output, y)
