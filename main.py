@@ -173,7 +173,7 @@ if __name__ == '__main__':
                          profiler= simple_Profiler,
                          check_val_every_n_epoch= args.check_val_every_n_epoch,
                          auto_lr_find=args.auto_lr_find,
-                         gradient_clip_val=args.gc,
+                         gradient_clip_val=args.update_every,
                          )
 
     if args.auto_lr_find and args.tune:
