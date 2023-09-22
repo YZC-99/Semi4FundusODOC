@@ -81,7 +81,7 @@ def init_loss(pl_module: pl.LightningModule):
 
     if pl_module.cfg.MODEL.CEpair_loss > 0.0:
         pl_module.CEpair_loss = CEpair_Loss(pl_module.num_classes)
-     if pl_module.cfg.MODEL.MSEpair_loss > 0.0:
+    if pl_module.cfg.MODEL.MSEpair_loss > 0.0:
         pl_module.MSEpair_loss = MSEpair_loss(pl_module.num_classes)
     # ---pair loss
     if pl_module.cfg.MODEL.A2C_pair_loss > 0.0:
