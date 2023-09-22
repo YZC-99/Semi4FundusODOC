@@ -486,6 +486,25 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'backbone_multi-levelv7-ii-1-5':
+            self.ffn1 = ConvModule(c3_in_channels+c4_in_channels,c3_in_channels)
+            self.ffn2 = ConvModule(c3_in_channels+c2_in_channels,c2_in_channels)
+            self.ffn3 = ConvModule(c2_in_channels+c1_in_channels,c1_in_channels)
+
+            self.cca1 = CrissCrossAttention(embedding_dim)
+            self.cca2 = CrissCrossAttention(embedding_dim)
+            self.cca3 = CrissCrossAttention(embedding_dim)
+
+            self.linear_c1 = MLP(input_dim=c1_in_channels,embed_dim=embedding_dim)
+            self.linear_c2 = MLP(input_dim=c2_in_channels,embed_dim=embedding_dim)
+            self.linear_c3 = MLP(input_dim=c3_in_channels,embed_dim=embedding_dim)
+            self.linear_c4 = MLP(input_dim=c4_in_channels,embed_dim=embedding_dim)
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*5,
+                c2=embedding_dim,
+                k=1,
+            )
         elif attention == 'backbone_multi-levelv7-iii':
             self.ffn1 = ConvModule(c3_in_channels+c4_in_channels,c2_in_channels)
             self.ffn2 = ConvModule(c2_in_channels+c2_in_channels+c4_in_channels,256)
@@ -980,6 +999,27 @@ class SegFormerHead(nn.Module):
             _c1 = self.linear_c1(out3).permute(0,2,1).reshape(n, -1, out3.shape[2], out3.shape[3])
 
             _c = self.linear_fuse(torch.cat([_c1,_c2,_c3,_c4],dim=1))
+
+        elif self.attention == 'backbone_multi-levelv7-ii-1-5':
+            # 全部上采样到128*128
+            lateral_c2 = F.interpolate(c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c3 = F.interpolate(c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            lateral_c4 = F.interpolate(c4, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            out1 = self.ffn1(torch.cat([lateral_c4,lateral_c3],dim=1))
+            out2 = self.ffn2(torch.cat([out1,lateral_c2],dim=1))
+            out3 = self.ffn3(torch.cat([out2,c1],dim=1))
+
+
+            _c4 = self.linear_c4(lateral_c4).permute(0,2,1).reshape(n, -1, lateral_c4.shape[2], lateral_c4.shape[3])
+            _c3 = self.linear_c3(out1).permute(0,2,1).reshape(n, -1, out1.shape[2], out1.shape[3])
+            _c2 = self.linear_c2(out2).permute(0,2,1).reshape(n, -1, out2.shape[2], out2.shape[3])
+            _c1 = self.linear_c1(out3).permute(0,2,1).reshape(n, -1, out3.shape[2], out3.shape[3])
+
+            cca1 = self.cca1.cross_forward(_c3,_c4)
+            cca2 = self.cca2.cross_forward(_c2,cca1)
+            cca3 = self.cca3.cross_forward(_c1,cca2)
+
+            _c = self.linear_fuse(torch.cat([_c1,_c2,_c3,_c4,cca3],dim=1))
 
         elif self.attention == 'backbone_multi-levelv7-iii':
             # 全部上采样到128*128
@@ -1593,7 +1633,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_multi-levelv7-ii-1-4')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_multi-levelv7-ii-1-5')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
