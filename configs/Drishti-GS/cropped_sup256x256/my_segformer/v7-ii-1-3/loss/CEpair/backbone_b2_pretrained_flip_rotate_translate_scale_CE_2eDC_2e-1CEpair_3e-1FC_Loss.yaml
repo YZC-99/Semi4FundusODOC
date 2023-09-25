@@ -13,7 +13,7 @@ MODEL:
   Attention: 'backbone_multi-levelv7-ii-1-3'
   FC_loss: 0.3
   CEpair_loss: 0.1
-  ContrastCrossPixelCorrect_loss: 0.5
+
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
