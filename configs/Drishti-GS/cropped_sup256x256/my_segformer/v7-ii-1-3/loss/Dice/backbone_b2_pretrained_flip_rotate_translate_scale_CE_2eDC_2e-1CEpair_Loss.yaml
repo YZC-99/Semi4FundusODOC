@@ -12,6 +12,7 @@ MODEL:
   optimizer: 'AdamW'
   Attention: 'backbone_multi-levelv7-ii-1-3'
   DC_loss: 2.0
+  CEpair_loss: 0.1
   loss:
     target: segment.losses.ce_loss.OhemCrossEntropy
     params:
