@@ -77,7 +77,7 @@ def init_loss(pl_module: pl.LightningModule):
 
     # --- 对比损失
     if pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss > 0.0:
-        pl_module.ContrastCrossPixelCorrect_loss = ContrastCrossPixelCorrect(pl_module.num_classes,extractor_channel=extractor_channel,kernal_size=pl_module.cfg.MODEL.ContrastCrossPixelCorrect_kernel)
+        pl_module.ContrastCrossPixelCorrect_loss = ContrastCrossPixelCorrect(pl_module.num_classes,extractor_channel=extractor_channel,kernel_size=pl_module.cfg.MODEL.ContrastCrossPixelCorrect_kernel)
 
     if pl_module.cfg.MODEL.CEpair_loss > 0.0:
         pl_module.CEpair_loss = CEpair_Loss(pl_module.num_classes)
