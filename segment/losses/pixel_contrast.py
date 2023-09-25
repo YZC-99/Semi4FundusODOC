@@ -22,7 +22,7 @@ class NeighborExtractor5(nn.Module):
         return output
 class NeighborExtractor7(nn.Module):
     def __init__(self, input_channel):
-        super(NeighborExtractor5, self).__init__()
+        super(NeighborExtractor7, self).__init__()
         same_class_neighbor = np.array([[1., 1., 1., 1., 1., 1., 1.],
                                         [1., 1., 1., 1., 1., 1., 1.],
                                         [1., 1., 1., 1., 1., 1., 1.],
