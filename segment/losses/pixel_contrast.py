@@ -277,9 +277,9 @@ class ContrastCrossPixelCorrect(nn.Module):
 
             # (1,N,D),(1,N,D),(25,N,D)
             # 试一试 不要detach()的
-            # nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative_unfold)
+            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative_unfold)
             # nce_loss = pixel_info_nce_loss(anchor,contrast_positive.detach(),contrast_negative_unfold.detach())
-            nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative_unfold.detach())
+            # nce_loss = pixel_info_nce_loss(anchor,contrast_positive,contrast_negative_unfold.detach())
             if torch.isnan(nce_loss):
                 cal_class_num = cal_class_num - 1
                 continue
