@@ -100,7 +100,7 @@ class ContrastCrossPixelCorrect(nn.Module):
         # return unfolded_re
         if get_anchor:
             anchor = unfolded_re[kernel_size * kernel_size // 2,...].clone()
-            return unfolded_re.detahc(),anchor
+            return unfolded_re.detach(),anchor
         else:
             return unfolded_re
 
