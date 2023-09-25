@@ -73,7 +73,7 @@ class ContrastCrossPixelCorrect(nn.Module):
         self.same_class_number_extractor_weight = base_weight
         self.same_class_number_extractor_weight = torch.FloatTensor(self.same_class_number_extractor_weight)
 
-    def get_neigh(self,input,kernel_size = 3,pad = 1,keep_anchor=True):
+    def get_neigh(self,input,kernel_size = 3,pad = 1,get_anchor=False):
         b, c, h, w = input.size()
         input = input.reshape(b, c, h, w).float()
         input_d = input.permute(0, 2, 3, 1)
@@ -95,15 +95,14 @@ class ContrastCrossPixelCorrect(nn.Module):
         # input_image(b,c,h,w)   unfolded_re(l,b,c,h,w)
         # 希望输出为(b,c,h,w)
         # result = torch.einsum('bchw,lbchw->bchw',[input,unfolded_re])
-        ##### 细粒度的分离方式
-        detach_mask = torch.zeros_like(unfolded_re, dtype=torch.uint8)
-        detach_mask[kernel_size * kernel_size // 2] = 1
-        unfolded_re = unfolded_re * detach_mask
-
         if c == 1:
             return unfolded_re.long()
         # return unfolded_re
-        return unfolded_re
+        if get_anchor:
+            anchor = unfolded_re[kernel_size * kernel_size // 2,...].clone()
+            return unfolded_re.detahc(),anchor
+        else:
+            return unfolded_re
 
     def pixel_contrast_loss(self, er_input, seg_label, seg_logit, gt_boundary_seg):
         shown_class = list(seg_label.unique())
@@ -217,7 +216,7 @@ class ContrastCrossPixelCorrect(nn.Module):
             # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
             whole_neigh_label = self.get_neigh(seg_label, kernel_size=self.kernel_size, pad=self.pad).to(er_input.device) # (L,B,C,H,W)
             whole_neigh_pred = self.get_neigh(pred_label.unsqueeze(1), kernel_size=self.kernel_size, pad=self.pad).to(er_input.device)
-            whole_neigh_feat = self.get_neigh(er_input, kernel_size=self.kernel_size, pad=self.pad).to(er_input.device) # (L,B,C,H,W)
+            whole_neigh_feat,anchor = self.get_neigh(er_input, kernel_size=self.kernel_size, pad=self.pad,get_anchor=True).to(er_input.device) # (L,B,C,H,W)
             # 可以根据now_class_mask获得当前类别的坐标，从而直接取出它们的邻居和本身 (B,H,W)
             # whole_neigh_feat.permute(1,3,4,0,2)  (B,H,W,L,C)
             # .permute(1, 0) (num,L,C) 这里的num就是当前在boundary的类别邻居以及它本身在内的特征,但不知道哪些是正样本，哪些是负样本
@@ -237,7 +236,7 @@ class ContrastCrossPixelCorrect(nn.Module):
             one_hot_now_class_and_neigh_correct = one_hot_now_class_and_neigh_label * one_hot_now_class_and_neigh_pred
             # 这种情况下得到的则是128*25*256的矩阵
             now_class = now_class_and_neigh_feat * one_hot_now_class_and_neigh_correct[:, :, shown_class[i].long()].unsqueeze(-1)
-            anchor = now_class[:,now_class.size()[1] // 2,:].unsqueeze(0)# 1*128*256
+            # anchor = now_class[:,now_class.size()[1] // 2,:].unsqueeze(0)# 1*128*256
             now_class[:,now_class.size()[1] // 2,:] = 0 # 将自己置零
             # 计算当前类别被分类正确的邻居的feature均值
             contrast_positive = now_class.mean(dim = 1,keepdim=True).permute(1,0,2) # 1,128,256 代表128个像素，有一个256维度的中心
