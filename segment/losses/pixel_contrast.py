@@ -46,16 +46,16 @@ class ContrastCrossPixelCorrect(nn.Module):
     考虑到边界像素周围假阴样本过多的极端情况，现在针对local center做进一步的改进
     改进的目标是：希望周围的local center应该是分类正确的，而不应该带有分类失败的样本
     '''
-    def __init__(self,num_classes = 2,extractor_channel = 256,kernal_size = 5):
+    def __init__(self,num_classes = 2,extractor_channel = 256,kernel_size = 5):
         super(ContrastCrossPixelCorrect,self).__init__()
 
         # 这里需要注意的是，conv_seg是最后一层网络
         self.num_classes = num_classes
         self.extractor_channel = extractor_channel
-        self.kernal_size = kernal_size
-        if kernal_size == 5:
+        self.kernel_size = kernel_size
+        if kernel_size == 5:
             self.pad = 2
-        elif kernal_size == 7:
+        elif kernel_size == 7:
             self.pad = 3
 
         # base_weight = np.array([[1, 1, 1, 1, 1],
@@ -63,10 +63,10 @@ class ContrastCrossPixelCorrect(nn.Module):
         #                         [1, 1, 0, 1, 1],
         #                         [1, 1, 1, 1, 1],
         #                         [1, 1, 1, 1, 1], ])
-        base_weight = np.ones((kernal_size,kernal_size),dtype=int)
-        base_weight[kernal_size//2,kernal_size//2] = 0
+        base_weight = np.ones((kernel_size,kernel_size),dtype=int)
+        base_weight[kernel_size//2,kernel_size//2] = 0
         # base_weight = base_weight.reshape((1, 1, 5, 5))
-        base_weight = base_weight.reshape((1, 1, kernal_size, kernal_size))
+        base_weight = base_weight.reshape((1, 1, kernel_size, kernel_size))
         self.same_class_extractor_weight = np.repeat(base_weight, self.extractor_channel, axis=0)
         self.same_class_extractor_weight = torch.FloatTensor(self.same_class_extractor_weight)
         # self.same_class_extractor_weight.requires_grad(False)
@@ -121,16 +121,16 @@ class ContrastCrossPixelCorrect(nn.Module):
         if self.same_class_number_extractor_weight.device != er_input.device:
             self.same_class_number_extractor_weight = self.same_class_number_extractor_weight.to(er_input.device)
         # same_class_extractor是用来提取同一个类的邻居特征的
-        if self.kernal_size == 5:
+        if self.kernel_size == 5:
             same_class_extractor = NeighborExtractor5(self.extractor_channel)
-        elif self.kernal_size == 7:
+        elif self.kernel_size == 7:
             same_class_extractor = NeighborExtractor7(self.extractor_channel)
         same_class_extractor = same_class_extractor.to(er_input.device)
         same_class_extractor.same_class_extractor.weight.data = self.same_class_extractor_weight
         # same_class_number_extractor是用来提取同一个类的邻居个数的
-        if self.kernal_size == 5:
+        if self.kernel_size == 5:
             same_class_number_extractor = NeighborExtractor5(1)
-        elif self.kernal_size == 7:
+        elif self.kernel_size == 7:
             same_class_number_extractor = NeighborExtractor7(1)
         same_class_number_extractor = same_class_number_extractor.to(er_input.device)
         same_class_number_extractor.same_class_extractor.weight.data = self.same_class_number_extractor_weight
@@ -209,9 +209,9 @@ class ContrastCrossPixelCorrect(nn.Module):
 
             # 新的解决方案：成功！
             # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
-            whole_neigh_label = self.get_neigh(seg_label, kernel_size=self.kernal_size, pad=self.pad).to(er_input.device) # (L,B,C,H,W)
-            whole_neigh_pred = self.get_neigh(pred_label.unsqueeze(1), kernel_size=self.kernal_size, pad=self.pad).to(er_input.device)
-            whole_neigh_feat = self.get_neigh(er_input, kernel_size=self.kernal_size, pad=self.pad).to(er_input.device) # (L,B,C,H,W)
+            whole_neigh_label = self.get_neigh(seg_label, kernel_size=self.kernel_size, pad=self.pad).to(er_input.device) # (L,B,C,H,W)
+            whole_neigh_pred = self.get_neigh(pred_label.unsqueeze(1), kernel_size=self.kernel_size, pad=self.pad).to(er_input.device)
+            whole_neigh_feat = self.get_neigh(er_input, kernel_size=self.kernel_size, pad=self.pad).to(er_input.device) # (L,B,C,H,W)
             # 可以根据now_class_mask获得当前类别的坐标，从而直接取出它们的邻居和本身 (B,H,W)
             # whole_neigh_feat.permute(1,3,4,0,2)  (B,H,W,L,C)
             # .permute(1, 0) (num,L,C) 这里的num就是当前在boundary的类别邻居以及它本身在内的特征,但不知道哪些是正样本，哪些是负样本
@@ -302,7 +302,7 @@ class ContrastCrossPixelCorrect(nn.Module):
         return gt_combine > 0
 
     def forward(self, outputs,gt_sem = None):
-        gt_sem_boundary = self.gt2boundary(gt_sem.squeeze(),ignore_label=-1,boundary_width=self.kernal_size)
+        gt_sem_boundary = self.gt2boundary(gt_sem.squeeze(),ignore_label=-1,boundary_width=self.kernel_size)
         pixel_contrast_loss = self.pixel_contrast_loss(
             outputs['out_features'],
             seg_label=gt_sem,
