@@ -127,7 +127,7 @@ class ContrastCrossPixelCorrect(nn.Module):
         if self.kernal_size == 5:
             same_class_number_extractor = NeighborExtractor5(1)
         elif self.kernal_size == 7:
-            same_class_extractor = NeighborExtractor7(1)
+            same_class_number_extractor = NeighborExtractor7(1)
         same_class_number_extractor = same_class_number_extractor.to(er_input.device)
         same_class_number_extractor.same_class_extractor.weight.data = self.same_class_number_extractor_weight
 
