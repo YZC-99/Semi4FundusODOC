@@ -216,7 +216,8 @@ class ContrastCrossPixelCorrect(nn.Module):
             # 直接使用原始er_input去获得每个元素周围的邻居，因为whole_neigh_feat是一个索引，所以可能会减少显存的开销
             whole_neigh_label = self.get_neigh(seg_label, kernel_size=self.kernel_size, pad=self.pad).to(er_input.device) # (L,B,C,H,W)
             whole_neigh_pred = self.get_neigh(pred_label.unsqueeze(1), kernel_size=self.kernel_size, pad=self.pad).to(er_input.device)
-            whole_neigh_feat,anchor = self.get_neigh(er_input, kernel_size=self.kernel_size, pad=self.pad,get_anchor=True).to(er_input.device) # (L,B,C,H,W)
+            whole_neigh_feat,anchor = self.get_neigh(er_input, kernel_size=self.kernel_size, pad=self.pad,get_anchor=True).to(er_input.device)
+            whole_neigh_feat = whole_neigh_feat.to(er_input.device) # (L,B,C,H,W)
             # 可以根据now_class_mask获得当前类别的坐标，从而直接取出它们的邻居和本身 (B,H,W)
             # whole_neigh_feat.permute(1,3,4,0,2)  (B,H,W,L,C)
             # .permute(1, 0) (num,L,C) 这里的num就是当前在boundary的类别邻居以及它本身在内的特征,但不知道哪些是正样本，哪些是负样本
