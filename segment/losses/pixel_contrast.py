@@ -255,15 +255,15 @@ class ContrastCrossPixelCorrect(nn.Module):
                                                                   padding=padding). \
                 view(contrast_negative.shape[0] * (2 * num_neigh + 1), contrast_negative.shape[1],
                      contrast_negative.shape[2])
-            # 筛选非0的
-            sum_per_sample = torch.sum(torch.abs(contrast_negative_unfold), dim=(1, 2))
-            # 找到不全为0的样本的索引
-            non_zero_indices = torch.nonzero(sum_per_sample != 0).squeeze()
-            # 根据非零索引筛选样本
-            contrast_negative_unfold = contrast_negative_unfold[non_zero_indices]
-            if contrast_negative_unfold.shape[0] == 0:
-                cal_class_num = cal_class_num - 1
-                continue
+            # # 筛选非0的
+            # sum_per_sample = torch.sum(torch.abs(contrast_negative_unfold), dim=(1, 2))
+            # # 找到不全为0的样本的索引
+            # non_zero_indices = torch.nonzero(sum_per_sample != 0).squeeze()
+            # # 根据非零索引筛选样本
+            # contrast_negative_unfold = contrast_negative_unfold[non_zero_indices]
+            # if contrast_negative_unfold.shape[0] == 0:
+            #     cal_class_num = cal_class_num - 1
+            #     continue
 
             # 我想要让contrast_negative_unfold的值赋予给contrast_negative_unfold_final
             # 但我不想让contrast_negative_unfold_final参与到模型的梯度更新中，只是参与损失函数的计算，我该如何实现
