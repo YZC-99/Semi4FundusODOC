@@ -26,6 +26,7 @@ _C.MODEL.ContrastPixelCBL_loss = None
 _C.MODEL.ContrastPixelCorrectCBL_loss = None
 _C.MODEL.ContrastCrossPixelCorrectCBL_loss = None
 _C.MODEL.ContrastCrossPixelCorrect_loss = -1.0
+_C.MODEL.ContrastCrossPixelCorrect_kernal = 5
 _C.MODEL.ContrastCrossPixelCorrect_loss_start_epoch = -1.0
 _C.MODEL.ContrastCrossPixelCorrect_loss_increase = -1.0
 _C.MODEL.A2C_pair_loss = 0.0

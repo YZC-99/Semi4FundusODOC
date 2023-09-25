@@ -75,6 +75,11 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42 -gc 0.5  --config Drishti-GS/c
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/losses/ce_pair/epochs100_warmup25e-2_lr1e-3_OHEM5e-1_backbone_b2_pretrained_flip_rotate_translate_scale_CE_attention_multi_v7
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/losses/ce_pair/epochs100_warmup25e-2_lr1e-3_OHEM5e-1_backbone_b2_pretrained_flip_rotate_translate_scale_CE_CEpair_attention_multi_v7
 
+#    7contrast weight
+
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/losses/7contrast_weight/lr1e-3_OHEM5e-1_backbone_b2_pretrained_flip_rotate_translate_scale_CE_8e-1ContrastCrossPixelCorrect_Loss_attention-multiv7-ii-1-3
+
+
 #    contrast weight
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/losses/contrast_weight/epochs100_warmup25e-2_lr1e-3_OHEM5e-1_backbone_b2_pretrained_flip_rotate_translate_scale_CE_1e-1ContrastCrossPixelCorrect_Loss_attention-sub-add-v3
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/losses/contrast_weight/epochs100_warmup25e-2_lr1e-3_OHEM5e-1_backbone_b2_pretrained_flip_rotate_translate_scale_CE_2e-1ContrastCrossPixelCorrect_Loss_attention-sub-add-v3
