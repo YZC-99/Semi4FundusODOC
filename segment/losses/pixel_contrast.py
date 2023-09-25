@@ -32,7 +32,7 @@ class NeighborExtractor7(nn.Module):
                                         [1., 1., 1., 1., 1., 1., 1.], ])
         same_class_neighbor = same_class_neighbor.reshape((1, 1, 7, 7))
         same_class_neighbor = np.repeat(same_class_neighbor, input_channel, axis=0)
-        self.same_class_extractor = nn.Conv2d(input_channel, input_channel, kernel_size=7, padding=2, bias=False,
+        self.same_class_extractor = nn.Conv2d(input_channel, input_channel, kernel_size=7, padding=3, bias=False,
                                               groups=input_channel)
         self.same_class_extractor.weight.data = torch.from_numpy(same_class_neighbor)
 
