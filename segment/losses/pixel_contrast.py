@@ -73,7 +73,7 @@ class ContrastCrossPixelCorrect(nn.Module):
         self.same_class_number_extractor_weight = base_weight
         self.same_class_number_extractor_weight = torch.FloatTensor(self.same_class_number_extractor_weight)
 
-    def get_neigh(self,input,kernel_size = 3,pad = 1):
+    def get_neigh(self,input,kernel_size = 3,pad = 1,keep_anchor=True):
         b, c, h, w = input.size()
         input = input.reshape(b, c, h, w).float()
         input_d = input.permute(0, 2, 3, 1)
@@ -95,8 +95,14 @@ class ContrastCrossPixelCorrect(nn.Module):
         # input_image(b,c,h,w)   unfolded_re(l,b,c,h,w)
         # 希望输出为(b,c,h,w)
         # result = torch.einsum('bchw,lbchw->bchw',[input,unfolded_re])
+        ##### 细粒度的分离方式
+        detach_mask = torch.zeros_like(unfolded_re, dtype=torch.uint8)
+        detach_mask[kernel_size * kernel_size // 2] = 1
+        unfolded_re = unfolded_re * detach_mask
+
         if c == 1:
             return unfolded_re.long()
+        # return unfolded_re
         return unfolded_re
 
     def pixel_contrast_loss(self, er_input, seg_label, seg_logit, gt_boundary_seg):
