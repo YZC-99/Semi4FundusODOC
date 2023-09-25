@@ -1355,11 +1355,11 @@ class SegFormer(nn.Module):
         out_feat = decodehead_out['out_feat']
         # out_feat = self.reduct4loss(out_feat)
         if self.seghead_last:
-            out_classifier = F.interpolate(out_feat, size=(H, W), mode='bilinear', align_corners=True)
-            x = self.classifier(out_classifier)
+            out_feat = F.interpolate(out_feat, size=(H, W), mode='bilinear', align_corners=True)
+            x = self.classifier(out_feat)
+            out_classifier = x
         else:
             out_classifier = self.classifier(out_feat)
-
             x = F.interpolate(out_classifier, size=(H, W), mode='bilinear', align_corners=True)
 
 
