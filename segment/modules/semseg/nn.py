@@ -188,7 +188,7 @@ class CrissCrossAttention(nn.Module):
         proj_query = self.query_conv(y)
         proj_query_H = proj_query.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height).permute(0, 2, 1)
         proj_query_W = proj_query.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width).permute(0, 2, 1)
-        proj_key = self.key_conv(x)
+        proj_key = self.key_conv(y)
         proj_key_H = proj_key.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height)
         proj_key_W = proj_key.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width)
         proj_value = self.value_conv(x)

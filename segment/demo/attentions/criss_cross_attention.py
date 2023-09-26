@@ -38,6 +38,7 @@ class CrissCrossAttention(nn.Module):
         proj_value_W = proj_value.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width)
         energy_H = (torch.bmm(proj_query_H, proj_key_H)+self.INF(m_batchsize, height, width)).view(m_batchsize,width,height,height).permute(0,2,1,3)
         energy_W = torch.bmm(proj_query_W, proj_key_W).view(m_batchsize,height,width,width)
+
         concate = self.softmax(torch.cat([energy_H, energy_W], 3))
 
         att_H = concate[:,:,:,0:height].permute(0,2,1,3).contiguous().view(m_batchsize*width,height,height)
