@@ -6,7 +6,7 @@ MODEL:
   epochs: 100
   lr: 1e-4 # 0.004/16*batch_size
   lr_warmup_steps_ratio: 0.25 # 0.004/16*batch_size
-  backbone: 'b3'
+  backbone: 'b4'
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
