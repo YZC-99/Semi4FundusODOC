@@ -161,7 +161,16 @@ if __name__ == '__main__':
         SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1,swa_epoch_start=10,annealing_epochs=30)
         callbacks.append(SWA_callback)
 
-    trainer = pl.Trainer(auto_lr_find=args.auto_lr_find)
+    trainer = pl.Trainer(auto_lr_find=True)
+    print(trainer.tune(model))
+    # # 运行学习率搜索
+    # lr_finder = trainer.tuner.lr_find(model)
+    #
+    # # 查看搜索结果
+    # lr_finder.results
+    #
+    # # 绘制学习率搜索图，suggest参数指定是否显示建议的学习率点
+    # fig = lr_finder.plot(suggest=True)
+    # fig.show()
 
-    print(trainer.tune(model,data))
 
