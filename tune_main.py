@@ -161,7 +161,19 @@ if __name__ == '__main__':
         SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1,swa_epoch_start=10,annealing_epochs=30)
         callbacks.append(SWA_callback)
 
-    trainer = pl.Trainer(auto_lr_find=True)
+    trainer = pl.Trainer(max_epochs=exp_config.epochs,
+                         precision=16 if exp_config.use_amp else 32,
+                         callbacks=callbacks,
+                         gpus=args.num_gpus,
+                         num_nodes=args.num_nodes,
+                         strategy="ddp" if args.num_nodes > 1 or args.num_gpus > 1 else None,
+                         accumulate_grad_batches=exp_config.update_every,
+                         logger=logger,
+                         profiler=simple_Profiler,
+                         check_val_every_n_epoch=args.check_val_every_n_epoch,
+                         auto_lr_find=True,
+                         gradient_clip_val=args.update_every,
+                         )
     trainer.tune(model, data)
     # # 运行学习率搜索
     # lr_finder = trainer.tuner.lr_find(model)
