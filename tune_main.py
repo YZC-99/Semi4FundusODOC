@@ -184,6 +184,9 @@ if __name__ == '__main__':
     # 绘制学习率搜索图，suggest参数指定是否显示建议的学习率点
     fig = lr_finder.plot(suggest=True)
     fig.savefig("best_lr.jpg")
+    # 获取最佳学习率或建议的学习率
+    new_lr = lr_finder.suggestion()
+    print(new_lr)
     # # 运行学习率搜索
     # lr_finder = trainer.tuner.lr_find(model)
     #
