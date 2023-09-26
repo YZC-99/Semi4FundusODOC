@@ -162,7 +162,7 @@ if __name__ == '__main__':
         callbacks.append(SWA_callback)
 
     trainer = pl.Trainer(auto_lr_find=True)
-    print(trainer.tune(model,data))
+    trainer.tune(model, data)
     # # 运行学习率搜索
     # lr_finder = trainer.tuner.lr_find(model)
     #
