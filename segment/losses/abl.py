@@ -299,14 +299,14 @@ if __name__ == '__main__':
     cudnn.benchmark = False
     cudnn.deterministic = True
 
-    seed = 0
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-
-    random.seed(seed)
-    np.random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    # seed = 0
+    # torch.manual_seed(seed)
+    # torch.cuda.manual_seed(seed)
+    # torch.cuda.manual_seed_all(seed)
+    #
+    # random.seed(seed)
+    # np.random.seed(seed)
+    # os.environ['PYTHONHASHSEED'] = str(seed)
 
     n, c, h, w = 4, 2, 512, 512
 

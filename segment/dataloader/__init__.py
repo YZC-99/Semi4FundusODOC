@@ -11,6 +11,10 @@ from torch.utils.data import DataLoader
 
 from utils.general import initialize_from_config
 
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    numpy.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 class ZipDataLoader:
     def __init__(self, *data_loaders):
@@ -57,7 +61,7 @@ class DataModuleFromConfig(pl.LightningDataModule):
 
     def _train_dataloader(self):
         return DataLoader(self.datasets["train"], batch_size=self.batch_size,
-                          num_workers=self.num_workers, shuffle=True,drop_last=True)
+                          num_workers=self.num_workers, shuffle=True,drop_last=True,worker_init_fn=seed_worker)
     def _train2_dataloader(self):
         src_trainset = self.datasets["train"]
         tgt_trainset = self.datasets["train2"]
@@ -70,15 +74,15 @@ class DataModuleFromConfig(pl.LightningDataModule):
             src_trainset.ids = src_trainset.ids[:tgt_ids_len]
 
         return ZipDataLoader(DataLoader(src_trainset, batch_size=self.batch_size,
-                          num_workers=self.num_workers, shuffle=True,drop_last=True),
+                          num_workers=self.num_workers, shuffle=True,drop_last=True,worker_init_fn=seed_worker),
             DataLoader(tgt_trainset, batch_size=self.batch_size,
-                       num_workers=self.num_workers, shuffle=True, drop_last=True)
+                       num_workers=self.num_workers, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
             )
     def _val_dataloader(self):
         return DataLoader(self.datasets["validation"],
                           batch_size=self.batch_size,
-                          num_workers=self.num_workers)
+                          num_workers=self.num_workers,worker_init_fn=seed_worker)
 
     def _test_dataloader(self):
         return DataLoader(self.datasets["test"], batch_size=self.batch_size,
-                          num_workers=self.num_workers)
+                          num_workers=self.num_workers,worker_init_fn=seed_worker)

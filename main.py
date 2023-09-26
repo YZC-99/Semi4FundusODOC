@@ -24,7 +24,7 @@ from omegaconf import OmegaConf
 import torch
 import pytorch_lightning as pl
 
-from utils.general import get_config_from_file, initialize_from_config, setup_callbacks,merge_cfg
+from utils.general import get_config_from_file, initialize_from_config, setup_callbacks,merge_cfg,get_random_seed
 from pytorch_lightning.callbacks import ModelCheckpoint, Callback,StochasticWeightAveraging
 def get_obj_from_str(string, reload=False):
     module, cls = string.rsplit(".", 1)
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     # Set random seed
     pl.seed_everything(args.seed)
-
+    get_random_seed(args.seed)
     # cfg.merge_from_file(Path("configs")/(args.config+".yaml"))
     # Load configuration
     config = get_config_from_file(Path("configs")/(args.config+".yaml"))
