@@ -573,6 +573,28 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'backbone_multi-levelv7-ii-1-6-v1':
+            self.ffn1 = ConvModule(c3_in_channels+c4_in_channels,c3_in_channels)
+            self.ffn2 = ConvModule(c3_in_channels+c2_in_channels,c2_in_channels)
+            self.ffn3 = ConvModule(c2_in_channels+c1_in_channels,c1_in_channels)
+
+
+            self.linear_c1 = MLP(input_dim=c1_in_channels,embed_dim=embedding_dim)
+            self.linear_c2 = MLP(input_dim=c2_in_channels,embed_dim=embedding_dim)
+            self.linear_c3 = MLP(input_dim=c3_in_channels,embed_dim=embedding_dim)
+            self.linear_c4 = MLP(input_dim=c4_in_channels,embed_dim=embedding_dim)
+
+            self.ffn_sub = ConvModule(embedding_dim * 2,embedding_dim)
+            self.cca1 = nn.Sequential(
+                CrissCrossAttention(embedding_dim),
+                CrissCrossAttention(embedding_dim)
+            )
+
+            self.linear_fuse = ConvModule(
+                c1=embedding_dim*5,
+                c2=embedding_dim,
+                k=1,
+            )
         elif attention == 'backbone_multi-levelv7-ii-1-7':
             self.ffn1 = ConvModule(c3_in_channels+c4_in_channels,c3_in_channels)
             self.ffn2 = ConvModule(c3_in_channels+c2_in_channels,c2_in_channels)
@@ -1236,7 +1258,7 @@ class SegFormerHead(nn.Module):
 
             _c = self.linear_fuse(torch.cat([_c1,_c2,_c3,_c4,cca3],dim=1))
 
-        elif self.attention == 'backbone_multi-levelv7-ii-1-6':
+        elif self.attention == 'backbone_multi-levelv7-ii-1-6' or self.attention == 'backbone_multi-levelv7-ii-1-6-v1':
             # 全部上采样到128*128
             lateral_c2 = F.interpolate(c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
             lateral_c3 = F.interpolate(c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
@@ -1981,7 +2003,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_multi-levelv7-ii-1-3-v3')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_multi-levelv7-ii-1-6-v1')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
