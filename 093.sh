@@ -2,11 +2,14 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_s
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/backbone_b2_pretrained_flip_rotate_translate_scale_CE_2e-1FC_Loss_v7-ii-1-8
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/backbone_b2_pretrained_flip_rotate_translate_scale_CE_2e-1FC_Loss_v7-ii-1-9
 
+
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/b3/backbone_b3_pretrained_flip_rotate_translate_scale_CE_2e-1FC_Loss
 
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/b1/flip_rotate_translate_scale_CE_2e-1FC_Loss
 
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/b4/flip_rotate_translate_scale_CE_2e-1FC_Loss
+
+CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/attentions/backbone_multi_level/backbone_b2_pretrained_flip_rotate_translate_scale_CE_2e-1FC_Loss_v7-ii-1-10
 
 
 
