@@ -174,7 +174,16 @@ if __name__ == '__main__':
                          auto_lr_find=True,
                          gradient_clip_val=args.update_every,
                          )
-    trainer.tune(model, data)
+    # trainer.tune(model, data)
+    # 运行学习率搜索
+    lr_finder = trainer.tuner.lr_find(model,data)
+
+    # 查看搜索结果
+    lr_finder.results
+
+    # 绘制学习率搜索图，suggest参数指定是否显示建议的学习率点
+    fig = lr_finder.plot(suggest=True)
+    fig.savefig("best_lr.jpg")
     # # 运行学习率搜索
     # lr_finder = trainer.tuner.lr_find(model)
     #
