@@ -36,7 +36,8 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/strong1/G1R7R4_B_CJ_semi')
+    parser.add_argument('-c', '--config', type=str,
+                        default='Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/contrast/b2_CE_FC_Contrast_Loss')
     parser.add_argument('-s', '--seed', type=int, default=42)
 
     parser.add_argument('-nn', '--num_nodes', type=int, default=1)
@@ -160,24 +161,7 @@ if __name__ == '__main__':
         SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1,swa_epoch_start=10,annealing_epochs=30)
         callbacks.append(SWA_callback)
 
+    trainer = pl.Trainer(auto_lr_find=args.auto_lr_find)
 
-    # Build trainer
-    trainer = pl.Trainer(max_epochs=exp_config.epochs,
-                         precision=16 if exp_config.use_amp else 32,
-                         callbacks=callbacks,
-                         gpus=args.num_gpus,
-                         num_nodes=args.num_nodes,
-                         strategy="ddp" if args.num_nodes > 1 or args.num_gpus > 1 else None,
-                         accumulate_grad_batches=exp_config.update_every,
-                         logger=logger,
-                         profiler= simple_Profiler,
-                         check_val_every_n_epoch= args.check_val_every_n_epoch,
-                         auto_lr_find=args.auto_lr_find,
-                         gradient_clip_val=args.update_every,
-                         )
-
-    if args.auto_lr_find and args.tune:
-        trainer.tune(model,data)
-    # Train
-    trainer.fit(model, data,ckpt_path=cfg.MODEL.resume_path)
+    print(trainer.tune(model,data))
 
