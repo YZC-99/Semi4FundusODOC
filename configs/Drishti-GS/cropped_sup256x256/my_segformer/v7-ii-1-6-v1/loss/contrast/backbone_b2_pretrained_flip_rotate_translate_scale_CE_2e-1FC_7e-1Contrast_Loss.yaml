@@ -10,7 +10,7 @@ MODEL:
   backbone_pretrained: True
   model: 'SegFormer'
   optimizer: 'AdamW'
-  Attention: 'backbone_multi-levelv7-ii-6-v1'
+  Attention: 'backbone_multi-levelv7-ii-1-6-v1'
   FC_loss: 0.2
   ContrastCrossPixelCorrect_loss: 0.7
   loss:
