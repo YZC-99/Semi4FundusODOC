@@ -1,5 +1,6 @@
 
 # loss
+CUDA_VISIBLE_DEVICES=0 python main.py --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/backbone_b2_pretrained_flip_rotate_translate_scale_CE
 # ce_pair
 #  only cepair
 CUDA_VISIBLE_DEVICES=0 python main.py --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/only_cepair/backbone_b2_pretrained_flip_rotate_translate_scale_1e-1CEpair_CE
