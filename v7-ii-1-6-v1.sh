@@ -12,4 +12,15 @@ CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_s
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/contrast/backbone_b2_pretrained_flip_rotate_translate_scale_CE_2e-1FC_9e-1Contrast_Loss
 CUDA_VISIBLE_DEVICES=0 python main.py -ng 1 -s 42  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/contrast/backbone_b2_pretrained_flip_rotate_translate_scale_CE_2e-1FC_10e-1Contrast_Loss
 
+# cepair
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_1e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_2e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_3e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_4e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_5e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_6e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_7e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_8e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_9e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=1 python main.py  --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/loss/ce_pair/backbone_b2_pretrained_flip_rotate_translate_scale_10e-1CEpair_CE_2e-1FC_6e-1Contrast_Loss
 
