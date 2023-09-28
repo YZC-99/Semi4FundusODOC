@@ -587,7 +587,7 @@ def optimizer_config(pl_module: pl.LightningModule):
         first_cycle_steps = total_iters *  1 / pl_module.cfg.MODEL.optimizer_T
         warmup_iter = int(round(pl_module.cfg.MODEL.lr_warmup_steps_ratio * first_cycle_steps))
 
-        scheduler = CosineAnnealingWarmupRestarts(optimizers[0],first_cycle_steps=first_cycle_steps,cycle_mult=1.0,max_lr=pl_module.cfg.MODEL.lr,min_lr=pl_module.cfg.MODEL.lr_min,warmup_steps=warmup_iter,gamma=pl_module.cfg.MODEL.optimizer_T_gamma)
+        scheduler = CosineAnnealingWarmupRestarts(optimizers[0],first_cycle_steps=first_cycle_steps,cycle_mult=1.0,max_lr=pl_module.cfg.MODEL.lr,min_lr=pl_module.cfg.MODEL.lr_min * pl_module.cfg.MODEL.lr,warmup_steps=warmup_iter,gamma=pl_module.cfg.MODEL.optimizer_T_gamma)
         if pl_module.cfg.MODEL.scheduler == 'poly':
             scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=1.0)
         schedulers = [
