@@ -45,6 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--DC_loss', type=float, default=-0.1)
     parser.add_argument('--BD_loss', type=float, default=-0.1)
     parser.add_argument('--BD_loss_increase_alpha', type=float, default=-0.1)
+    parser.add_argument('--BD_Contrast_rebalance_loss', type=bool, default=False)
     parser.add_argument('--FC_loss', type=float, default=-0.1)
     parser.add_argument('--IoU_loss', type=float, default=-0.1)
     parser.add_argument('--CEpair_loss', type=float, default=-0.1)
@@ -100,6 +101,7 @@ if __name__ == '__main__':
     config.MODEL.backbone = args.backbone
     config.MODEL.scheduler = args.scheduler
     config.MODEL.epochs = args.epochs
+    config.MODEL.BD_Contrast_rebalance_loss = args.BD_Contrast_rebalance_loss
 
     config_dict = OmegaConf.to_container(config, resolve=True)
     # 将新的配置字典中的键添加到之前的CfgNode对象中
