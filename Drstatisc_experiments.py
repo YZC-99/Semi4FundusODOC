@@ -59,7 +59,7 @@ with open(csv_path, 'w', newline='') as csvfile:
             if hasattr(config.MODEL,'ContrastCrossPixelCorrect_loss'):
                 ContrastCrossPixelCorrect_loss = config.MODEL.ContrastCrossPixelCorrect_loss
             w.writerow([root.replace(path,"").replace("/lightning_logs/","").replace("/ckpt",""),
-                        config.MODEL.bakcbone,
+                        config.MODEL.backbone,
                         round(float(result['OD_dice']) * 100,2),
                         round(float(result['OD_mIoU']) * 100,2),
                         round(float(result['OC_dice']) * 100,2),
