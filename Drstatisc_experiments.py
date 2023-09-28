@@ -20,13 +20,14 @@ import csv
 
 import os
 import csv
+from utils.general import get_config_from_file
 
 path = 'experiments/Drishti-GS/cropped_sup256x256'
 csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU'])
+    w.writerow(['experiment','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','lr','warmup_ratio','DC_loss','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss'])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
@@ -39,11 +40,36 @@ with open(csv_path, 'w', newline='') as csvfile:
                     key = key.strip()  # 去除键的前后空格
                     value = value.replace(".ckpt","")  # 去除文件扩展名
                     result[key] = value
+            # 获得超参配置
+            config_path = root.replace("ckpt","hparams.yaml")
+            config = get_config_from_file(config_path)
+            DC_loss = 0.0
+            FC_loss = 0.0
+            IoU_loss = 0.0
+            CEpair_loss = 0.0
+            ContrastCrossPixelCorrect_loss = 0.0
+            if hasattr(config.MODEL,'DC_loss'):
+                DC_loss = config.MODEL.DC_loss
+            if hasattr(config.MODEL,'FC_loss'):
+                FC_loss = config.MODEL.FC_loss
+            if hasattr(config.MODEL,'IoU_loss'):
+                IoU_loss = config.MODEL.IoU_loss
+            if hasattr(config.MODEL,'CEpair_loss'):
+                CEpair_loss = config.MODEL.CEpair_loss
+            if hasattr(config.MODEL,'ContrastCrossPixelCorrect_loss'):
+                ContrastCrossPixelCorrect_loss = config.MODEL.ContrastCrossPixelCorrect_loss
             w.writerow([root.replace(path,"").replace("/lightning_logs/","").replace("/ckpt",""),
                         round(float(result['OD_dice']) * 100,2),
                         round(float(result['OD_mIoU']) * 100,2),
                         round(float(result['OC_dice']) * 100,2),
-                        round(float(result['OC_mIoU']) * 100,2)
+                        round(float(result['OC_mIoU']) * 100,2),
+                        config.MODEL.lr,
+                        config.MODEL.lr_warmup_steps_ratio,
+                        DC_loss,
+                        FC_loss,
+                        IoU_loss,
+                        CEpair_loss,
+                        ContrastCrossPixelCorrect_loss,
                        ]
                         )
 

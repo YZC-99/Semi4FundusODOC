@@ -1,3 +1,2 @@
-CUDA_VISIBLE_DEVICES=0 python main.py --config Drishti-GS/cropped_sup256x256/my_segformer/b2/flip_rotate_translate_scale_CE_2e-1FC_6e-1Contrast_Loss
-
-CUDA_VISIBLE_DEVICES=1 python main.py --config Drishti-GS/cropped_sup256x256/my_segformer/b2/flip_rotate_translate_scale_CE_2e-1FC_6e-1Contrast_Loss
+CUDA_VISIBLE_DEVICES=0 python main.py --lr 7e-4 --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/Base &
+CUDA_VISIBLE_DEVICES=1 python main.py --lr 6e-4 --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/Base

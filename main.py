@@ -15,7 +15,7 @@ from segment.modules.semibase import Base
 from segment.modules.Teacher_Student import TSBase
 from segment.modules.dualsemibase import DualBase
 from segment.prototype_dist_init import prototype_dist_init
-from segment.dataloader.od_oc_dataset import SemiDataset,SemiUabledTrain
+from segment.dataloader.od_oc_dataset import SemiDataset, SemiUabledTrain
 from segment.label import label
 
 import argparse, os, sys, datetime, glob, importlib
@@ -24,8 +24,10 @@ from omegaconf import OmegaConf
 import torch
 import pytorch_lightning as pl
 
-from utils.general import get_config_from_file, initialize_from_config, setup_callbacks,merge_cfg,get_random_seed
-from pytorch_lightning.callbacks import ModelCheckpoint, Callback,StochasticWeightAveraging
+from utils.general import get_config_from_file, initialize_from_config, setup_callbacks, merge_cfg, get_random_seed
+from pytorch_lightning.callbacks import ModelCheckpoint, Callback, StochasticWeightAveraging
+
+
 def get_obj_from_str(string, reload=False):
     module, cls = string.rsplit(".", 1)
     if reload:
@@ -36,6 +38,16 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--lr', type=float, default=-0.1)
+    parser.add_argument('--warmup', type=float, default=-0.1)
+    parser.add_argument('--DC_loss', type=float, default=-0.1)
+    parser.add_argument('--FC_loss', type=float, default=-0.1)
+    parser.add_argument('--IoU_loss', type=float, default=-0.1)
+    parser.add_argument('--CEpair_loss', type=float, default=-0.1)
+    parser.add_argument('--ContrastCrossPixelCorrect_loss', type=float, default=-0.1)
+
+    parser.add_argument('--backbone', type=str, default='b2')
+
     parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/strong1/G1R7R4_B_CJ_semi')
     parser.add_argument('-s', '--seed', type=int, default=42)
 
@@ -51,9 +63,9 @@ if __name__ == '__main__':
     parser.add_argument('--limit_val_batches', type=int, default=8)
     parser.add_argument('-tune', default=False, action='store_true')
     parser.add_argument('-saw', default=False, action='store_true')
-    parser.add_argument('-abs','--auto_scale_batch_size', default=False, action='store_true')
-    parser.add_argument('-alf','--auto_lr_find', default=False, action='store_true')
-    parser.add_argument('-v','--check_val_every_n_epoch', type=int, default=1)
+    parser.add_argument('-abs', '--auto_scale_batch_size', default=False, action='store_true')
+    parser.add_argument('-alf', '--auto_lr_find', default=False, action='store_true')
+    parser.add_argument('-v', '--check_val_every_n_epoch', type=int, default=1)
     args = parser.parse_args()
 
     # Set random seed
@@ -61,16 +73,33 @@ if __name__ == '__main__':
     get_random_seed(args.seed)
     # cfg.merge_from_file(Path("configs")/(args.config+".yaml"))
     # Load configuration
-    config = get_config_from_file(Path("configs")/(args.config+".yaml"))
+    config = get_config_from_file(Path("configs") / (args.config + ".yaml"))
+    # 修改新参数
+    if args.lr > 0:
+        config.MODEL.lr = args.lr
+    if args.warmup > 0:
+        config.MODEL.lr_warmup_steps_ratio = args.warmup
+    if args.DC_loss > 0:
+        config.MODEL.DC_loss = args.DC_loss
+    if args.FC_loss > 0:
+        config.MODEL.FC_loss = args.FC_loss
+    if args.IoU_loss > 0:
+        config.MODEL.IoU_loss = args.IoU_loss
+    if args.CEpair_loss > 0:
+        config.MODEL.CEpair_loss = args.CEpair_loss
+    if args.ContrastCrossPixelCorrect_loss > 0:
+        config.MODEL.ContrastCrossPixelCorrect_loss = args.ContrastCrossPixelCorrect_loss
+    config.MODEL.backbone = args.backbone
+
     config_dict = OmegaConf.to_container(config, resolve=True)
     # 将新的配置字典中的键添加到之前的CfgNode对象中
     merge_cfg(cfg, config_dict)
     loss_config = config['MODEL']['loss']
 
-    now_experiment_path = Path("experiments")/(args.config)
-    now_ex_pseudo_masks_path = os.path.join(now_experiment_path,'pseudo_masks')
-    now_ex_prototypes_path = os.path.join(now_experiment_path,'prototypes')
-    now_ex_logs_path = os.path.join(now_experiment_path,'logs')
+    now_experiment_path = Path("experiments") / (args.config)
+    now_ex_pseudo_masks_path = os.path.join(now_experiment_path, 'pseudo_masks')
+    now_ex_prototypes_path = os.path.join(now_experiment_path, 'prototypes')
+    now_ex_logs_path = os.path.join(now_experiment_path, 'logs')
 
     if not os.path.exists(now_experiment_path):
         os.makedirs(now_experiment_path)
@@ -83,31 +112,27 @@ if __name__ == '__main__':
     cfg.MODEL.pseudo_mask_path = now_ex_pseudo_masks_path
     cfg.MODEL.logs_path = now_ex_logs_path
 
-
-
     exp_config = OmegaConf.create({"name": args.config, "epochs": cfg.MODEL.epochs, "update_every": args.update_every,
-                                    "use_amp": args.use_amp, "batch_frequency": args.batch_frequency,
+                                   "use_amp": args.use_amp, "batch_frequency": args.batch_frequency,
                                    "max_images": args.max_images})
 
     # Build model
     if cfg.MODEL.Dual:
         model = DualBase('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
     elif cfg.MODEL.Teacher_Student:
-        model = TSBase(cfg.MODEL.model,cfg.MODEL.backbone,cfg.MODEL.NUM_CLASSES,cfg,loss_config)
+        model = TSBase(cfg.MODEL.model, cfg.MODEL.backbone, cfg.MODEL.NUM_CLASSES, cfg, loss_config)
     else:
-        model = Base(cfg.MODEL.model,cfg.MODEL.backbone,cfg.MODEL.NUM_CLASSES,cfg,loss_config)
+        model = Base(cfg.MODEL.model, cfg.MODEL.backbone, cfg.MODEL.NUM_CLASSES, cfg, loss_config)
     model.learning_rate = cfg.MODEL.lr * args.num_gpus
     # Setup callbacks
-    callbacks, logger,simple_Profiler = setup_callbacks(exp_config, config)
-
-
+    callbacks, logger, simple_Profiler = setup_callbacks(exp_config, config)
 
     if len(list(filter(lambda x: x.endswith('.pth'), os.listdir(cfg.prototype_path)))) < 2 and cfg.MODEL.uda:
         src_dataset = initialize_from_config(config.dataset.params['train'])
         src_dataloader = DataLoader(src_dataset, batch_size=1,
                                     num_workers=8, shuffle=True, drop_last=True)
         print('>>>>>>>>>>>>>>>>正在计算 prototypes >>>>>>>>>>>>>>>>')
-        prototype_dist_init(cfg, src_train_loader= src_dataloader)
+        prototype_dist_init(cfg, src_train_loader=src_dataloader)
 
     if cfg.MODEL.label and len(os.listdir(cfg.MODEL.pseudo_mask_path)) == 0:
         unlabeled_dataset = SemiUabledTrain(task=cfg.dataset.params.train2.params.task,
@@ -120,11 +145,11 @@ if __name__ == '__main__':
                                             add_unlabeled_id_path=cfg.dataset.params.train2.params.add_unlabeled_id_path,
                                             pseudo_mask_path=None)
         unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
-                                     pin_memory=True, num_workers=8, drop_last=False)
+                                          pin_memory=True, num_workers=8, drop_last=False)
 
         ckpt_path = cfg.MODEL.stage1_ckpt_path
 
-        label(unlabeled_dataloader,ckpt_path,cfg)
+        label(unlabeled_dataloader, ckpt_path, cfg)
 
     # 二次训练
     if cfg.MODEL.retraining and len(os.listdir(cfg.MODEL.pseudo_mask_path)) == 0:
@@ -138,7 +163,7 @@ if __name__ == '__main__':
                                             unlabeled_id_path=cfg.dataset.params.train.params.unlabeled_id_path,
                                             pseudo_mask_path=None)
         unlabeled_dataloader = DataLoader(unlabeled_dataset, batch_size=1, shuffle=False,
-                                     pin_memory=True, num_workers=8, drop_last=False)
+                                          pin_memory=True, num_workers=8, drop_last=False)
         ckpt_path = cfg.MODEL.stage2_ckpt_path
         label(unlabeled_dataloader, ckpt_path, cfg)
 
@@ -157,9 +182,8 @@ if __name__ == '__main__':
     data.prepare_data()
 
     if args.saw:
-        SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1,swa_epoch_start=10,annealing_epochs=30)
+        SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1, swa_epoch_start=10, annealing_epochs=30)
         callbacks.append(SWA_callback)
-
 
     # Build trainer
     trainer = pl.Trainer(max_epochs=exp_config.epochs,
@@ -170,14 +194,14 @@ if __name__ == '__main__':
                          strategy="ddp" if args.num_nodes > 1 or args.num_gpus > 1 else None,
                          accumulate_grad_batches=exp_config.update_every,
                          logger=logger,
-                         profiler= simple_Profiler,
-                         check_val_every_n_epoch= args.check_val_every_n_epoch,
+                         profiler=simple_Profiler,
+                         check_val_every_n_epoch=args.check_val_every_n_epoch,
                          auto_lr_find=args.auto_lr_find,
                          gradient_clip_val=args.update_every,
                          )
 
     if args.auto_lr_find and args.tune:
-        trainer.tune(model,data)
+        trainer.tune(model, data)
     # Train
-    trainer.fit(model, data,ckpt_path=cfg.MODEL.resume_path)
+    trainer.fit(model, data, ckpt_path=cfg.MODEL.resume_path)
 
