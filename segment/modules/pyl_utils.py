@@ -590,7 +590,7 @@ def optimizer_config(pl_module: pl.LightningModule):
         scheduler = CosineAnnealingWarmupRestarts(optimizers[0],first_cycle_steps=first_cycle_steps,cycle_mult=1.0,max_lr=pl_module.cfg.MODEL.lr,min_lr=pl_module.cfg.MODEL.lr_min,warmup_steps=warmup_iter,gamma=pl_module.cfg.MODEL.optimizer_T_gamma)
         if pl_module.cfg.MODEL.scheduler == 'poly':
             # scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizers[0], total_iters=total_iters, power=1.0)
-            scheduler = PolyLRwithWarmup(optimizers[0],max_iter=total_iters,warmup='linear',warmup_iter=warmup_iter,power=1.0)
+            scheduler = PolyLRwithWarmup(optimizers[0],max_iter=total_iters,warmup='linear',warmup_iters=warmup_iter,power=1.0)
         schedulers = [
             {
                 'scheduler': scheduler,
@@ -608,7 +608,7 @@ def optimizer_config(pl_module: pl.LightningModule):
         warmup_iter = int(round(pl_module.cfg.MODEL.lr_warmup_steps_ratio * first_cycle_steps))
 
         optimizers = [SGD(param_groups, momentum=0.9, weight_decay=1e-4)]
-        scheduler = PolyLRwithWarmup(optimizers[0],max_iter=total_iters,warmup='linear',warmup_iter=warmup_iter,power=1.0)
+        scheduler = PolyLRwithWarmup(optimizers[0],max_iter=total_iters,warmup='linear',warmup_iters=warmup_iter,power=1.0)
         if pl_module.cfg.MODEL.scheduler == 'cosine':
             scheduler = CosineAnnealingWarmupRestarts(optimizers[0],first_cycle_steps=total_iters,cycle_mult=1.0,max_lr=pl_module.cfg.MODEL.lr,min_lr=1e-6,warmup_steps=warmup_iter,gamma=1.0)
         schedulers = [
