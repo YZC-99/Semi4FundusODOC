@@ -27,7 +27,7 @@ csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss'])
+    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss'])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
@@ -55,7 +55,7 @@ with open(csv_path, 'w', newline='') as csvfile:
                 DC_loss = config.MODEL.DC_loss
             if hasattr(config.MODEL,'BD_loss'):
                 BD_loss = config.MODEL.BD_loss
-            if hasattr(config.MODEL,'BD_incre'):
+            if hasattr(config.MODEL,'BD_loss_increase_alpha'):
                 BD_loss_increase_alpha = config.MODEL.BD_loss_increase_alpha
 
             if hasattr(config.MODEL,'FC_loss'):
