@@ -78,21 +78,21 @@ if __name__ == '__main__':
     # Load configuration
     config = get_config_from_file(Path("configs") / (args.config + ".yaml"))
     # 修改新参数
-    if args.lr > 0:
+    if args.lr >= 0:
         config.MODEL.lr = args.lr
-    if args.warmup > 0:
+    if args.warmup >= 0:
         config.MODEL.lr_warmup_steps_ratio = args.warmup
-    if args.DC_loss > 0:
+    if args.DC_loss >= 0:
         config.MODEL.DC_loss = args.DC_loss
-    if args.BD_loss > 0:
+    if args.BD_loss >= 0:
         config.MODEL.BD_loss = args.BD_loss
-    if args.FC_loss > 0:
+    if args.FC_loss >= 0:
         config.MODEL.FC_loss = args.FC_loss
-    if args.IoU_loss > 0:
+    if args.IoU_loss >= 0:
         config.MODEL.IoU_loss = args.IoU_loss
-    if args.CEpair_loss > 0:
+    if args.CEpair_loss >= 0:
         config.MODEL.CEpair_loss = args.CEpair_loss
-    if args.ContrastCrossPixelCorrect_loss > 0:
+    if args.ContrastCrossPixelCorrect_loss >= 0:
         config.MODEL.ContrastCrossPixelCorrect_loss = args.ContrastCrossPixelCorrect_loss
     config.MODEL.backbone = args.backbone
     config.MODEL.scheduler = args.scheduler
