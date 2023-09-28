@@ -4,6 +4,7 @@ from yacs.config import CfgNode as CN
 # training -cfg
 _C = CN()
 _C.info = CN()
+_C.info.seed=42
 _C.info.setting='od_val_refuge/1_7/100gamma'
 _C.info.description=''
 

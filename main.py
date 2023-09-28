@@ -102,6 +102,7 @@ if __name__ == '__main__':
     config.MODEL.scheduler = args.scheduler
     config.MODEL.epochs = args.epochs
     config.MODEL.BD_Contrast_rebalance_loss = args.BD_Contrast_rebalance_loss
+    config.info.seed = args.seed
 
     config_dict = OmegaConf.to_container(config, resolve=True)
     # 将新的配置字典中的键添加到之前的CfgNode对象中
