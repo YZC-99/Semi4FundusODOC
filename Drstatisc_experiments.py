@@ -27,7 +27,7 @@ csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss'])
+    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss'])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
@@ -44,6 +44,7 @@ with open(csv_path, 'w', newline='') as csvfile:
             config_path = root.replace("ckpt","hparams.yaml")
             config = get_config_from_file(config_path)
             DC_loss = 0.0
+            BD_loss = 0.0
             FC_loss = 0.0
             IoU_loss = 0.0
             CEpair_loss = 0.0
@@ -51,6 +52,8 @@ with open(csv_path, 'w', newline='') as csvfile:
             scheduler = 'cosine'
             if hasattr(config.MODEL,'DC_loss'):
                 DC_loss = config.MODEL.DC_loss
+            if hasattr(config.MODEL,'BD_loss'):
+                BD_loss = config.MODEL.BD_loss
             if hasattr(config.MODEL,'FC_loss'):
                 FC_loss = config.MODEL.FC_loss
             if hasattr(config.MODEL,'IoU_loss'):
@@ -72,6 +75,7 @@ with open(csv_path, 'w', newline='') as csvfile:
                         config.MODEL.lr_warmup_steps_ratio,
                         scheduler,
                         DC_loss,
+                        BD_loss,
                         FC_loss,
                         IoU_loss,
                         CEpair_loss,

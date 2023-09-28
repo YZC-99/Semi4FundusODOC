@@ -43,6 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup', type=float, default=-0.1)
     parser.add_argument('--scheduler', type=str, default='cosine')
     parser.add_argument('--DC_loss', type=float, default=-0.1)
+    parser.add_argument('--BD_loss', type=float, default=-0.1)
     parser.add_argument('--FC_loss', type=float, default=-0.1)
     parser.add_argument('--IoU_loss', type=float, default=-0.1)
     parser.add_argument('--CEpair_loss', type=float, default=-0.1)
@@ -83,6 +84,8 @@ if __name__ == '__main__':
         config.MODEL.lr_warmup_steps_ratio = args.warmup
     if args.DC_loss > 0:
         config.MODEL.DC_loss = args.DC_loss
+    if args.BD_loss > 0:
+        config.MODEL.BD_loss = args.BD_loss
     if args.FC_loss > 0:
         config.MODEL.FC_loss = args.FC_loss
     if args.IoU_loss > 0:
