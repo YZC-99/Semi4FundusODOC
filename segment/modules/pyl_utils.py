@@ -151,8 +151,8 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         #     pl_module.BD_loss_increase_alpha = pl_module.BD_loss_increase_alpha * pl_module.current_epoch
         # else:
         #     _DC = _DC + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
-        if pl_module.cfg.MODEL.BD_loss_increase_alpha > 0.0 and pl_module.current_epoch > 75:
-            loss = loss + (pl_module.cfg.MODEL.BD_loss + 1) * pl_module.BD_loss(out_soft, dist)
+        if pl_module.cfg.MODEL.BD_loss_increase_alpha > 0.0 and pl_module.current_epoch > pl_module.cfg.MODEL.epochs * 0.75:
+            loss = loss + (pl_module.cfg.MODEL.BD_loss + 0.25 + pl_module.current_epoch / pl_module.cfg.MODEL.epochs) * pl_module.BD_loss(out_soft, dist)
         else:
             loss = loss + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
 
