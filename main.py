@@ -38,6 +38,7 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--lr', type=float, default=-0.1)
     parser.add_argument('--warmup', type=float, default=-0.1)
     parser.add_argument('--scheduler', type=str, default='cosine')
@@ -92,6 +93,7 @@ if __name__ == '__main__':
         config.MODEL.ContrastCrossPixelCorrect_loss = args.ContrastCrossPixelCorrect_loss
     config.MODEL.backbone = args.backbone
     config.MODEL.scheduler = args.scheduler
+    config.MODEL.epochs = args.epochs
 
     config_dict = OmegaConf.to_container(config, resolve=True)
     # 将新的配置字典中的键添加到之前的CfgNode对象中
