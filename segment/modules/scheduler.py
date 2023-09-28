@@ -1,6 +1,6 @@
 import math
 import torch
-from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.lr_scheduler import _LRScheduler,LambdaLR
 class LambdaStepLR(LambdaLR):
 
   def __init__(self, optimizer, lr_lambda, last_step=-1):
