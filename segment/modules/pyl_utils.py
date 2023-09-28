@@ -339,6 +339,17 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
         pl_module.classification_recall.update(classification_preds,classification_lables)
         pl_module.classification_f1.update(classification_preds,classification_lables)
 
+def reached_sota(oc_dice):
+    import requests
+    headers = {"Authorization": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjM2ODE4LCJ1dWlkIjoiZTdjNjIxZTAtMjJjZC00NTExLThmMDItYmZkZDVmYzhlODgzIiwiaXNfYWRtaW4iOmZhbHNlLCJpc19zdXBlcl9hZG1pbiI6ZmFsc2UsInN1Yl9uYW1lIjoiIiwidGVuYW50IjoiYXV0b2RsIiwidXBrIjoiIn0.NSS3wQt2G_hSijtTO-Wv8L9fu9LZ9Q2rCgqGfpmAfQq1x-MToru4BEjtOtvKhGR1T9QAjVqc5IEhN8YE2wPh-A"}
+    resp = requests.post("https://www.autodl.com/api/v1/wechat/message/send",
+                         json={
+                             "title": "eg. 来自我的程序",
+                             "name": "eg. 我的Drishti-GS实验",
+                             "content": "eg. oc_dice:{}".format(oc_dice)
+                         }, headers = headers)
+    print(resp.content.decode())
+
 def epoch_end_show_metrics(pl_module: pl.LightningModule,tag):
     od_miou = pl_module.od_multiclass_jaccard.compute()
     pl_module.od_multiclass_jaccard.reset()
