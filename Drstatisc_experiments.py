@@ -45,6 +45,7 @@ with open(csv_path, 'w', newline='') as csvfile:
             config = get_config_from_file(config_path)
             DC_loss = 0.0
             BD_loss = 0.0
+            BD_loss_increase_alpha = 0.0
             FC_loss = 0.0
             IoU_loss = 0.0
             CEpair_loss = 0.0
@@ -54,6 +55,9 @@ with open(csv_path, 'w', newline='') as csvfile:
                 DC_loss = config.MODEL.DC_loss
             if hasattr(config.MODEL,'BD_loss'):
                 BD_loss = config.MODEL.BD_loss
+            if hasattr(config.MODEL,'BD_incre'):
+                BD_loss_increase_alpha = config.MODEL.BD_loss_increase_alpha
+
             if hasattr(config.MODEL,'FC_loss'):
                 FC_loss = config.MODEL.FC_loss
             if hasattr(config.MODEL,'IoU_loss'):
@@ -76,6 +80,7 @@ with open(csv_path, 'w', newline='') as csvfile:
                         scheduler,
                         DC_loss,
                         BD_loss,
+                        BD_loss_increase_alpha,
                         FC_loss,
                         IoU_loss,
                         CEpair_loss,
