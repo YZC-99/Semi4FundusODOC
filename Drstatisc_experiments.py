@@ -48,6 +48,7 @@ with open(csv_path, 'w', newline='') as csvfile:
             IoU_loss = 0.0
             CEpair_loss = 0.0
             ContrastCrossPixelCorrect_loss = 0.0
+            scheduler = 'cosine'
             if hasattr(config.MODEL,'DC_loss'):
                 DC_loss = config.MODEL.DC_loss
             if hasattr(config.MODEL,'FC_loss'):
@@ -58,6 +59,8 @@ with open(csv_path, 'w', newline='') as csvfile:
                 CEpair_loss = config.MODEL.CEpair_loss
             if hasattr(config.MODEL,'ContrastCrossPixelCorrect_loss'):
                 ContrastCrossPixelCorrect_loss = config.MODEL.ContrastCrossPixelCorrect_loss
+            if hasattr(config.MODEL,'scheduler'):
+                scheduler = config.MODEL.scheduler
             w.writerow([root.replace(path,"").replace("/lightning_logs/","").replace("/ckpt",""),
                         config.MODEL.backbone,
                         round(float(result['OD_dice']) * 100,2),
@@ -66,7 +69,7 @@ with open(csv_path, 'w', newline='') as csvfile:
                         round(float(result['OC_mIoU']) * 100,2),
                         config.MODEL.lr,
                         config.MODEL.lr_warmup_steps_ratio,
-                        config.MODEL.scheduler,
+                        scheduler,
                         DC_loss,
                         FC_loss,
                         IoU_loss,
