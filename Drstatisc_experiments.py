@@ -27,7 +27,7 @@ csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','lr','warmup_ratio','DC_loss','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss'])
+    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','lr','warmup_ratio','scheduler','DC_loss','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss'])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
@@ -66,6 +66,7 @@ with open(csv_path, 'w', newline='') as csvfile:
                         round(float(result['OC_mIoU']) * 100,2),
                         config.MODEL.lr,
                         config.MODEL.lr_warmup_steps_ratio,
+                        config.MODEL.scheduler,
                         DC_loss,
                         FC_loss,
                         IoU_loss,

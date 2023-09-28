@@ -1,6 +1,38 @@
 import math
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
+class LambdaStepLR(LambdaLR):
+
+  def __init__(self, optimizer, lr_lambda, last_step=-1):
+    super(LambdaStepLR, self).__init__(optimizer, lr_lambda, last_step)
+
+  @property
+  def last_step(self):
+    """Use last_epoch for the step counter"""
+    return self.last_epoch
+
+  @last_step.setter
+  def last_step(self, v):
+    self.last_epoch = v
+
+class PolyLRwithWarmup(LambdaStepLR):
+  """DeepLab learning rate policy"""
+
+  def __init__(self, optimizer, max_iter, warmup='linear', warmup_iters=1500, warmup_ratio=1e-6, power=1.0, last_step=-1):
+
+    assert warmup == 'linear'
+    def poly_with_warmup(s):
+      coeff = (1 - s / (max_iter+1)) ** power
+      if s <= warmup_iters:
+        warmup_coeff = 1 - (1 - s / warmup_iters) * (1 - warmup_ratio)
+      else:
+        warmup_coeff = 1.0
+      return coeff * warmup_coeff
+
+    super(PolyLRwithWarmup, self).__init__(optimizer, poly_with_warmup, last_step)
+    # torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, last_epoch=-1, verbose=False)
+    # lr_lambda: A function which computes a multiplicative factor given an integer parameter epoch, or a list of such functions, one for each group in optimizer.param_groups.
+
 
 
 class CosineAnnealingWarmupRestarts(_LRScheduler):
