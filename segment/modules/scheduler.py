@@ -24,7 +24,8 @@ class PolyLRwithWarmup(LambdaStepLR):
     def poly_with_warmup(s):
       coeff = (1 - s / (max_iter+1)) ** power
       if s <= warmup_iters:
-        warmup_coeff = 1 - (1 - s / warmup_iters) * (1 - warmup_ratio)
+        # warmup_coeff = 1 - (1 - s / warmup_iters) * (1 - warmup_ratio)
+        warmup_coeff = s / warmup_iters * warmup_ratio
       else:
         warmup_coeff = 1.0
       return coeff * warmup_coeff
