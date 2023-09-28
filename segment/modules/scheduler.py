@@ -15,25 +15,50 @@ class LambdaStepLR(LambdaLR):
   def last_step(self, v):
     self.last_epoch = v
 
-class PolyLRwithWarmup(LambdaStepLR):
-  """DeepLab learning rate policy"""
+# class PolyLRwithWarmup(LambdaStepLR):
+#   """DeepLab learning rate policy"""
+#
+#   def __init__(self, optimizer, max_iter, warmup='linear', warmup_iters=1500, warmup_ratio=1e-6, power=1.0, last_step=-1):
+#
+#     assert warmup == 'linear'
+#     def poly_with_warmup(s):
+#       coeff = (1 - s / (max_iter+1)) ** power
+#       if s <= warmup_iters:
+#         # warmup_coeff = 1 - (1 - s / warmup_iters) * (1 - warmup_ratio)
+#         warmup_coeff = s / warmup_iters * warmup_ratio
+#       else:
+#         warmup_coeff = 1.0
+#       return coeff * warmup_coeff
+#
+#     super(PolyLRwithWarmup, self).__init__(optimizer, poly_with_warmup, last_step)
+#     # torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, last_epoch=-1, verbose=False)
+#     # lr_lambda: A function which computes a multiplicative factor given an integer parameter epoch, or a list of such functions, one for each group in optimizer.param_groups.
 
-  def __init__(self, optimizer, max_iter, warmup='linear', warmup_iters=1500, warmup_ratio=1e-6, power=1.0, last_step=-1):
 
-    assert warmup == 'linear'
-    def poly_with_warmup(s):
-      coeff = (1 - s / (max_iter+1)) ** power
-      if s <= warmup_iters:
-        # warmup_coeff = 1 - (1 - s / warmup_iters) * (1 - warmup_ratio)
-        warmup_coeff = s / warmup_iters * warmup_ratio
-      else:
-        warmup_coeff = 1.0
-      return coeff * warmup_coeff
+class PolyLRwithWarmup(_LRScheduler):
+    """Linearly warmup learning rate and then linearly decay.
 
-    super(PolyLRwithWarmup, self).__init__(optimizer, poly_with_warmup, last_step)
-    # torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, last_epoch=-1, verbose=False)
-    # lr_lambda: A function which computes a multiplicative factor given an integer parameter epoch, or a list of such functions, one for each group in optimizer.param_groups.
+    Args:
+        optimizer (:class:`torch.optim.Optimizer`): Wrapped optimizer.
+        total_steps (int): Number of total training steps.
+        warmup_steps (int, optional): Number of warmup steps, defaults to 0
+        last_epoch (int, optional): The index of last epoch, defaults to -1. When last_epoch=-1,
+            the schedule is started from the beginning or When last_epoch=-1, sets initial lr as lr.
+    """
 
+    def __init__(self, optimizer, total_steps: int, warmup_steps: int = 0, last_epoch: int = -1, **kwargs):
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+        super().__init__(optimizer, last_epoch=last_epoch)
+
+    def get_lr(self):
+        if self.last_epoch < self.warmup_steps:
+            return [(self.last_epoch + 1) / (self.warmup_steps + 1) * lr for lr in self.base_lrs]
+        else:
+            return [
+                (self.total_steps - self.last_epoch) / (self.total_steps - self.warmup_steps) * lr
+                for lr in self.base_lrs
+            ]
 
 
 class CosineAnnealingWarmupRestarts(_LRScheduler):
