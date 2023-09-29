@@ -133,6 +133,13 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
 
     _CE = ce_loss
     loss = _CE
+    if pl_module.cfg.MODEL.FC_loss > 0.0:
+        if pl_module.current_epoch > pl_module.cfg.MODEL.FC_stop_epoch:
+            loss = loss
+        else:
+            _FC = pl_module.cfg.MODEL.FC_loss * pl_module.FC_loss(logits, y)
+            loss = loss + _FC
+
     if pl_module.cfg.MODEL.DC_loss > 0.0:
         _DC =  pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
         # if pl_module.cfg.MODEL.BD_loss == 0.0:
@@ -164,12 +171,6 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
             loss = loss + pl_module.cfg.MODEL.BD_loss * pl_module.BD_loss(out_soft, dist)
 
 
-    if pl_module.cfg.MODEL.FC_loss > 0.0:
-        if pl_module.current_epoch > pl_module.cfg.MODEL.FC_stop_epoch:
-            loss = loss
-        else:
-            _FC = pl_module.cfg.MODEL.FC_loss * pl_module.FC_loss(logits, y)
-            loss = loss + _FC
 
     if pl_module.cfg.MODEL.LOVASZ_loss > 0.0:
         _IoU = pl_module.cfg.MODEL.LOVASZ_loss * lovasz_softmax(out_soft, y, ignore=255)
