@@ -1,12 +1,23 @@
-# 循环执行100次
-for i in {0..100}
-do
-    (
-    CUDA_VISIBLE_DEVICES=0 python main.py -s $((i + 0)) --lr 4.0e-4 --warmup 1e-2 --BD_loss 2.0 --FC_loss 0.0 --ContrastCrossPixelCorrect_loss 0.4 --epochs 100 --scheduler poly --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise &
-    sleep 60  # 延迟1秒
-    CUDA_VISIBLE_DEVICES=1 python main.py -s $((i + 1)) --lr 4.0e-4 --warmup 1e-2 --BD_loss 2.0 --FC_loss 0.0 --ContrastCrossPixelCorrect_loss 0.4 --epochs 100 --scheduler poly --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise &
-    sleep 60  # 延迟1秒
-    CUDA_VISIBLE_DEVICES=2 python main.py -s $((i + 2)) --lr 4.0e-4 --warmup 1e-2 --BD_loss 2.0 --FC_loss 0.0 --ContrastCrossPixelCorrect_loss 0.4 --epochs 100 --scheduler poly --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise &
-    )
-    wait  # 等待当前循环内的所有命令完成
+#!/bin/bash
+
+# 设置需要的总循环次数
+total_loops=150  # 例如，这里设置为10，您可以根据需要进行更改
+
+# 设置并行训练的显卡数量
+num_gpus=3
+
+# 循环从0开始，步长为3，作为随机种子seed
+for seed in $(seq 0 3 $((total_loops-1))); do
+  # 并行训练三个不同随机种子的模型
+  for gpu_id in $(seq 0 $((num_gpus-1))); do
+    # 启动训练任务，这里假设您有一个train.py脚本用于模型训练
+    # 您需要根据实际情况修改训练命令和参数
+    CUDA_VISIBLE_DEVICES=$gpu_id python main.py -s $((seed+gpu_id)) --lr 4.0e-4 --warmup 1e-2 --BD_loss 2.0 --FC_loss 0.0 --ContrastCrossPixelCorrect_loss 0.4 --epochs 100 --scheduler poly --config Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise &
+    sleep 15
+  done
+
+  # 等待上一轮的所有训练任务完成
+  wait
 done
+
+echo "所有训练任务已完成"

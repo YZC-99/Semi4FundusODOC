@@ -137,12 +137,13 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         _DC =  pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
         # if pl_module.cfg.MODEL.BD_loss == 0.0:
         loss = loss + _DC
-    if pl_module.cfg.MODEL.BD_Contrast_rebalance_loss and pl_module.current_epoch > pl_module.cfg.MODEL.epochs * 0.75:
+    if pl_module.cfg.MODEL.BD_Contrast_rebalance_loss:
         dist = batch['boundary']
         contrast_weight = pl_module.cfg.MODEL.ContrastCrossPixelCorrect_loss
         BD_weight = pl_module.cfg.MODEL.BD_loss
         loss = loss + (contrast_weight - contrast_weight * pl_module.current_epoch/pl_module.cfg.MODEL.epochs)* pl_module.ContrastCrossPixelCorrect_loss(
-                output, y) + (BD_weight + 0.25 + pl_module.current_epoch / pl_module.cfg.MODEL.epochs) * pl_module.BD_loss(out_soft, dist)
+                output, y) + (BD_weight * pl_module.current_epoch / pl_module.cfg.MODEL.epochs) * pl_module.BD_loss(out_soft, dist)
+        return loss
     if pl_module.cfg.MODEL.BD_loss > 0.0:
         dist = batch['boundary']
         #
