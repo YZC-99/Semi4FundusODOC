@@ -249,6 +249,35 @@ def blur(img, p=0.5):
 #
 #     return img, mask
 
+# def cutout(img, mask, p=0.5, value_min=0, value_max=255, pixel_level=True):
+#     if np.random.random() < p:
+#         img = np.array(img)
+#         mask = np.array(mask)
+#
+#         # 找到mask中像素值为2的部分
+#         mask_2 = (mask == 2).astype(np.uint8)
+#
+#         # 向内腐蚀50个像素
+#         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 100))
+#         mask_2_eroded = cv2.erode(mask_2, kernel)
+#
+#         # 计算类别2的边缘（原始的类别2减去腐蚀后的结果）
+#         mask_edge = mask_2 - mask_2_eroded
+#         edge_y, edge_x = np.where(mask_edge > 0)
+#
+#         # 将边缘掩盖掉
+#         for y, x in zip(edge_y, edge_x):
+#             if pixel_level:
+#                 value = np.random.uniform(value_min, value_max, img[y, x].shape)
+#             else:
+#                 value = np.random.uniform(value_min, value_max)
+#             img[y, x] = value
+#             mask[y, x] = 255
+#
+#         img = Image.fromarray(img.astype(np.uint8))
+#         mask = Image.fromarray(mask.astype(np.uint8))
+#
+#     return img, mask
 def cutout(img, mask, p=0.5, value_min=0, value_max=255, pixel_level=True):
     if np.random.random() < p:
         img = np.array(img)
@@ -258,21 +287,31 @@ def cutout(img, mask, p=0.5, value_min=0, value_max=255, pixel_level=True):
         mask_2 = (mask == 2).astype(np.uint8)
 
         # 向内腐蚀50个像素
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 100))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (80, 80))
         mask_2_eroded = cv2.erode(mask_2, kernel)
 
         # 计算类别2的边缘（原始的类别2减去腐蚀后的结果）
         mask_edge = mask_2 - mask_2_eroded
         edge_y, edge_x = np.where(mask_edge > 0)
 
-        # 将边缘掩盖掉
-        for y, x in zip(edge_y, edge_x):
-            if pixel_level:
-                value = np.random.uniform(value_min, value_max, img[y, x].shape)
-            else:
-                value = np.random.uniform(value_min, value_max)
-            img[y, x] = value
-            mask[y, x] = 255
+        # 创建x和y的坐标网格
+        h, w = img.shape[:2]
+        x, y = np.meshgrid(np.arange(w), np.arange(h))
+
+        # 创建一个从边缘区域指向图像中心的向量场
+        center_x, center_y = w // 2, h // 2
+        vectors_x = center_x - x
+        vectors_y = center_y - y
+
+        # 使用向量场创建一个坐标映射
+        map_x = (x + vectors_x * mask_edge).astype(np.float32)
+        map_y = (y + vectors_y * mask_edge).astype(np.float32)
+
+        # 使用cv2.remap进行插值
+        img = cv2.remap(img, map_x, map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+
+        # 将mask的被掩盖部分填充为1
+        mask[edge_y, edge_x] = 1
 
         img = Image.fromarray(img.astype(np.uint8))
         mask = Image.fromarray(mask.astype(np.uint8))
