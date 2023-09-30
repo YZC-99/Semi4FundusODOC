@@ -27,7 +27,7 @@ csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','bb','OD_epoch','OD_dice', 'OD_mIoU','OC_epoch', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed','info'])
+    w.writerow(['experiment','bb','OD_epoch','OD_dice', 'OD_mIoU','OC_epoch', 'OC_dice', 'OC_mIoU','info','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed',])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
@@ -75,7 +75,7 @@ with open(csv_path, 'w', newline='') as csvfile:
             if hasattr(config.MODEL,'scheduler'):
                 scheduler = config.MODEL.scheduler
             if hasattr(config.info,'setting'):
-                scheduler = config.info.setting
+                setting = config.info.setting
             w.writerow([root.replace(path,"").replace("/lightning_logs/","").replace("/ckpt",""),
                         config.MODEL.backbone,
                         result['OD_best_epoch'],
@@ -84,6 +84,7 @@ with open(csv_path, 'w', newline='') as csvfile:
                         result['OC_best_epoch'],
                         round(float(result['OC_dice']) * 100,2),
                         round(float(result['OC_mIoU']) * 100,2),
+                        setting,
                         config.MODEL.epochs,
                         config.MODEL.lr,
                         config.MODEL.lr_warmup_steps_ratio,
@@ -96,7 +97,6 @@ with open(csv_path, 'w', newline='') as csvfile:
                         CEpair_loss,
                         ContrastCrossPixelCorrect_loss,
                         config.info.seed,
-                        config.info.setting,
                        ]
                         )
 
