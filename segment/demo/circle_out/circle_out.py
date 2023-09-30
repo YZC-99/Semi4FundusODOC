@@ -212,10 +212,61 @@ def circle_out_v4(img, mask, p=1.0):
     return img, mask
 
 
+import cv2
+import numpy as np
+from PIL import Image
+
+
+def circle_out_v5(img, mask, p=1.0):
+    if np.random.random() < p:
+        img = np.array(img)
+        mask = np.array(mask)
+
+        # 找到mask中像素值为2的部分
+        mask_2 = (mask == 2).astype(np.uint8)
+
+        # 向内腐蚀50个像素
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 100))
+        mask_2_eroded = cv2.erode(mask_2, kernel)
+
+        # 计算类别2的边缘（原始的类别2减去腐蚀后的结果）
+        mask_edge = mask_2 - mask_2_eroded
+
+        # 找到mask中像素值为1的部分
+        mask_1 = (mask == 1).astype(np.uint8)
+
+        # 获取mask类别1的区域的边界
+        contours, _ = cv2.findContours(mask_1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        x, y, w, h = cv2.boundingRect(contours[0])
+
+        # 从img中裁剪mask类别1对应的区域
+        patch = img[y:y + h, x:x + w]
+
+        # 创建一个和img大小相同的空图像
+        patch_resized = np.zeros_like(img)
+
+        # 将裁剪出的patch放大/缩小到和被掩盖部分的边缘相同的大小
+        patch_resized_edge = cv2.resize(patch, (mask_edge.shape[1], mask_edge.shape[0]))
+
+        # 使用mask_edge作为模板，将patch_resized_edge粘贴到patch_resized上
+        patch_resized[mask_edge > 0] = patch_resized_edge[mask_edge > 0]
+
+        # 将patch_resized的内容粘贴到img上
+        img[mask_edge > 0] = patch_resized[mask_edge > 0]
+
+        # 将mask的被掩盖部分填充为1
+        mask[mask_edge > 0] = 1
+
+        img = Image.fromarray(img.astype(np.uint8))
+        mask = Image.fromarray(mask.astype(np.uint8))
+
+    return img, mask
+
+
 img = Image.open('./drishtiGS_002.png')
 mask = Image.open('./drishtiGS_002_gt.png')
 # out_img,out_mask = cutout(img,mask)
-out_img,out_mask = circle_out_v4(img=img,mask=mask,p=1.0)
+out_img,out_mask = circle_out_v5(img=img,mask=mask,p=1.0)
 out_img.save('out_img.png')
 out_mask.putpalette(cmap)
 out_mask.save('out_mask.png')
