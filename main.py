@@ -38,6 +38,7 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--d', type=str, default='')
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--lr', type=float, default=-0.1)
     parser.add_argument('--warmup', type=float, default=-0.1)
@@ -103,6 +104,7 @@ if __name__ == '__main__':
     config.MODEL.epochs = args.epochs
     config.MODEL.BD_Contrast_rebalance_loss = args.BD_Contrast_rebalance_loss
     config.info.seed = args.seed
+    config.info.setting = args.d
 
     config_dict = OmegaConf.to_container(config, resolve=True)
     # 将新的配置字典中的键添加到之前的CfgNode对象中
