@@ -273,7 +273,7 @@ def circle_out_v6(img, mask, p=1.0):
         mask_2 = (mask == 2).astype(np.uint8)
 
         # 向内腐蚀50个像素
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 100))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (120, 120))
         mask_2_eroded = cv2.erode(mask_2, kernel)
 
         # 计算类别2的边缘（原始的类别2减去腐蚀后的结果）
@@ -302,7 +302,7 @@ def circle_out_v6(img, mask, p=1.0):
         img[mask_edge > 0] = patch_resized[mask_edge > 0]
 
         # 创建一个模糊核，只在边缘区域附近应用模糊
-        blur_kernel_size = 21  # 可以调整此值以获得不同程度的模糊
+        blur_kernel_size = 31  # 可以调整此值以获得不同程度的模糊
         blurred_img = cv2.GaussianBlur(img, (blur_kernel_size, blur_kernel_size), 0)
         blend_mask = cv2.dilate(mask_edge,
                                 cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (blur_kernel_size, blur_kernel_size)))

@@ -336,7 +336,8 @@ def cutout(img, mask, p=0.5, value_min=0, value_max=255, pixel_level=True):
         mask_2 = (mask == 2).astype(np.uint8)
 
         # 向内腐蚀50个像素
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 100))
+        width = np.random.randint(30, 101)  # 131是排他的，所以它不会被包括在内
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (width, width))
         mask_2_eroded = cv2.erode(mask_2, kernel)
 
         # 计算类别2的边缘（原始的类别2减去腐蚀后的结果）
