@@ -27,19 +27,24 @@ csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed','info'])
+    w.writerow(['experiment','bb','OD_epoch','OD_dice', 'OD_mIoU','OC_epoch', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed','info'])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
             file = [ i for i in file if 'last' not in i]
-            data = [i.replace("val_","").split('-')[1:] for i in file]
+            data = [i.replace("val_","").split('-')[0:] for i in file]
             result = {}
             for sublist in data:
                 for item in sublist:
                     key, value = item.split('=')
+                    if 'OC_dice' in sublist[1] and key == 'epoch':
+                        key = 'OC_best_epoch'
+                    elif 'OD_dice' in sublist[1] and key == 'epoch':
+                        key = 'OD_best_epoch'
                     key = key.strip()  # 去除键的前后空格
                     value = value.replace(".ckpt","")  # 去除文件扩展名
                     result[key] = value
+#             print(result)
             # 获得超参配置
             config_path = root.replace("ckpt","hparams.yaml")
             config = get_config_from_file(config_path)
@@ -73,8 +78,10 @@ with open(csv_path, 'w', newline='') as csvfile:
                 scheduler = config.info.setting
             w.writerow([root.replace(path,"").replace("/lightning_logs/","").replace("/ckpt",""),
                         config.MODEL.backbone,
+                        result['OD_best_epoch'],
                         round(float(result['OD_dice']) * 100,2),
                         round(float(result['OD_mIoU']) * 100,2),
+                        result['OC_best_epoch'],
                         round(float(result['OC_dice']) * 100,2),
                         round(float(result['OC_mIoU']) * 100,2),
                         config.MODEL.epochs,
