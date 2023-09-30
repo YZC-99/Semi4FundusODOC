@@ -4,7 +4,7 @@ import random
 import torch
 from torchvision import transforms
 from segment.dataloader.boundary_utils import class2one_hot,one_hot2dist
-
+import cv2
 
 def dist_transform(mask):
     # mask = np.array(mask)
@@ -217,32 +217,62 @@ def blur(img, p=0.5):
     return img
 
 
-def cutout(img, mask, p=0.5, size_min=0.02, size_max=0.4, ratio_1=0.3,
-           ratio_2=1/0.3, value_min=0, value_max=255, pixel_level=True):
-    if random.random() < p:
+# def cutout(img, mask, p=0.5, size_min=0.02, size_max=0.4, ratio_1=0.3,
+#            ratio_2=1/0.3, value_min=0, value_max=255, pixel_level=True):
+#     if random.random() < p:
+#         img = np.array(img)
+#         mask = np.array(mask)
+#
+#         img_h, img_w, img_c = img.shape
+#
+#         while True:
+#             size = np.random.uniform(size_min, size_max) * img_h * img_w
+#             ratio = np.random.uniform(ratio_1, ratio_2)
+#             erase_w = int(np.sqrt(size / ratio))
+#             erase_h = int(np.sqrt(size * ratio))
+#             x = np.random.randint(0, img_w)
+#             y = np.random.randint(0, img_h)
+#
+#             if x + erase_w <= img_w and y + erase_h <= img_h:
+#                 break
+#
+#         if pixel_level:
+#             value = np.random.uniform(value_min, value_max, (erase_h, erase_w, img_c))
+#         else:
+#             value = np.random.uniform(value_min, value_max)
+#
+#         img[y:y + erase_h, x:x + erase_w] = value
+#         mask[y:y + erase_h, x:x + erase_w] = 255
+#
+#         img = Image.fromarray(img.astype(np.uint8))
+#         mask = Image.fromarray(mask.astype(np.uint8))
+#
+#     return img, mask
+
+def cutout(img, mask, p=0.5, value_min=0, value_max=255, pixel_level=True):
+    if np.random.random() < p:
         img = np.array(img)
         mask = np.array(mask)
 
-        img_h, img_w, img_c = img.shape
+        # 找到mask中像素值为2的部分
+        mask_2 = (mask == 2).astype(np.uint8)
 
-        while True:
-            size = np.random.uniform(size_min, size_max) * img_h * img_w
-            ratio = np.random.uniform(ratio_1, ratio_2)
-            erase_w = int(np.sqrt(size / ratio))
-            erase_h = int(np.sqrt(size * ratio))
-            x = np.random.randint(0, img_w)
-            y = np.random.randint(0, img_h)
+        # 向内腐蚀50个像素
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 100))
+        mask_2_eroded = cv2.erode(mask_2, kernel)
 
-            if x + erase_w <= img_w and y + erase_h <= img_h:
-                break
+        # 计算类别2的边缘（原始的类别2减去腐蚀后的结果）
+        mask_edge = mask_2 - mask_2_eroded
+        edge_y, edge_x = np.where(mask_edge > 0)
 
-        if pixel_level:
-            value = np.random.uniform(value_min, value_max, (erase_h, erase_w, img_c))
-        else:
-            value = np.random.uniform(value_min, value_max)
-
-        img[y:y + erase_h, x:x + erase_w] = value
-        mask[y:y + erase_h, x:x + erase_w] = 255
+        # 将边缘掩盖掉
+        for y, x in zip(edge_y, edge_x):
+            if pixel_level:
+                value = np.random.uniform(value_min, value_max, img[y, x].shape)
+            else:
+                value = np.random.uniform(value_min, value_max)
+            img[y, x] = value
+            mask[y, x] = 255
 
         img = Image.fromarray(img.astype(np.uint8))
         mask = Image.fromarray(mask.astype(np.uint8))
