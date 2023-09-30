@@ -27,7 +27,7 @@ csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed'])
+    w.writerow(['experiment','bb','OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed','info'])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
