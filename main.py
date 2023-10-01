@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--CEpair_loss', type=float, default=-0.1)
     parser.add_argument('--ContrastCrossPixelCorrect_loss', type=float, default=-0.1)
     parser.add_argument('--ohem_thres', type=float, default=0.5)
-    parser.add_argument('--ohem_weight', type=list, default=[1.0,2.8,3.0])
+    parser.add_argument('--ohem_weight', type=float,nargs="+", default=[1.0,2.8,3.0])
 
     parser.add_argument('--backbone', type=str, default='b2')
 
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     config.MODEL.epochs = args.epochs
     config.MODEL.BD_Contrast_rebalance_loss = args.BD_Contrast_rebalance_loss
     config.MODEL.loss.params.thres = args.ohem_thres
-    config.MODEL.loss.params.weight = list(args.ohem_weight)
+    config.MODEL.loss.params.weight = args.ohem_weight
     config.info.seed = args.seed
     config.info.setting = args.d
 
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     data.prepare_data()
 
     if args.saw:
-        SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1, swa_epoch_start=10, annealing_epochs=30)
+        SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1, swa_epoch_start=50, annealing_epochs=50)
         callbacks.append(SWA_callback)
 
     # Build trainer

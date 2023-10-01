@@ -78,7 +78,11 @@ def Drishti_GS1():
         mask_arr_result = 0
         for mask_path in item:
             mask = Image.open(mask_path)
-            mask_arr = (np.array(mask) / 255).astype(np.uint8)
+            # 这里是原来的
+            # mask_arr = (np.array(mask) / 255).astype(np.uint8)
+            mask_arr = np.array(mask)
+            mask_arr[mask_arr > 191] = 191
+            mask_arr = (mask_arr / 191).astype(np.uint8)
             mask_arr_result += mask_arr
         mask_result = Image.fromarray(mask_arr_result, mode='P')
         mask_result.putpalette(cmap)
@@ -210,4 +214,4 @@ def NEW_IMAGE():
             if 'tif' in root:
                 print(root)
                 print(files)
-
+Drishti_GS1()
