@@ -193,7 +193,7 @@ images_cropped/n0031.jpg my_gts_cropped/n0031.bmp
 images_cropped/n0035.jpg my_gts_cropped/n0035.bmp
 images_cropped/n0036.jpg my_gts_cropped/n0036.bmp
 images_cropped/n0037.jpg my_gts_cropped/n0037.bmp
-images_cropped/n0038.jpg my_gts_cropped/n0038.bm
+images_cropped/n0038.jpg my_gts_cropped/n0038.bmp
 images_cropped/n0039.jpg my_gts_cropped/n0039.bmp
 images_cropped/n0041.jpg my_gts_cropped/n0041.bmp
 images_cropped/n0042.jpg my_gts_cropped/n0042.bmp
