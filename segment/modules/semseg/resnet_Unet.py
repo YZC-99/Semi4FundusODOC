@@ -74,6 +74,7 @@ class Unet(nn.Module):
         return {'out':out_classifier,
                 'out_features':up1,
                 'out_classifier':out_classifier,
+                'backbone_features': feat5,
                 }
 
 
