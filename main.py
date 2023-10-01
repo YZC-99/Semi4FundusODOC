@@ -53,6 +53,7 @@ if __name__ == '__main__':
     parser.add_argument('--ContrastCrossPixelCorrect_loss', type=float, default=-0.1)
     parser.add_argument('--ohem_thres', type=float, default=0.5)
     parser.add_argument('--ohem_weight', type=float,nargs="+", default=[1.0,2.8,3.0])
+    parser.add_argument('--Attention', type=str, default=None)
 
     parser.add_argument('--backbone', type=str, default='b2')
 
@@ -101,6 +102,9 @@ if __name__ == '__main__':
         config.MODEL.CEpair_loss = args.CEpair_loss
     if args.ContrastCrossPixelCorrect_loss >= 0:
         config.MODEL.ContrastCrossPixelCorrect_loss = args.ContrastCrossPixelCorrect_loss
+    if args.Attention is not None:
+        config.MODEL.Attention = args.Attention
+
     config.MODEL.backbone = args.backbone
     config.MODEL.scheduler = args.scheduler
     config.MODEL.epochs = args.epochs
