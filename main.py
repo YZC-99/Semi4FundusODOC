@@ -38,8 +38,6 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default=None)
-    parser.add_argument('--backbone', type=str, default=None)
     parser.add_argument('--d', type=str, default='')
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--lr', type=float, default=-0.1)
@@ -57,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--ohem_weight', type=float,nargs="+", default=[1.0,2.8,3.0])
     parser.add_argument('--Attention', type=str, default=None)
 
+    parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--backbone', type=str, default='b2')
 
     parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/strong1/G1R7R4_B_CJ_semi')
@@ -108,8 +107,6 @@ if __name__ == '__main__':
         config.MODEL.Attention = args.Attention
     if args.model is not None:
         config.MODEL.model = args.model
-    if args.backbone is not None:
-        config.MODEL.backbone = args.backbone
 
     config.MODEL.backbone = args.backbone
     config.MODEL.scheduler = args.scheduler
