@@ -315,10 +315,53 @@ def circle_out_v6(img, mask, p=1.0):
         mask = Image.fromarray(mask.astype(np.uint8))
 
     return img, mask
+
+
+from PIL import Image
+import numpy as np
+
+
+def localize_cup(mask, value=2):
+    y_indices, x_indices = np.where(mask == value)
+    if len(y_indices) == 0 or len(x_indices) == 0:  # 如果找不到视杯，返回整个图像的坐标
+        return 0, mask.shape[0], 0, mask.shape[1]
+    return min(y_indices), max(y_indices), min(x_indices), max(x_indices)
+
+
+def enhance_cup(img, mask, scale_factor=0.8):
+    # 定位视杯区域
+    ymin, ymax, xmin, xmax = localize_cup(mask)
+
+    # 提取ROI
+    roi_img = img[ymin:ymax, xmin:xmax]
+    roi_mask = mask[ymin:ymax, xmin:xmax]
+
+    # 缩放ROI
+    new_height, new_width = int(roi_img.shape[0] * scale_factor), int(roi_img.shape[1] * scale_factor)
+    resized_roi_img = np.array(Image.fromarray(roi_img).resize((new_width, new_height), Image.BILINEAR))
+    resized_roi_mask = np.array(Image.fromarray(roi_mask).resize((new_width, new_height), Image.NEAREST))
+
+    # 创建输出图像和mask，首先将它们初始化为原始图像和mask的值
+    output_img = np.array(img)
+    output_mask = np.array(mask)
+
+    # 计算插入缩放后ROI的位置
+    y_offset = (ymax - ymin - new_height) // 2
+    x_offset = (xmax - xmin - new_width) // 2
+
+    # 替换原始图像和mask中的ROI
+    output_img[ymin + y_offset:ymin + y_offset + new_height,
+    xmin + x_offset:xmin + x_offset + new_width] = resized_roi_img
+    output_mask[ymin + y_offset:ymin + y_offset + new_height,
+    xmin + x_offset:xmin + x_offset + new_width] = resized_roi_mask
+
+    return output_img, output_mask
+
+
 img = Image.open('./drishtiGS_002.png')
 mask = Image.open('./drishtiGS_002_gt.png')
 # out_img,out_mask = cutout(img,mask)
-out_img,out_mask = circle_out_v6(img=img,mask=mask,p=1.0)
+out_img,out_mask = enhance_cup(img=img,mask=mask)
 out_img.save('out_img.png')
 out_mask.putpalette(cmap)
 out_mask.save('out_mask.png')
