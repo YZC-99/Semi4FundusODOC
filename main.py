@@ -54,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--ohem_thres', type=float, default=0.5)
     parser.add_argument('--ohem_weight', type=float,nargs="+", default=[1.0,2.8,3.0])
     parser.add_argument('--Attention', type=str, default=None)
+    parser.add_argument('--optimizer_decoupling', type=int, default=10)
 
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--backbone', type=str, default='b2')
@@ -109,6 +110,7 @@ if __name__ == '__main__':
         config.MODEL.model = args.model
 
     config.MODEL.backbone = args.backbone
+    config.MODEL.optimizer_decoupling = args.optimizer_decoupling
     config.MODEL.scheduler = args.scheduler
     config.MODEL.epochs = args.epochs
     config.MODEL.BD_Contrast_rebalance_loss = args.BD_Contrast_rebalance_loss
