@@ -106,7 +106,7 @@ if __name__ == '__main__':
     config.MODEL.epochs = args.epochs
     config.MODEL.BD_Contrast_rebalance_loss = args.BD_Contrast_rebalance_loss
     config.MODEL.loss.params.thres = args.ohem_thres
-    config.MODEL.loss.params.weight = args.ohem_weight
+    config.MODEL.loss.params.weight = list(args.ohem_weight)
     config.info.seed = args.seed
     config.info.setting = args.d
 
