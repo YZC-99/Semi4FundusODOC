@@ -580,13 +580,14 @@ def uda_train(pl_module: pl.LightningModule, batch):
 def optimizer_config(pl_module: pl.LightningModule):
     lr = pl_module.learning_rate
     total_iters = pl_module.train_steps
-    # 获取backbone的参数
-    backbone_params = set(pl_module.model.backbone.parameters())
-    # 获取非backbone的参数
-    non_backbone_params = [p for p in pl_module.model.parameters() if p not in backbone_params]
 
 
     if pl_module.cfg.MODEL.optimizer_decoupling > 0:
+        # 获取backbone的参数
+        backbone_params = set(pl_module.model.backbone.parameters())
+        # 获取非backbone的参数
+        non_backbone_params = [p for p in pl_module.model.parameters() if p not in backbone_params]
+
         param_groups = [
             {'params': pl_module.model.backbone.parameters(), 'lr': lr},
             {'params': non_backbone_params, 'lr': lr * pl_module.cfg.MODEL.optimizer_decoupling}
