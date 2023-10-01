@@ -38,6 +38,8 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--model', type=str, default=None)
+    parser.add_argument('--backbone', type=str, default=None)
     parser.add_argument('--d', type=str, default='')
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--lr', type=float, default=-0.1)
@@ -104,6 +106,10 @@ if __name__ == '__main__':
         config.MODEL.ContrastCrossPixelCorrect_loss = args.ContrastCrossPixelCorrect_loss
     if args.Attention is not None:
         config.MODEL.Attention = args.Attention
+    if args.model is not None:
+        config.MODEL.model = args.model
+    if args.backbone is not None:
+        config.MODEL.backbone = args.backbone
 
     config.MODEL.backbone = args.backbone
     config.MODEL.scheduler = args.scheduler

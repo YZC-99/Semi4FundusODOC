@@ -51,7 +51,7 @@ class Unet(nn.Module):
         else:
             self.up_conv = None
 
-        self.final = nn.Conv2d(out_filters[0], num_classes, 1)
+        self.classifier = nn.Conv2d(out_filters[0], num_classes, 1)
 
         self.backbone = backbone
 
@@ -69,9 +69,13 @@ class Unet(nn.Module):
         if self.up_conv != None:
             up1 = self.up_conv(up1)
 
-        final = self.final(up1)
+        out_classifier = self.classifier(up1)
 
-        return final
+        return {'out':out_classifier,
+                'out_features':up1,
+                'out_classifier':out_classifier,
+                }
+
 
     def freeze_backbone(self):
         if self.backbone == "vgg":
