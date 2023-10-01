@@ -84,10 +84,10 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
 
 
     ckpt_path = os.path.join(logger.log_dir,'ckpt')
-    on_best_ODmIoU = ModelCheckpoint(
+    on_best_ODIoU = ModelCheckpoint(
         dirpath = ckpt_path,
-        filename="{epoch}-{val_OD_mIoU:.6f}",
-        monitor="val_OD_mIoU",
+        filename="{epoch}-{val_OD_IoU:.6f}",
+        monitor="val_OD_IoU",
         mode="max",
         save_top_k=1,
         save_last=False,
@@ -102,10 +102,10 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
-    on_best_OCmIoU = ModelCheckpoint(
+    on_best_OCIoU = ModelCheckpoint(
         dirpath = ckpt_path,
-        filename="{epoch}-{val_OC_mIoU:.6f}",
-        monitor="val_OC_mIoU",
+        filename="{epoch}-{val_OC_IoU:.6f}",
+        monitor="val_OC_IoU",
         mode="max",
         save_top_k=1,
         save_last=False,
@@ -123,7 +123,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     # val_loss
     on_min_val_loss = ModelCheckpoint(
         dirpath = ckpt_path,
-        filename="valloss-{epoch}-{val_OD_dice:.6f}-{val_OD_mIoU:.6f}-{val_OC_dice:.6f}-{val_OC_mIoU:.6f}",
+        filename="valloss-{epoch}-{val_OD_dice:.6f}-{val_OD_IoU:.6f}-{val_OC_dice:.6f}-{val_OC_IoU:.6f}",
         monitor="val_loss",
         mode="min",
         save_top_k=1,
@@ -132,7 +132,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     )
     on_best_OD_Dice = ModelCheckpoint(
         dirpath = ckpt_path,
-        filename="{epoch}-{val_OD_dice:.6f}-{val_OD_mIoU:.6f}",
+        filename="{epoch}-{val_OD_dice:.6f}-{val_OD_IoU:.6f}",
         monitor="val_OD_dice",
         mode="max",
         save_top_k=1,
@@ -141,7 +141,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     )
     on_best_OC_Dice = ModelCheckpoint(
         dirpath = ckpt_path,
-        filename="{epoch}-{val_OC_dice:.6f}-{val_OC_mIoU:.6f}",
+        filename="{epoch}-{val_OC_dice:.6f}-{val_OC_IoU:.6f}",
         monitor="val_OC_dice",
         mode="max",
         save_top_k=1,
@@ -170,11 +170,11 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
     model_architecture_callback = ModelArchitectureCallback(path=str(setup_callback.logdir))
     # return [setup_callback, checkpoint_callback, logger_img_callback,model_architecture_callback], logger
     if config.MODEL.NUM_CLASSES == 3:
-        # return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,on_best_OCmIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
+        # return [setup_callback, on_best_ODIoU,on_best_OD_Dice,on_best_OCIoU,on_best_OC_Dice,logger_img_callback], logger,Profiler
         return [setup_callback,on_min_val_loss,on_best_OD_Dice,on_best_OC_Dice,logger_img_callback], logger,Profiler
     elif config.MODEL.NUM_CLASSES == -1:
         return [setup_callback, on_vqe_min_loss,logger_img_callback], logger, Profiler
-    return [setup_callback, on_best_ODmIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
+    return [setup_callback, on_best_ODIoU,on_best_OD_Dice,logger_img_callback], logger,Profiler
 
 
 def get_config_from_file(config_file: str) -> Dict:

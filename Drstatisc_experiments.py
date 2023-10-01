@@ -7,16 +7,16 @@ import csv
 # with open(csv_path, 'w', newline='') as csvfile:
 #     w = csv.writer(csvfile)
 #     # 写入列头
-#     w.writerow(['experiment', 'OD_dice', 'OD_mIoU', 'OC_dice', 'OC_mIoU'])
+#     w.writerow(['experiment', 'OD_dice', 'OD_IoU', 'OC_dice', 'OC_IoU'])
 #     for root, dirs, file in os.walk(path):
 #         if 'ckpt' in root:
 #             experiment = root.split(path)[-1].replace('ckpt', '')
 #             results_list = [i.split('-')[0].replace('val_', '').split('=') for i in file]
 #             results_dict = {item[0]: round(float(item[1].replace('.ckpt','')) * 100, 2) for item in results_list}
 #             w.writerow([experiment, results_dict['OD_dice'],
-#                         results_dict['OD_mIoU'],
+#                         results_dict['OD_IoU'],
 #                         results_dict['OC_dice'],
-#                         results_dict['OC_mIoU']])
+#                         results_dict['OC_IoU']])
 
 import os
 import csv
@@ -27,7 +27,7 @@ csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
     # 写入列头
-    w.writerow(['experiment','bb','OD_epoch','OD_dice', 'OD_mIoU','OC_epoch', 'OC_dice', 'OC_mIoU','info','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed',])
+    w.writerow(['experiment','bb','OD_epoch','OD_dice', 'OD_IoU','OC_epoch', 'OC_dice', 'OC_IoU','info','epochs','lr','warmup_ratio','scheduler','DC_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed',])
     for root, dirs, file in os.walk(path):
         if 'ckpt' in root:
             file = [ i for i in file if 'valloss' not in i]
@@ -80,10 +80,10 @@ with open(csv_path, 'w', newline='') as csvfile:
                         config.MODEL.backbone,
                         result['OD_best_epoch'],
                         round(float(result['OD_dice']) * 100,2),
-                        round(float(result['OD_mIoU']) * 100,2),
+                        round(float(result['OD_IoU']) * 100,2),
                         result['OC_best_epoch'],
                         round(float(result['OC_dice']) * 100,2),
-                        round(float(result['OC_mIoU']) * 100,2),
+                        round(float(result['OC_IoU']) * 100,2),
                         setting,
                         config.MODEL.epochs,
                         config.MODEL.lr,
