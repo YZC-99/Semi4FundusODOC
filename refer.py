@@ -52,8 +52,8 @@ dataset = SupTrain(task='od_oc',
 dataloader = DataLoader(dataset, batch_size=1, shuffle=False,
                                   pin_memory=True, num_workers=8, drop_last=False)
 tbar = tqdm(dataloader)
-od_mIoU = JaccardIndex(num_classes=2, task='multiclass',average='micro').to('cuda:0')
-oc_mIoU = JaccardIndex(num_classes=2, task='multiclass',average='micro').to('cuda:0')
+od_mIoU = JaccardIndex(num_classes=2, task='binary',average='micro').to('cuda:0')
+oc_mIoU = JaccardIndex(num_classes=2, task='binary',average='micro').to('cuda:0')
 od_Dice = Dice(num_classes=1,multiclass=False,average='samples').to('cuda:0')
 oc_Dice = Dice(num_classes=1,multiclass=False,average='samples').to('cuda:0')
 cmap = color_map('eye')
