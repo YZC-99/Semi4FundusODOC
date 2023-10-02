@@ -111,7 +111,7 @@ def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_
 
 
 
-def random_rotate(img, mask, p=0.5, max_rotation_angle=90):
+def random_rotate(img, mask, p=0.5, max_rotation_angle=5):
     if random.random() < p:
         rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
         img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
@@ -327,54 +327,9 @@ def blur(img, p=0.5):
 #     return img, mask
 
 # v6
-def cutout(img, mask, p=0.5, value_min=0, value_max=255, pixel_level=True):
+def cutout(img, mask, p=0.5):
     if np.random.random() < p:
-        img = np.array(img)
-        mask = np.array(mask)
-
-        # 找到mask中像素值为2的部分
-        mask_2 = (mask == 2).astype(np.uint8)
-
-        # 向内腐蚀50个像素
-        width = np.random.randint(30, 101)  # 131是排他的，所以它不会被包括在内
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (width, width))
-        mask_2_eroded = cv2.erode(mask_2, kernel)
-
-        # 计算类别2的边缘（原始的类别2减去腐蚀后的结果）
-        mask_edge = mask_2 - mask_2_eroded
-
-        # 找到mask中像素值为1的部分
-        mask_1 = (mask == 1).astype(np.uint8)
-
-        # 获取mask类别1的区域的边界
-        contours, _ = cv2.findContours(mask_1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        x, y, w, h = cv2.boundingRect(contours[0])
-
-        # 从img中裁剪mask类别1对应的区域
-        patch = img[y:y + h, x:x + w]
-
-        # 创建一个和img大小相同的空图像
-        patch_resized = np.zeros_like(img)
-
-        # 将裁剪出的patch放大/缩小到和被掩盖部分的边缘相同的大小
-        patch_resized_edge = cv2.resize(patch, (mask_edge.shape[1], mask_edge.shape[0]))
-
-        # 使用mask_edge作为模板，将patch_resized_edge粘贴到patch_resized上
-        patch_resized[mask_edge > 0] = patch_resized_edge[mask_edge > 0]
-
-        # 将patch_resized的内容粘贴到img上
-        img[mask_edge > 0] = patch_resized[mask_edge > 0]
-
-        # 创建一个模糊核，只在边缘区域附近应用模糊
-        blur_kernel_size = 21  # 可以调整此值以获得不同程度的模糊
-        blurred_img = cv2.GaussianBlur(img, (blur_kernel_size, blur_kernel_size), 0)
-        blend_mask = cv2.dilate(mask_edge,
-                                cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (blur_kernel_size, blur_kernel_size)))
-        img[blend_mask > 0] = blurred_img[blend_mask > 0]
-
-        # 将mask的被掩盖部分填充为1
-        mask[mask_edge > 0] = 1
-
-        img = Image.fromarray(img.astype(np.uint8))
-        mask = Image.fromarray(mask.astype(np.uint8))
+        factor = np.random.uniform(0.3, 1.7)
+        enhancer = ImageEnhance.Brightness(img)
+        img = enhancer.enhance(factor)
     return img, mask
