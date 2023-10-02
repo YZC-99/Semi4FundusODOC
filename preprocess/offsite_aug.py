@@ -1,14 +1,16 @@
 import numpy as np
 from PIL import Image
 import os
+import sys
+sys.path.append('..')
 from segment.dataloader.transform import crop, hflip,vflip, normalize, resize, blur, cutout,dist_transform,random_scale_and_crop
 from segment.dataloader.transform import random_rotate,random_translate,add_salt_pepper_noise,random_scale,color_distortion
-import cv2
 from segment.util import count_params, meanIOU, color_map
+import cv2
 cmap = color_map('fundus')
 root = '/root/autodl-tmp/data/Drishti-GS'
-whole_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/Drishti-GS/SEG.txt'
-whole_cropped_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/Drishti-GS/all_cropped.txt'
+whole_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/Drishti-GS/all_cropped.txt'
+whole_cropped_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/Drishti-GS/auged.txt'
 with open(whole_path, 'r') as f:
     whole_ids = f.read().splitlines()
 with open(whole_cropped_path,'a') as cf:
@@ -49,5 +51,6 @@ with open(whole_cropped_path,'a') as cf:
         img,mask = hflip(img,mask,p=1.0)
         img,mask = vflip(img,mask,p=1.0)
         # 保存
-        img.save(cropped_img_path)
+        print(cropped_img_path)
+#         img.save(cropped_img_path)
 print('done')
