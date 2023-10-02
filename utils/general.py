@@ -93,33 +93,7 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
-    on_best_OD_Dice = ModelCheckpoint(
-        dirpath = ckpt_path,
-        filename="{epoch}-{val_OD_dice:.6f}",
-        monitor="val_OD_dice",
-        mode="max",
-        save_top_k=1,
-        save_last=False,
-        verbose=False,
-    )
-    on_best_OCIoU = ModelCheckpoint(
-        dirpath = ckpt_path,
-        filename="{epoch}-{val_OC_IoU:.6f}",
-        monitor="val_OC_IoU",
-        mode="max",
-        save_top_k=1,
-        save_last=False,
-        verbose=False,
-    )
-    on_best_OC_Dice = ModelCheckpoint(
-        dirpath = ckpt_path,
-        filename="{epoch}-{val_OC_dice:.6f}",
-        monitor="val_OC_dice",
-        mode="max",
-        save_top_k=1,
-        save_last=False,
-        verbose=False,
-    )
+
     # val_loss
     on_min_val_loss = ModelCheckpoint(
         dirpath = ckpt_path,
@@ -130,6 +104,16 @@ def setup_callbacks(exp_config: OmegaConf, config: OmegaConf) -> Tuple[List[Call
         save_last=False,
         verbose=False,
     )
+    # on_min_val_loss = ModelCheckpoint(
+    #     dirpath = ckpt_path,
+    #     filename="valloss-{epoch}-{val_OD_dice:.6f}-{val_OD_IoU:.6f}-{val_OC_dice:.6f}-{val_OC_IoU:.6f}",
+    #     monitor="val_loss",
+    #     mode="min",
+    #     save_top_k=-1,
+    #     every_n_epochs=1,
+    #     save_last=True,
+    #     verbose=False,
+    # )
     on_best_OD_Dice = ModelCheckpoint(
         dirpath = ckpt_path,
         filename="{epoch}-{val_OD_dice:.6f}-{val_OD_IoU:.6f}",

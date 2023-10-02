@@ -20,11 +20,11 @@ from torch.utils.data import DataLoader
 
 #
 num_classes = 3
-ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/Drishti-GS/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise/lightning_logs/version_4/ckpt/epoch=90-val_OC_dice=0.908886-val_OC_mIoU=0.947833.ckpt'
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/REFUGE/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise/lightning_logs/version_8/ckpt/epoch=49-val_OC_dice=0.913130-val_OC_IoU=0.845713.ckpt'
 log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus,'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
 # model = model_zoo['deeplabv3plus']('resnet50', num_classes,attention='Criss_Attention_R2_V1',seghead_last=True)
-model = SegFormer(num_classes=num_classes, phi='b4',attention='backbone_multi-levelv7-ii-1-6-v1')
+model = SegFormer(num_classes=num_classes, phi='b2',attention='backbone_multi-levelv7-ii-1-6-v1')
 sd = torch.load(ckpt_path,map_location='cpu')
 
 if 'state_dict' in sd:
@@ -44,8 +44,8 @@ model.to('cuda:0')
 model.eval()
 
 dataset = SupTrain(task='od_oc',
-                    name='Drishti-GS/cropped_sup',
-                    root='./data/fundus_datasets/od_oc/Drishti-GS/',
+                    name='REFUGE/cropped_sup',
+                    root='./data/fundus_datasets/od_oc/REFUGE/',
                     mode='test',
                     size=256
                              )
