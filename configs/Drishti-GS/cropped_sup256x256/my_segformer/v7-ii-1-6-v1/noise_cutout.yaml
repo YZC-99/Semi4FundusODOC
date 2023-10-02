@@ -47,10 +47,19 @@ dataset:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:
                 task: 'od_oc'
-                name: 'Drishti-GS/cropped_sup'
+                name: 'cropped_sup'
                 root: './data/fundus_datasets/od_oc/Drishti-GS/'
+                labeled_id_path: 'dataset/Drishti-GS/cropped_sup/val.txt'
                 size: 256
-                mode: 'val'
+                mode: 'train'
+                aug:
+                  weak:
+                    flip: True
+                    rotate: True
+                    translate: True
+                    noise: True
+                    scale: True
+                    cutout: True
         test:
             target: segment.dataloader.od_oc_dataset.SupTrain
             params:

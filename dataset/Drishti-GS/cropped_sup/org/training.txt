@@ -43,3 +43,8 @@ Drishti-GS1_files/Training/images_cropped/drishtiGS_038.png Drishti-GS1_files/my
 Drishti-GS1_files/Training/images_cropped/drishtiGS_017.png Drishti-GS1_files/my_gts_cropped/drishtiGS_017.png
 Drishti-GS1_files/Training/images_cropped/drishtiGS_063.png Drishti-GS1_files/my_gts_cropped/drishtiGS_063.png
 Drishti-GS1_files/Training/images_cropped/drishtiGS_068.png Drishti-GS1_files/my_gts_cropped/drishtiGS_068.png
+Drishti-GS1_files/Training/images_cropped/drishtiGS_035.png Drishti-GS1_files/my_gts_cropped/drishtiGS_035.png
+Drishti-GS1_files/Training/images_cropped/drishtiGS_060.png Drishti-GS1_files/my_gts_cropped/drishtiGS_060.png
+Drishti-GS1_files/Training/images_cropped/drishtiGS_094.png Drishti-GS1_files/my_gts_cropped/drishtiGS_094.png
+Drishti-GS1_files/Training/images_cropped/drishtiGS_002.png Drishti-GS1_files/my_gts_cropped/drishtiGS_002.png
+Drishti-GS1_files/Training/images_cropped/drishtiGS_057.png Drishti-GS1_files/my_gts_cropped/drishtiGS_057.png

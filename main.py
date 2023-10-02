@@ -232,4 +232,5 @@ if __name__ == '__main__':
         trainer.tune(model, data)
     # Train
     trainer.fit(model, data, ckpt_path=cfg.MODEL.resume_path)
+    # trainer.test(model,data,ckpt_path=)
 
