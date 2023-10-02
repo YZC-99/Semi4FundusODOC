@@ -36,11 +36,11 @@ dataset:
                 mode: 'train'
                 aug:
                   weak:
-                    flip: True
-                    rotate: True
-                    translate: True
-                    noise: True
-                    scale: True
+                    flip: False
+                    rotate: False
+                    translate: False
+                    noise: False
+                    scale: False
                     cutout: False
 
         validation:
