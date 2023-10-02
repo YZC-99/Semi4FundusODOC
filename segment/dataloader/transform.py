@@ -111,7 +111,7 @@ def random_scale_and_crop(img, mask, target_size=(512, 512), min_scale=0.8, max_
 
 
 
-def random_rotate(img, mask, p=0.5, max_rotation_angle=5):
+def random_rotate(img, mask, p=0.5, max_rotation_angle=90):
     if random.random() < p:
         rotation_angle = random.uniform(-max_rotation_angle, max_rotation_angle)
         img = img.rotate(rotation_angle, resample=Image.BILINEAR, expand=True)
