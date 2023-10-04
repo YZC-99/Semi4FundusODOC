@@ -22,7 +22,7 @@ import os
 import csv
 from utils.general import get_config_from_file
 
-path = 'experiments/REFUGE/cropped_sup256x256'
+path = 'experiments/REFUGE'
 csv_path = os.path.join(path, 'statistic.csv')
 with open(csv_path, 'w', newline='') as csvfile:
     w = csv.writer(csvfile)
