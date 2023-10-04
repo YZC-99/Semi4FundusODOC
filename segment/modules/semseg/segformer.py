@@ -49,10 +49,7 @@ class SegFormerHead(nn.Module):
 
         self.attention = attention
 
-        self.linear_c4 = MLP(input_dim=c4_in_channels, embed_dim=embedding_dim)
-        self.linear_c3 = MLP(input_dim=c3_in_channels, embed_dim=embedding_dim)
-        self.linear_c2 = MLP(input_dim=c2_in_channels, embed_dim=embedding_dim)
-        self.linear_c1 = MLP(input_dim=c1_in_channels, embed_dim=embedding_dim)
+
 
 
         if attention == 'backbone_multi-levelv7-ii-1-6-v1':
@@ -130,8 +127,31 @@ class SegFormerHead(nn.Module):
                 c2=embedding_dim,
                 k=1,
             )
+        elif attention == 'o1':
+            self.dam = DAM(c4_in_channels)
+            self.ffn0 = nn.Sequential(
+                CrissCrossAttention(c4_in_channels),
+                ConvModule(c4_in_channels, c3_in_channels,k=3,p=1)
+            )
+            self.ffn1 = nn.Sequential(
+                CrissCrossAttention(c3_in_channels),
+                ConvModule(c3_in_channels, c2_in_channels,k=3,p=1)
+            )
+            self.ffn2 = nn.Sequential(
+                CrissCrossAttention(c2_in_channels),
+                ConvModule(c2_in_channels, c1_in_channels,k=3,p=1)
+            )
+            self.ffn3 = nn.Sequential(
+                CrissCrossAttention(c1_in_channels),
+                ConvModule(c1_in_channels, 64,k=3,p=1)
+            )
+
 
         else:
+            self.linear_c4 = MLP(input_dim=c4_in_channels, embed_dim=embedding_dim)
+            self.linear_c3 = MLP(input_dim=c3_in_channels, embed_dim=embedding_dim)
+            self.linear_c2 = MLP(input_dim=c2_in_channels, embed_dim=embedding_dim)
+            self.linear_c1 = MLP(input_dim=c1_in_channels, embed_dim=embedding_dim)
             self.linear_fuse = ConvModule(
                 c1=embedding_dim*4,
                 c2=embedding_dim,
@@ -147,18 +167,6 @@ class SegFormerHead(nn.Module):
 
         ############## MLP decoder on C1-C4 ###########
         n, _, h, w = c4.shape
-        # if self.attention == 'org':
-        _c4 = self.linear_c4(c4).permute(0,2,1).reshape(n, -1, c4.shape[2], c4.shape[3])
-        _c4 = F.interpolate(_c4, size=c1.size()[2:], mode='bilinear', align_corners=False)
-
-        _c3 = self.linear_c3(c3).permute(0,2,1).reshape(n, -1, c3.shape[2], c3.shape[3])
-        _c3 = F.interpolate(_c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
-
-        _c2 = self.linear_c2(c2).permute(0,2,1).reshape(n, -1, c2.shape[2], c2.shape[3])
-        _c2 = F.interpolate(_c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
-
-        _c1 = self.linear_c1(c1).permute(0,2,1).reshape(n, -1, c1.shape[2], c1.shape[3])
-
 
         if self.attention == 'backbone_multi-levelv7-ii-1-6' or self.attention == 'backbone_multi-levelv7-ii-1-6-v1' \
                 or self.attention == 'backbone_multi-levelv7-ii-1-6-v2':
@@ -202,11 +210,32 @@ class SegFormerHead(nn.Module):
             sub = self.cca1(sub)
 
             _c = self.linear_fuse(torch.cat([_c1, _c2, _c3, _c4, sub], dim=1))
-
+        elif self.attention == 'o1':
+            c4 = self.dam(c4)
+            c4 = self.ffn0(c4)
+            _c4 = F.interpolate(c4, size=c3.size()[2:], mode='bilinear', align_corners=False)
+            c3 = self.ffn1(_c4 + c3)
+            _c3 = F.interpolate(c3, size=c2.size()[2:], mode='bilinear', align_corners=False)
+            c2 = self.ffn2(_c3 + c2)
+            _c2 = F.interpolate(c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            _c1 = self.ffn3(_c2)
+            out_feat = _c1
         else:
+            # if self.attention == 'org':
+            _c4 = self.linear_c4(c4).permute(0, 2, 1).reshape(n, -1, c4.shape[2], c4.shape[3])
+            _c4 = F.interpolate(_c4, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _c3 = self.linear_c3(c3).permute(0, 2, 1).reshape(n, -1, c3.shape[2], c3.shape[3])
+            _c3 = F.interpolate(_c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _c2 = self.linear_c2(c2).permute(0, 2, 1).reshape(n, -1, c2.shape[2], c2.shape[3])
+            _c2 = F.interpolate(_c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+
+            _c1 = self.linear_c1(c1).permute(0, 2, 1).reshape(n, -1, c1.shape[2], c1.shape[3])
             _c = self.linear_fuse(torch.cat([_c4, _c3, _c2, _c1], dim=1))
 
-        out_feat = self.dropout(_c)
+        if self.attention != 'o1':
+            out_feat = self.dropout(_c)
         # x = self.classifier(out_feat)
 
         # return out_feat,x
@@ -241,8 +270,10 @@ class SegFormer(nn.Module):
         #     c2=256,
         #     k=1,
         # )
-
-        self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
+        if attention == 'o1':
+            self.classifier = nn.Conv2d(64, num_classes, kernel_size=3,padding=1)
+        else:
+            self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
         # self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
 
 
@@ -282,7 +313,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='backbone_multi-levelv7-ii-1-6-v1-dam-criss')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
