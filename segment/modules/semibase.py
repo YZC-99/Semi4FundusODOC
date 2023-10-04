@@ -26,7 +26,8 @@ from segment.modules.semseg.deeplabv2 import DeepLabV2
 
 # from segment.modules.semseg.unet import UNet,ResUNet
 from segment.modules.semseg.resnet_Unet import Unet
-from segment.modules.semseg.segformer import SegFormer,ResSegFormer
+from segment.modules.semseg.segformer import SegFormer
+from segment.modules.semseg.ex_segformer import ResSegFormer
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
