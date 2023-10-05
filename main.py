@@ -112,9 +112,9 @@ if __name__ == '__main__':
     if args.model is not None:
         config.MODEL.model = args.model
     if args.sample >= 0:
-        config.dataset.params.train.params.labeled_id_path = config.params.train.params.labeled_id_path.replace("training.txt",'sample{}/training.txt'.format(args.sample))
-        config.dataset.params.validation.params.name = os.path.join(config.params.validation.params.name,'sample{}'.format(args.sample))
-        config.dataset.params.test.params.name = os.path.join(config.params.test.params.name,'sample{}'.format(args.sample))
+        config.dataset.params.train.params.labeled_id_path = config.dataset.params.train.params.labeled_id_path.replace("training.txt",'sample{}/training.txt'.format(args.sample))
+        config.dataset.params.validation.params.name = os.path.join(config.dataset.params.validation.params.name,'sample{}'.format(args.sample))
+        config.dataset.params.test.params.name = os.path.join(config.dataset.params.test.params.name,'sample{}'.format(args.sample))
 
     config.MODEL.backbone = args.backbone
     config.MODEL.optimizer_decoupling = args.optimizer_decoupling
