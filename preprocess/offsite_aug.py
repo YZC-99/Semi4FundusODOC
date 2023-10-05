@@ -20,9 +20,9 @@ def write_save(img,mask,name,cf):
     cf.write(img_path_name + ' ' + mask_path_name + '\n')
 
 cmap = color_map('fundus')
-root = '/root/autodl-tmp/data/Drishti-GS1'
-whole_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/Drishti-GS/all_cropped.txt'
-whole_cropped_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/Drishti-GS/auged.txt'
+root = '/root/autodl-tmp/data/REFUGE'
+whole_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/REFUGE/all_cropped.txt'
+whole_cropped_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/REFUGE/polared.txt'
 with open(whole_path, 'r') as f:
     whole_ids = f.read().splitlines()
 with open(whole_cropped_path, 'a') as cf:
@@ -32,9 +32,9 @@ with open(whole_cropped_path, 'a') as cf:
         img = Image.open(img_path)
         mask = Image.open(mask_path)
 
-        mask_path = mask_path.replace('my_gts_cropped', 'my_gts_auged')
+        mask_path = mask_path.replace('my_gts', 'my_gts_polared')
         if 'images' in img_path:
-            img_path = img_path.replace('images', 'images_auged')
+            img_path = img_path.replace('images', 'images_polared')
         if 'Images' in img_path:
             img_path = img_path.replace('Images', 'images_auged')
         if '650image' in img_path:

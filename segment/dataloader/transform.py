@@ -333,3 +333,4 @@ def cutout(img, mask, p=0.5):
         enhancer = ImageEnhance.Brightness(img)
         img = enhancer.enhance(factor)
     return img, mask
+
