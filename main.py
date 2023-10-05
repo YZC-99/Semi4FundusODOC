@@ -60,6 +60,9 @@ if __name__ == '__main__':
     parser.add_argument('--backbone', type=str, default='b2')
 
     parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/strong1/G1R7R4_B_CJ_semi')
+
+    parser.add_argument('--sample', type=int, default=-1)
+
     parser.add_argument('-s', '--seed', type=int, default=42)
 
     parser.add_argument('-nn', '--num_nodes', type=int, default=1)
@@ -108,6 +111,10 @@ if __name__ == '__main__':
         config.MODEL.Attention = args.Attention
     if args.model is not None:
         config.MODEL.model = args.model
+    if args.sample >= 0:
+        config.params.train.params.labeled_id_path = config.params.train.params.labeled_id_path.replace("training.txt",'sample{}/training.txt'.format(args.sample))
+        config.params.validation.params.name = os.path.join(config.params.validation.params.name,'sample{}'.format(args.sample))
+        config.params.test.params.name = os.path.join(config.params.test.params.name,'sample{}'.format(args.sample))
 
     config.MODEL.backbone = args.backbone
     config.MODEL.optimizer_decoupling = args.optimizer_decoupling
