@@ -9,6 +9,7 @@ import os
 import sys
 from yacs.config import CfgNode as CN
 import yaml
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from torch.utils.data import DataLoader
 from segment.configs import cfg
 from segment.modules.semibase import Base
@@ -70,6 +71,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-u', '--update_every', type=int, default=1)
     parser.add_argument('-a', '--use_amp', default=False, action='store_true')
+    parser.add_argument('--early_stop', default=False, action='store_true')
     parser.add_argument('-gc', '--grad_clip', default=0.0, type=float)
 
     parser.add_argument('-b', '--batch_frequency', type=int, default=10000)
@@ -219,7 +221,10 @@ if __name__ == '__main__':
     if args.saw:
         SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1, swa_epoch_start=50, annealing_epochs=50)
         callbacks.append(SWA_callback)
-
+    if args.early_stop:
+        early_stop_callback = EarlyStopping(monitor="val_OC_dice", min_delta=0.00, patience=30, verbose=False,
+                                            mode="max")
+        callbacks.append(early_stop_callback)
     # Build trainer
     trainer = pl.Trainer(max_epochs=exp_config.epochs,
                          precision=16 if exp_config.use_amp else 32,
