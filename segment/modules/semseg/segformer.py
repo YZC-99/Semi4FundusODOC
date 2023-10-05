@@ -273,6 +273,7 @@ class SegFormerHead(nn.Module):
             sub = self.cca1(sub)
 
             _c = self.linear_fuse(torch.cat([_c1, _c2, _c3, _c4, sub], dim=1))
+            out_feat = _c
         elif self.attention=='backbone_multi-levelv7-ii-1-6-v1-dam' or self.attention=='backbone_multi-levelv7-ii-1-6-v1-dam-criss':
             c4 = self.dam(c4)
             # 全部上采样到128*128
@@ -294,6 +295,7 @@ class SegFormerHead(nn.Module):
             sub = self.cca1(sub)
 
             _c = self.linear_fuse(torch.cat([_c1, _c2, _c3, _c4, sub], dim=1))
+            out_feat = _c
         elif self.attention == 'o1':
             c4 = self.dam(c4)
             c4 = self.ffn0(c4)
