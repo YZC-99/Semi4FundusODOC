@@ -81,7 +81,7 @@ images_polared_cropped/n0067.jpg my_gts_polared_cropped/n0067.bmp
 images_polared_cropped/n0068.jpg my_gts_polared_cropped/n0068.bmp
 images_polared_cropped/n0069.jpg my_gts_polared_cropped/n0069.bmp
 images_polared_cropped/n0070.jpg my_gts_polared_cropped/n0070.bmp
-images_polared_cropped/n0071.jpg my_gts_plared_cropped/n0071.bmp
+images_polared_cropped/n0071.jpg my_gts_polared_cropped/n0071.bmp
 images_polared_cropped/n0072.jpg my_gts_polared_cropped/n0072.bmp
 images_polared_cropped/n0073.jpg my_gts_polared_cropped/n0073.bmp
 images_polared_cropped/n0074.jpg my_gts_polared_cropped/n0074.bmp

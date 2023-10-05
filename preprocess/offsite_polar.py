@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 import os
 import sys
 
@@ -14,31 +14,40 @@ import cv2
 import numpy as np
 from PIL import Image
 
-def cartesian_to_polar(img):
-    # Convert PIL image to numpy array
-    data = np.array(img)
 
-    # Calculate the center of the image
-    center_x = data.shape[1] / 2
-    center_y = data.shape[0] / 2
+def cartesian_to_polar(img, mask):
+    # 将PIL图像转换为NumPy数组
+    img_np = np.array(img.convert('RGB'))
+    mask_np = np.array(mask)  # 假设mask是灰度图
 
-    # Create an empty array for the polar image
-    polar_img = np.zeros_like(data)
+    # 确保图像是float类型
+    img_float = img_np.astype(np.float32)
+    mask_float = mask_np.astype(np.float32)
+    print(np.unique(mask_float))
 
-    # Convert each pixel to polar coordinates
-    for x in range(data.shape[1]):
-        for y in range(data.shape[0]):
-            r = np.sqrt((x - center_x)**2 + (y - center_y)**2)
-            theta = np.arctan2(y - center_y, x - center_x)
-            polar_x = int(r * np.cos(theta) + center_x)
-            polar_y = int(r * np.sin(theta) + center_y)
-            polar_img[y, x] = data[polar_y, polar_x]
+    # 计算用于极坐标变换的值
+    value = np.sqrt(((img_float.shape[0] / 2.0) ** 2.0) + ((img_float.shape[1] / 2.0) ** 2.0))
 
-    # Convert the numpy array back to a PIL image
-    return Image.fromarray(polar_img)
+    # 执行极坐标变换
+    polar_img_cv = cv2.linearPolar(img_float, (img_float.shape[1] / 2, img_float.shape[0] / 2), value,
+                                   cv2.WARP_FILL_OUTLIERS)
+    polar_mask_cv = cv2.linearPolar(mask_float, (mask_float.shape[1] / 2, mask_float.shape[0] / 2), value,
+                                    cv2.WARP_FILL_OUTLIERS)
+
+    # 将极坐标图像的数据类型转换为uint8
+    polar_img_cv = polar_img_cv.astype(np.uint8)
+    polar_mask_cv = polar_mask_cv.astype(np.uint8)
+
+    # 将NumPy数组转换回PIL图像
+    polar_img = Image.fromarray(polar_img_cv)
+
+    polar_mask = Image.fromarray(polar_mask_cv, mode="P")
+
+    return polar_img, polar_mask
 
 
-def write_save(img,mask,name,cf):
+def write_save(img, mask, name, cf):
+    cmap = color_map('fundus')
     mask.putpalette(cmap)
     img_path_name = cropped_img_path.replace(".png", "{}.png".format(name))
     mask_path_name = cropped_mask_path.replace(".png", "{}.png".format(name))
@@ -46,7 +55,7 @@ def write_save(img,mask,name,cf):
     mask.save(mask_path_name)
     cf.write(img_path_name + ' ' + mask_path_name + '\n')
 
-cmap = color_map('fundus')
+
 root = '/root/autodl-tmp/data/REFUGE'
 whole_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/REFUGE/all_cropped.txt'
 whole_cropped_path = '/root/autodl-tmp/Semi4FundusODOC/dataset/REFUGE/polared.txt'
@@ -85,11 +94,8 @@ with open(whole_cropped_path, 'a') as cf:
         mask_name = os.path.basename(mask_path)
         cropped_img_path = os.path.join(img_root, image_name)
         cropped_mask_path = os.path.join(mask_root, mask_name)
-        polared_img = cartesian_to_polar(img)
-        polared_mask = cartesian_to_polar(mask)
+        polared_img, polared_mask = cartesian_to_polar(img, mask)
         # 原始图片
-        write_save(polared_img,polared_mask,'',cf)
-
-
+        write_save(polared_img, polared_mask, '', cf)
 
 print('done')
