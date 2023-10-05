@@ -9,7 +9,6 @@ import os
 import sys
 from yacs.config import CfgNode as CN
 import yaml
-from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from torch.utils.data import DataLoader
 from segment.configs import cfg
 from segment.modules.semibase import Base
@@ -26,7 +25,7 @@ import torch
 import pytorch_lightning as pl
 
 from utils.general import get_config_from_file, initialize_from_config, setup_callbacks, merge_cfg, get_random_seed
-from pytorch_lightning.callbacks import ModelCheckpoint, Callback, StochasticWeightAveraging
+from pytorch_lightning.callbacks import ModelCheckpoint, Callback, StochasticWeightAveraging,EarlyStopping
 
 
 def get_obj_from_str(string, reload=False):
