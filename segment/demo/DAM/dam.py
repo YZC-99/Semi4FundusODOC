@@ -13,7 +13,7 @@ import random
 import glob
 from matplotlib import pyplot as plt
 from segment.demo.attentions.cbam import CBAMBlock
-from segment.demo.attentions.criss_cross_attention import CrissCrossAttention
+from segment.modules.semseg.nn import CrissCrossAttention
 from PIL import Image
 
 class DAM(nn.Module):
