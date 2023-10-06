@@ -28,10 +28,10 @@ import skimage.transform
 
 def polar_to_cartesian(polar_img):
     # 确保图像是 float 类型
-    polar_img_float = polar_img
+    polar_img_float = polar_img.astype(np.float32)
 
-    # 计算用于极坐标变换的值
-    value = np.sqrt(((polar_img_float.shape[0] / 2.0) ** 2.0) + ((polar_img_float.shape[1] / 2.0) ** 2.0))
+    # 计算用于极坐标变换的值，使用图像的短边作为半径
+    value = min(polar_img_float.shape[0], polar_img_float.shape[1]) / 2
 
     # 执行极坐标到笛卡尔坐标的逆变换
     cartesian_img_cv = cv2.linearPolar(polar_img_float, (polar_img_float.shape[1] / 2, polar_img_float.shape[0] / 2),

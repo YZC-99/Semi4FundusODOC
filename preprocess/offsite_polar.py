@@ -25,8 +25,8 @@ def cartesian_to_polar(img, mask):
     mask_float = mask_np.astype(np.float32)
     print(np.unique(mask_float))
 
-    # 计算用于极坐标变换的值
-    value = np.sqrt(((img_float.shape[0] / 2.0) ** 2.0) + ((img_float.shape[1] / 2.0) ** 2.0))
+    # 计算用于极坐标变换的值，使用图像的短边作为半径
+    value = min(img_float.shape[0], img_float.shape[1]) / 2
 
     # 执行极坐标变换
     polar_img_cv = cv2.linearPolar(img_float, (img_float.shape[1] / 2, img_float.shape[0] / 2), value,
@@ -40,7 +40,6 @@ def cartesian_to_polar(img, mask):
 
     # 将NumPy数组转换回PIL图像
     polar_img = Image.fromarray(polar_img_cv)
-
     polar_mask = Image.fromarray(polar_mask_cv, mode="P")
 
     return polar_img, polar_mask
