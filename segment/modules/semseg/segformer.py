@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt,CBAMBlock
 from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
-from segment.demo.DAM.dam import DAM
+from segment.demo.DAM.dam import DAM,DAM_criss
 from segment.demo.gold_yolo.Low_FAMIFM import FAMIFM
 from segment.demo.gold_yolo.transformer import InjectionMultiSum_Auto_pool
 
@@ -131,6 +131,24 @@ class SegFormerHead(nn.Module):
             )
         elif attention == 'o1':
             self.dam = DAM(c4_in_channels)
+            self.ffn0 = nn.Sequential(
+                CrissCrossAttention(c4_in_channels),
+                ConvModule(c4_in_channels, c3_in_channels,k=3,p=1)
+            )
+            self.ffn1 = nn.Sequential(
+                CrissCrossAttention(c3_in_channels),
+                ConvModule(c3_in_channels, c2_in_channels,k=3,p=1)
+            )
+            self.ffn2 = nn.Sequential(
+                CrissCrossAttention(c2_in_channels),
+                ConvModule(c2_in_channels, c1_in_channels,k=3,p=1)
+            )
+            self.ffn3 = nn.Sequential(
+                CrissCrossAttention(c1_in_channels),
+                ConvModule(c1_in_channels, 64,k=3,p=1)
+            )
+        elif attention == 'o1-damcriss':
+            self.dam = DAM_criss(c4_in_channels)
             self.ffn0 = nn.Sequential(
                 CrissCrossAttention(c4_in_channels),
                 ConvModule(c4_in_channels, c3_in_channels,k=3,p=1)
@@ -296,7 +314,7 @@ class SegFormerHead(nn.Module):
 
             _c = self.linear_fuse(torch.cat([_c1, _c2, _c3, _c4, sub], dim=1))
             out_feat = _c
-        elif self.attention == 'o1':
+        elif self.attention == 'o1'  or self.attention == 'o1-damcriss':
             c4 = self.dam(c4)
             c4 = self.ffn0(c4)
             _c4 = F.interpolate(c4, size=c3.size()[2:], mode='bilinear', align_corners=False)
@@ -453,7 +471,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-fam-inj-v1')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-damcriss')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
