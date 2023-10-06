@@ -49,7 +49,7 @@ class SimFusion_4in(nn.Module):
     def __init__(self):
         super().__init__()
         self.avg_pool = nn.functional.adaptive_avg_pool2d
-    
+
     def forward(self, x):
         x_l, x_m, x_s, x_n = x
         B, C, H, W = x_s.shape

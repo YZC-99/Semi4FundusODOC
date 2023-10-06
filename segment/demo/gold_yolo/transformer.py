@@ -217,4 +217,52 @@ class InjectionMultiSum_Auto_pool(nn.Module):
         return out
 
 
+class Skip_InjectionMultiSum_Auto_pool(nn.Module):
+    def __init__(
+            self,
+            inp: int,
+            oup: int,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            activations=None,
+            global_inp=None,
+    ) -> None:
+        super().__init__()
+        self.norm_cfg = norm_cfg
+
+        if not global_inp:
+            global_inp = inp
+
+        self.local_embedding = ConvModule(inp, oup, kernel_size=1, norm_cfg=self.norm_cfg, act_cfg=None)
+        self.global_embedding = ConvModule(global_inp, oup, kernel_size=1, norm_cfg=self.norm_cfg, act_cfg=None)
+        self.global_act = ConvModule(global_inp, oup, kernel_size=1, norm_cfg=self.norm_cfg, act_cfg=None)
+        self.act = h_sigmoid()
+
+    def forward(self, x_l, x_g,x_g_skip):
+        '''
+        x_g: global features
+        x_l: local features
+        '''
+        B, C, H, W = x_l.shape
+        g_B, g_C, g_H, g_W = x_g.shape
+        use_pool = H < g_H
+
+        local_feat = self.local_embedding(x_l)
+
+        global_act = self.global_act(x_g)
+        global_feat = self.global_embedding(x_g_skip)
+
+        if use_pool:
+            avg_pool = get_avg_pool()
+            output_size = np.array([H, W])
+
+            sig_act = avg_pool(global_act, output_size)
+            global_feat = avg_pool(global_feat, output_size)
+
+        else:
+            sig_act = F.interpolate(self.act(global_act), size=(H, W), mode='bilinear', align_corners=False)
+            global_feat = F.interpolate(global_feat, size=(H, W), mode='bilinear', align_corners=False)
+
+        out = local_feat * sig_act + global_feat
+        return out
+
 

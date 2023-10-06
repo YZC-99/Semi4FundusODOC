@@ -12,7 +12,7 @@ from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet1
 from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
 from segment.demo.DAM.dam import DAM,DAM_criss
 from segment.demo.gold_yolo.Low_FAMIFM import FAMIFM
-from segment.demo.gold_yolo.transformer import InjectionMultiSum_Auto_pool
+from segment.demo.gold_yolo.transformer import InjectionMultiSum_Auto_pool,Skip_InjectionMultiSum_Auto_pool
 
 
 class MLP(nn.Module):
@@ -224,14 +224,15 @@ class SegFormerHead(nn.Module):
             self.ffn = nn.Sequential(
                 ConvModule(c3_in_channels + c2_in_channels + c1_in_channels, 64, k=3, p=1)
             )
-        elif attention == 'o1-fam-inj-laf':
+
+        elif attention == 'o1-fam-inj-skip':
             self.dam = DAM(c4_in_channels)
             self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
                                       trans_channels=[c1_in_channels,c2_in_channels,c3_in_channels,c4_in_channels])
 
-            self.inj3 = InjectionMultiSum_Auto_pool(c3_in_channels,c3_in_channels,activations=nn.ReLU6)
-            self.inj2 = InjectionMultiSum_Auto_pool(c2_in_channels,c2_in_channels,activations=nn.ReLU6)
-            self.inj1 = InjectionMultiSum_Auto_pool(c1_in_channels,c1_in_channels,activations=nn.ReLU6)
+            self.inj3 = Skip_InjectionMultiSum_Auto_pool(c3_in_channels,c3_in_channels,activations=nn.ReLU6)
+            self.inj2 = Skip_InjectionMultiSum_Auto_pool(c2_in_channels,c2_in_channels,activations=nn.ReLU6)
+            self.inj1 = Skip_InjectionMultiSum_Auto_pool(c1_in_channels,c1_in_channels,activations=nn.ReLU6)
             self.ffn0 = nn.Sequential(
                 CrissCrossAttention(c4_in_channels),
                 ConvModule(c4_in_channels, c3_in_channels,k=3,p=1)
@@ -360,6 +361,25 @@ class SegFormerHead(nn.Module):
             _c2 = self.inj1(_c2,global_c1)
             _c1 = self.ffn3(_c2)
             out_feat = _c1
+        elif self.attention == 'o1-fam-inj-skip':
+            global_info = self.low_FAM_IFM((c1,c2,c3,c4))
+            global_c1 = F.interpolate(global_info[0], size=c1.size()[2:], mode='bilinear', align_corners=False)
+            global_c2 = F.interpolate(global_info[1], size=c2.size()[2:], mode='bilinear', align_corners=False)
+            global_c3 = global_info[2]
+            c4 = self.dam(c4)
+            c4 = self.ffn0(c4)
+            _c4 = F.interpolate(c4, size=c3.size()[2:], mode='bilinear', align_corners=False)
+            _c4 = self.inj3(_c4,global_c3,c3)
+            c3 = self.ffn1(_c4)
+
+            _c3 = F.interpolate(c3, size=c2.size()[2:], mode='bilinear', align_corners=False)
+            _c3 = self.inj2(_c3, global_c2,c2)
+            c2 = self.ffn2(_c3)
+
+            _c2 = F.interpolate(c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            _c2 = self.inj1(_c2,global_c1,c1)
+            _c1 = self.ffn3(_c2)
+            out_feat = _c1
         elif self.attention == 'o1-fam-inj-v1':
             global_info = self.low_FAM_IFM((c1,c2,c3,c4))
             global_c1 = global_info[0]
@@ -471,8 +491,9 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-damcriss')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-fam-inj-skip')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
+    print(logits.shape)
     # print(logits.shape)
