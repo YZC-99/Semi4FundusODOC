@@ -40,6 +40,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--d', type=str, default='')
     parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--lr', type=float, default=-0.1)
     parser.add_argument('--warmup', type=float, default=-0.1)
     parser.add_argument('--scheduler', type=str, default='cosine')
@@ -121,6 +122,7 @@ if __name__ == '__main__':
     config.MODEL.optimizer_decoupling = args.optimizer_decoupling
     config.MODEL.scheduler = args.scheduler
     config.MODEL.epochs = args.epochs
+    config.dataset.params.batch_size = args.bs
     config.MODEL.BD_Contrast_rebalance_loss = args.BD_Contrast_rebalance_loss
     config.MODEL.loss.params.thres = args.ohem_thres
     config.MODEL.loss.params.weight = args.ohem_weight
