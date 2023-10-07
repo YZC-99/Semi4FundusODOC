@@ -42,12 +42,12 @@ def polar_to_cartesian(polar_img):
 
 #
 num_classes = 3
-ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/REFUGE/cropped_sup256x256/polar_400/noise/lightning_logs/version_2/ckpt/epoch=75-val_OC_dice=0.946621-val_OC_IoU=0.900515.ckpt'
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/REFUGE/cropped_sup256x256/polar_400/noise/lightning_logs/version_0/ckpt/epoch=31-val_OC_dice=0.935030-val_OC_IoU=0.886296.ckpt'
 log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus, 'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet,
              'deeplabv2': DeepLabV2}
 # model = model_zoo['deeplabv3plus']('resnet50', num_classes,attention='Criss_Attention_R2_V1',seghead_last=True)
-model = SegFormer(num_classes=num_classes, phi='b4', attention='o1')
+model = SegFormer(num_classes=num_classes, phi='b4', attention='o1-fam-inj-skip')
 sd = torch.load(ckpt_path, map_location='cpu')
 
 if 'state_dict' in sd:
@@ -67,7 +67,7 @@ model.to('cuda:0')
 model.eval()
 
 dataset = SupTrain(task='od_oc',
-                   name='REFUGE/cropped_polared/400',
+                   name='REFUGE/cropped_polared/400/sample1',
                    root='./data/fundus_datasets/od_oc/REFUGE/',
                    mode='test',
                    size=256
@@ -103,10 +103,10 @@ with open(os.path.join('experiments', 'preds_metrics.csv'), 'w', newline='') as 
             center = (preds.shape[2] / 2, preds.shape[1] / 2)  # 假设 preds 的维度是 [channels, height, width]
             max_radius = np.sqrt(center[0] ** 2 + center[1] ** 2)
 
-            preds = polar_to_cartesian(preds.squeeze(0).cpu().numpy())
-            mask = polar_to_cartesian(mask.squeeze(0).cpu().numpy())
-            preds = torch.tensor(preds).unsqueeze(0).to('cuda:0')
-            mask = torch.tensor(mask).unsqueeze(0).to('cuda:0')
+            preds = polar_to_cartesian(preds.squeeze(0).detach().cpu().numpy())
+            mask = polar_to_cartesian(mask.squeeze(0).detach().cpu().numpy())
+            preds = torch.tensor(preds).unsqueeze(0).to('cuda:0').to(torch.int)
+            mask = torch.tensor(mask).unsqueeze(0).to('cuda:0').to(torch.int)
             # -------------
 
             od_preds = deepcopy(preds)
