@@ -46,7 +46,13 @@ def get_labels(task,mask_path):
 
 
 class SemiDataset(Dataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size,
+                 labeled_id_path=None,
+                 unlabeled_id_path=None,
+                 add_unlabeled_id_path=None,
+                 pseudo_mask_path=None,
+                 aug=None,
+                 start_aug=-1):
         """
         :param name: dataset name, pascal or cityscapes
         :param root: root path of the dataset.
@@ -61,6 +67,7 @@ class SemiDataset(Dataset):
         :param pseudo_mask_path: path of generated pseudo masks, needed in semi_train mode.
         """
         self.aug = aug
+        self.start_aug = start_aug
         self.task = task
         self.name = name
         self.root = root
@@ -146,19 +153,20 @@ class SemiDataset(Dataset):
             mask = get_labels(self.task, os.path.join(self.pseudo_mask_path, fname))
         # basic augmentation on all training images
         # img, mask = crop(img, mask, self.size)
-        if self.aug.weak.flip:
-            img, mask = hflip(img, mask, p=0.5)
-            img, mask = vflip(img, mask, p=0.5)
-        if self.aug.weak.rotate:
-            img, mask = random_rotate(img, mask,p=0.5)
-        if self.aug.weak.translate:
-            img, mask = random_translate(img, mask,p=0.2)
-        if self.aug.weak.noise:
-            img, mask = add_salt_pepper_noise(img, mask,p=0.2)
-        if self.aug.weak.cutout:
-            img = cutout(source_img=img,p=1.0)
-        if self.aug.weak.scale:
-            img, mask = random_scale_and_crop(img, mask, target_size=(self.size, self.size), min_scale=0.8, max_scale=1.2,p=0.5)
+        if self.start_aug < 0:
+            if self.aug.weak.flip:
+                img, mask = hflip(img, mask, p=0.5)
+                img, mask = vflip(img, mask, p=0.5)
+            if self.aug.weak.rotate:
+                img, mask = random_rotate(img, mask,p=0.5)
+            if self.aug.weak.translate:
+                img, mask = random_translate(img, mask,p=0.2)
+            if self.aug.weak.noise:
+                img, mask = add_salt_pepper_noise(img, mask,p=0.2)
+            if self.aug.weak.cutout:
+                img = cutout(source_img=img,p=1.0)
+            if self.aug.weak.scale:
+                img, mask = random_scale_and_crop(img, mask, target_size=(self.size, self.size), min_scale=0.8, max_scale=1.2,p=0.5)
             # img, mask = random_scale(img, mask,p=0.2)
         # if self.aug.weak.color_distortion:
         #     img = color_distortion(img)
@@ -197,7 +205,7 @@ class SemiDataset(Dataset):
         return len(self.ids)
 
 class Validation(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None,start_aug=-1):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -207,10 +215,11 @@ class Validation(SemiDataset):
                          unlabeled_id_path=unlabeled_id_path,
                          add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         aug=aug)
+                         aug=aug,
+                         start_aug=start_aug)
 
 class SupTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None,start_aug=-1):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -220,10 +229,11 @@ class SupTrain(SemiDataset):
                          unlabeled_id_path=unlabeled_id_path,
                          add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         aug=aug)
+                         aug=aug,
+                         start_aug=start_aug)
 
 class SemiTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None,start_aug=-1):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -233,10 +243,11 @@ class SemiTrain(SemiDataset):
                          unlabeled_id_path=unlabeled_id_path,
                          add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         aug=aug)
+                         aug=aug,
+                         start_aug=start_aug)
 
 class SemiUabledTrain(SemiDataset):
-    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None):
+    def __init__(self,task, name, root, mode, size, labeled_id_path=None, unlabeled_id_path=None,add_unlabeled_id_path=None, pseudo_mask_path=None,aug=None,start_aug=-1):
         super().__init__(task=task,
                          name=name,
                          root=root,
@@ -246,4 +257,5 @@ class SemiUabledTrain(SemiDataset):
                          unlabeled_id_path=unlabeled_id_path,
                          add_unlabeled_id_path=add_unlabeled_id_path,
                          pseudo_mask_path=pseudo_mask_path,
-                         aug=aug)
+                         aug=aug,
+                         start_aug=start_aug)

@@ -366,8 +366,11 @@ def blur(img, p=0.5):
 #         img = enhancer.enhance(factor)
 #     return img, mask
 
-def cutout(source_img, template_img_path='',p=0.5):
+def cutout(source_img, template_img_path='', p=0.5):
     if np.random.random() < p:
+        # Convert PIL Image to NumPy array
+        source_np = np.array(source_img)
+
         template_img_path = '/root/autodl-tmp/data/REFUGE/images_cropped/T0062.jpg'
         template = cv2.imread(template_img_path)
 
@@ -385,11 +388,15 @@ def cutout(source_img, template_img_path='',p=0.5):
             return inverse_cdf[source].reshape(source.shape)
 
         matched_channels = []
-        for d in range(source_img.shape[2]):
-            matched_c = hist_match(source_img[:,:,d], template[:,:,d])
+        for d in range(source_np.shape[2]):
+            matched_c = hist_match(source_np[:, :, d], template[:, :, d])
             matched_channels.append(matched_c)
 
-        matched_image = cv2.merge(matched_channels).astype(np.uint8)
-        return matched_image
+        matched_np = cv2.merge(matched_channels).astype(np.uint8)
+
+        # Convert the NumPy array back to a PIL Image
+        matched_img = Image.fromarray(matched_np)
+
+        return matched_img
     else:
         return source_img
