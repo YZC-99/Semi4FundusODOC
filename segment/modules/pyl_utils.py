@@ -319,11 +319,12 @@ def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
     preds, y = outputs['preds'], outputs['y']
 
     if pl_module.cfg.dataset.polar:
-        # 转换为笛卡尔坐标
-        preds = polar_to_cartesian(preds.squeeze(0).detach().cpu().numpy())
-        y = polar_to_cartesian(y.squeeze(0).detach().cpu().numpy())
-        preds = torch.tensor(preds).unsqueeze(0).to(pl_module.device).to(torch.int)
-        y = torch.tensor(y).unsqueeze(0).to(pl_module.device).to(torch.int)
+        for i in range(preds.shape[0]):
+            # 转换为笛卡尔坐标
+            preds[i,...] = polar_to_cartesian(preds[i,...].squeeze(0).detach().cpu().numpy())
+            y[i,...] = polar_to_cartesian(y[i,...].squeeze(0).detach().cpu().numpy())
+            preds[i,...] = torch.tensor(preds[i,...]).unsqueeze(0).to(pl_module.device).to(torch.int)
+            y[i,...] = torch.tensor(y[i,...]).unsqueeze(0).to(pl_module.device).to(torch.int)
     # 在这里对边缘进行裁剪
     if pl_module.cfg.MODEL.preds_postprocess > 0:
         new_od_preds = copy.deepcopy(preds)
