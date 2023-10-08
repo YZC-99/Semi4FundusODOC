@@ -37,6 +37,9 @@ import cv2
 def generate_ellipse_mask(mask_img):
     # 选择最大的连通区域
     num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask_img)
+    # 如果只有背景连通组件
+    if num_labels == 1:
+        return np.zeros_like(mask_img)
     largest_label = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
     largest_area_img = np.zeros_like(mask_img)
     largest_area_img[labels == largest_label] = 1
