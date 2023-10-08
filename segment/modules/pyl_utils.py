@@ -46,7 +46,9 @@ def generate_ellipse_mask(mask_img):
 
     # 找到这个连通组件的轮廓
     contours, _ = cv2.findContours(largest_area_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+    # 如果轮廓中的点的数量少于5
+    if len(contours[0]) < 5:
+        return np.zeros_like(mask_img)
     # 对轮廓进行椭圆拟合
     ellipse = cv2.fitEllipse(contours[0])
     ellipse_img = np.zeros_like(largest_area_img)
