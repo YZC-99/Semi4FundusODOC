@@ -366,7 +366,7 @@ def blur(img, p=0.5):
 #         img = enhancer.enhance(factor)
 #     return img, mask
 
-def cutout(source_img, template_img_path,p=0.5):
+def cutout(source_img, template_img_path='',p=0.5):
     if np.random.random() < p:
         template_img_path = '/root/autodl-tmp/data/REFUGE/images_cropped/T0062.jpg'
         template = cv2.imread(template_img_path)
