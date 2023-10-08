@@ -318,7 +318,7 @@ def gt2boundary(gt,boundary_width=1, ignore_label=-1):  # gt NHW
 def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
     preds, y = outputs['preds'], outputs['y']
 
-    if pl_module.cfg.dataset.params.polar:
+    if pl_module.cfg.dataset.polar:
         # 转换为笛卡尔坐标
         preds = polar_to_cartesian(preds.squeeze(0).detach().cpu().numpy())
         y = polar_to_cartesian(y.squeeze(0).detach().cpu().numpy())

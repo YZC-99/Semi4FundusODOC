@@ -125,8 +125,8 @@ _C.INPUT.IGNORE_LABEL = 255
 
 _C.dataset = CN()
 _C.dataset.target =''
+_C.dataset.polar = False
 _C.dataset.params = CN()
-_C.dataset.params.polar = False
 _C.dataset.params.batch_size = 8
 _C.dataset.params.num_workers = 8
 #train
