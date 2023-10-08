@@ -184,7 +184,7 @@ class SemiDataset(Dataset):
             if self.aug.strong.blur:
                 img = blur(img, p=1.0)
             if self.aug.strong.cutout:
-                img, mask = cutout(img, mask, p=1.0)
+                img = cutout(img=img,p=1.0)
 
             img, mask = normalize(img, mask)
             boundary = dist_transform(mask)
