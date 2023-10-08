@@ -162,8 +162,6 @@ class SemiDataset(Dataset):
             # img, mask = random_scale(img, mask,p=0.2)
         # if self.aug.weak.color_distortion:
         #     img = color_distortion(img)
-
-
         img, mask = resize(img, mask, self.size)
 
         # strong augmentation on unlabeled images

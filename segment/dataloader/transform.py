@@ -6,6 +6,36 @@ from torchvision import transforms
 from segment.dataloader.boundary_utils import class2one_hot,one_hot2dist
 import cv2
 
+
+def cartesian_to_polar(img, mask):
+    # 将PIL图像转换为NumPy数组
+    img_np = np.array(img.convert('RGB'))
+    mask_np = np.array(mask)  # 假设mask是灰度图
+
+    # 确保图像是float类型
+    img_float = img_np.astype(np.float32)
+    mask_float = mask_np.astype(np.float32)
+    print(np.unique(mask_float))
+
+    # 计算用于极坐标变换的值，使用图像的短边作为半径
+    value = min(img_float.shape[0], img_float.shape[1]) / 2
+
+    # 执行极坐标变换
+    polar_img_cv = cv2.linearPolar(img_float, (img_float.shape[1] / 2, img_float.shape[0] / 2), value,
+                                   cv2.WARP_FILL_OUTLIERS)
+    polar_mask_cv = cv2.linearPolar(mask_float, (mask_float.shape[1] / 2, mask_float.shape[0] / 2), value,
+                                    cv2.WARP_FILL_OUTLIERS)
+
+    # 将极坐标图像的数据类型转换为uint8
+    polar_img_cv = polar_img_cv.astype(np.uint8)
+    polar_mask_cv = polar_mask_cv.astype(np.uint8)
+
+    # 将NumPy数组转换回PIL图像
+    polar_img = Image.fromarray(polar_img_cv)
+    polar_mask = Image.fromarray(polar_mask_cv, mode="P")
+
+    return polar_img, polar_mask
+
 def dist_transform(mask):
     # mask = np.array(mask)
     # mask_arr_ex = np.expand_dims(mask, axis=0)
@@ -176,7 +206,9 @@ def normalize(img, mask=None,mean=[0.0,0.0,0.0],std=[1.0,1.0,1.0]):
         return img, mask
     return img
 
-def resize(img, mask,size):
+def resize(img, mask,size,polar=False):
+    if polar:
+        img,mask = cartesian_to_polar(img,mask)
     img = img.resize((size, size), Image.BILINEAR)
     mask = mask.resize((size, size), Image.NEAREST)
     return img, mask
