@@ -63,6 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--config', type=str, default='domain_shift_semi/1_7/strong1/G1R7R4_B_CJ_semi')
 
     parser.add_argument('--sample', type=int, default=-1)
+    parser.add_argument('--polar', type=bool, default=False)
 
     parser.add_argument('-s', '--seed', type=int, default=42)
 
@@ -117,6 +118,7 @@ if __name__ == '__main__':
         config.dataset.params.train.params.labeled_id_path = config.dataset.params.train.params.labeled_id_path.replace("training.txt",'sample{}/training.txt'.format(args.sample))
         config.dataset.params.validation.params.name = os.path.join(config.dataset.params.validation.params.name,'sample{}'.format(args.sample))
         config.dataset.params.test.params.name = os.path.join(config.dataset.params.test.params.name,'sample{}'.format(args.sample))
+    config.dataset.params.polar = args.polar
 
     config.MODEL.backbone = args.backbone
     config.MODEL.optimizer_decoupling = args.optimizer_decoupling

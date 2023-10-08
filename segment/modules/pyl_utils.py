@@ -33,6 +33,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils.general import initialize_from_config
 from utils.my_torchmetrics import BoundaryIoU
+import cv2
+def generate_ellipse_mask(mask_img):
+    # 选择最大的连通区域
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask_img)
+    largest_label = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
+    largest_area_img = np.zeros_like(mask_img)
+    largest_area_img[labels == largest_label] = 1
+
+    # 找到这个连通组件的轮廓
+    contours, _ = cv2.findContours(largest_area_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # 对轮廓进行椭圆拟合
+    ellipse = cv2.fitEllipse(contours[0])
+    ellipse_img = np.zeros_like(largest_area_img)
+    cv2.ellipse(ellipse_img, ellipse, 1, -1)  # 填充椭圆
+
+    return ellipse_img
+
+def polar_to_cartesian(polar_img):
+    polar_img_float = polar_img.astype(np.float32)
+    value = min(polar_img_float.shape[0], polar_img_float.shape[1]) / 2
+
+    cartesian_img_cv = cv2.linearPolar(polar_img_float,
+                                       (polar_img_float.shape[1] / 2, polar_img_float.shape[0] / 2),
+                                       value,
+                                       cv2.WARP_FILL_OUTLIERS + cv2.WARP_INVERSE_MAP).astype(np.uint8)
+
+    od_mask = (cartesian_img_cv > 0).astype(np.uint8)
+    oc_mask = np.where(cartesian_img_cv == 2, 1, 0).astype(np.uint8)
+
+    pred_od = generate_ellipse_mask(od_mask)
+    pred_oc = generate_ellipse_mask(oc_mask)
+
+    final_result = pred_od + pred_oc
+    return final_result
 
 
 def init_from_ckpt(pl_module: pl.LightningModule, path: str, ignore_keys: List[str] = list()):
@@ -281,8 +316,14 @@ def gt2boundary(gt,boundary_width=1, ignore_label=-1):  # gt NHW
 
 
 def step_end_compute_update_metrics(pl_module: pl.LightningModule, outputs):
-
     preds, y = outputs['preds'], outputs['y']
+
+    if pl_module.cfg.dataset.params.polar:
+        # 转换为笛卡尔坐标
+        preds = polar_to_cartesian(preds.squeeze(0).detach().cpu().numpy())
+        y = polar_to_cartesian(y.squeeze(0).detach().cpu().numpy())
+        preds = torch.tensor(preds).unsqueeze(0).to(pl_module.device).to(torch.int)
+        y = torch.tensor(y).unsqueeze(0).to(pl_module.device).to(torch.int)
     # 在这里对边缘进行裁剪
     if pl_module.cfg.MODEL.preds_postprocess > 0:
         new_od_preds = copy.deepcopy(preds)
