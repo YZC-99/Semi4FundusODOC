@@ -359,10 +359,34 @@ def blur(img, p=0.5):
 #     return img, mask
 
 # v6
-def cutout(img, mask, p=0.5):
-    if np.random.random() < p:
-        factor = np.random.uniform(0.3, 1.7)
-        enhancer = ImageEnhance.Brightness(img)
-        img = enhancer.enhance(factor)
-    return img, mask
+# def cutout(img, mask, p=0.5):
+#     if np.random.random() < p:
+#         factor = np.random.uniform(0.3, 1.7)
+#         enhancer = ImageEnhance.Brightness(img)
+#         img = enhancer.enhance(factor)
+#     return img, mask
 
+def cutout(source_img, template_img_path):
+    template_img_path = '/root/autodl-tmp/data/REFUGE/images_cropped/T0062.jpg'
+    template = cv2.imread(template_img_path)
+
+    def hist_match(source, template):
+        src_hist, bin_edges = np.histogram(source.ravel(), bins=256, density=True)
+        src_cdf = src_hist.cumsum()
+        src_cdf /= src_cdf[-1]
+
+        tgt_hist, _ = np.histogram(template.ravel(), bins=256, density=True)
+        tgt_cdf = tgt_hist.cumsum()
+        tgt_cdf /= tgt_cdf[-1]
+
+        inverse_cdf = np.interp(src_cdf, tgt_cdf, bin_edges[:-1])
+
+        return inverse_cdf[source].reshape(source.shape)
+
+    matched_channels = []
+    for d in range(source_img.shape[2]):
+        matched_c = hist_match(source_img[:,:,d], template[:,:,d])
+        matched_channels.append(matched_c)
+
+    matched_image = cv2.merge(matched_channels).astype(np.uint8)
+    return matched_image
