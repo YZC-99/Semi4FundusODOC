@@ -12,6 +12,7 @@ _C.info.description=''
 
 # _C = CN()
 _C.MODEL = CN()
+_C.MODEL.retrain_batch = -1
 _C.MODEL.Dual = False
 _C.MODEL.weightCE_loss = None
 _C.MODEL.CE_loss = 1.0

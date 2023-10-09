@@ -74,7 +74,11 @@ class Base(pl.LightningModule):
             self.loss = nn.CrossEntropyLoss(weight=torch.tensor(cfg.MODEL.weightCE_loss))
         else:
             self.loss = initialize_from_config(loss)
-        
+        if cfg.MODEL.retrain_batch > 0:
+            # Queue to store last 10 batch losses and data
+            from collections import deque
+            self.batch_losses = deque(maxlen=cfg.MODEL.retrain_batch)
+            self.batch_data = deque(maxlen=cfg.MODEL.retrain_batch)
         init_loss(self)
         init_metrics(self)
 
@@ -137,11 +141,23 @@ class Base(pl.LightningModule):
             y = batch['mask']
             output = self(x)
             loss = self.compute_loss(self,output,batch)
-
+            if self.cfg.MODEL.retrain_batch > 0:
+                # Store loss and data
+                self.batch_losses.append(loss)
+                self.batch_data.append(batch)
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True,)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True,)
         return loss
 
+    def training_epoch_end(self, outputs) -> None:
+        if self.cfg.MODEL.retrain_batch > 0:
+            # Determine the batch with the worst loss
+            worst_idx = np.argmax(self.batch_losses)
+            worst_batch = self.batch_data[worst_idx]
+            # Re-train on the worst batch
+            self.manual_backward(self.batch_losses[worst_idx])
+            self.optimizer.step()
+            self.optimizer.zero_grad()
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']

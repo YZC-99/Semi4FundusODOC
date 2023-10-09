@@ -39,6 +39,7 @@ def get_obj_from_str(string, reload=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--d', type=str, default='')
+    parser.add_argument('--retrain_batch', type=int, default=-1)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--lr', type=float, default=-0.1)
@@ -123,6 +124,7 @@ if __name__ == '__main__':
         config.dataset.params.validation.params.name = os.path.join(config.dataset.params.validation.params.name,'sample{}'.format(args.sample))
         config.dataset.params.test.params.name = os.path.join(config.dataset.params.test.params.name,'sample{}'.format(args.sample))
     config.dataset.polar = args.polar
+    config.MODEL.retrain_batch = args.retrain_batch
     config.MODEL.CE_loss = args.CE_loss
     config.MODEL.backbone = args.backbone
     config.MODEL.optimizer_decoupling = args.optimizer_decoupling
