@@ -147,6 +147,22 @@ class SegFormerHead(nn.Module):
                 CrissCrossAttention(c1_in_channels),
                 ConvModule(c1_in_channels, 64,k=3,p=1)
             )
+        elif attention == 'o1-cbam':
+            self.f4_dam = DAM(c4_in_channels)
+            self.f3_dam = CBAMBlock(c3_in_channels)
+            self.f2_dam = CBAMBlock(c2_in_channels)
+            self.f1_dam = CBAMBlock(c1_in_channels)
+
+            self.ffn3 = ConvModule(c4_in_channels+c3_in_channels,c3_in_channels)
+            self.ffn2 = ConvModule(c2_in_channels+c3_in_channels,c2_in_channels)
+            self.ffn1 = ConvModule(c2_in_channels+c1_in_channels,c1_in_channels)
+
+            self.ffn = nn.Sequential(
+                ConvModule(c4_in_channels+c3_in_channels + c2_in_channels + c1_in_channels, 64)
+            )
+
+
+
         elif attention == 'o1-damcriss':
             self.dam = DAM_criss(c4_in_channels)
             self.ffn0 = nn.Sequential(
@@ -348,6 +364,21 @@ class SegFormerHead(nn.Module):
             _c2 = F.interpolate(c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
             _c1 = self.ffn3(_c2 + c1)
             out_feat = _c1
+        elif self.attention == 'o1-cbam':
+            c4 = self.f4_dam(c4)
+            _c4 = F.interpolate(c4, size=c3.size()[2:], mode='bilinear', align_corners=False)
+            c3 = self.ffn3(torch.cat([c3 ,_c4],dim=1))
+            c3 = self.f3_dam(c3)
+            _c3 = F.interpolate(c3, size=c2.size()[2:], mode='bilinear', align_corners=False)
+            c2 = self.ffn2(torch.cat([c2,_c3],dim=1))
+            c2 = self.f2_dam(c2)
+            _c2 = F.interpolate(c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            c1 = self.ffn1(torch.cat([c1,_c2],dim=1))
+            _c1 = self.f1_dam(c1)
+            _c3 = F.interpolate(_c3, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            _c4 = F.interpolate(_c4, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            out_feat = self.ffn(torch.cat([_c1,_c2,_c3,_c4],dim=1))
+
         elif self.attention == 'o1-fam':
             global_info = self.low_FAM_IFM((c1,c2,c3,c4))
             global_c1 = F.interpolate(global_info[0], size=c1.size()[2:], mode='bilinear', align_corners=False)
@@ -514,7 +545,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-fam-inj-cbam-skip')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-cbam')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
