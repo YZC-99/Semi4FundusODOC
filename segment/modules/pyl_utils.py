@@ -19,6 +19,7 @@ from segment.losses.cbl import ContrastPixelCBL,ContrastPixelCorrectCBL,Contrast
 from segment.losses.pixel_contrast import ContrastCrossPixelCorrect,loss_A2C_pair,loss_A2C_SCE,CEpair_Loss,MSEpair_Loss
 # from segment.losses.cbl import ContrastPixelCBLV2 as ContrastPixelCBL
 from segment.losses.lovasz_loss import lovasz_softmax,lovasz_softmaxPlus
+from segment.losses.seg.dice_loss import SoftDiceLoss
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
@@ -99,6 +100,8 @@ def init_loss(pl_module: pl.LightningModule):
 
     if pl_module.cfg.MODEL.ABL_loss > 0.0:
         pl_module.ABL_loss = ABL()
+    if pl_module.cfg.MODEL.SoftDC_loss > 0.0:
+        pl_module.SoftDice_loss = SoftDiceLoss()
     if pl_module.cfg.MODEL.DC_loss > 0.0:
         pl_module.Dice_loss = DiceLoss(n_classes=pl_module.num_classes)
     if pl_module.cfg.MODEL.BD_loss > 0.0:
@@ -183,6 +186,9 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
     if pl_module.cfg.MODEL.DC_loss > 0.0:
         _DC =  pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
         # if pl_module.cfg.MODEL.BD_loss == 0.0:
+        loss = loss + _DC
+    if pl_module.cfg.MODEL.SoftDice_loss > 0.0:
+        _DC =  pl_module.cfg.MODEL.SoftDice_loss * pl_module.SoftDice_loss(out_soft, y)
         loss = loss + _DC
     if pl_module.cfg.MODEL.BD_Contrast_rebalance_loss:
         dist = batch['boundary']

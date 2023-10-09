@@ -45,6 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup', type=float, default=-0.1)
     parser.add_argument('--scheduler', type=str, default='cosine')
     parser.add_argument('--DC_loss', type=float, default=-0.1)
+    parser.add_argument('--SoftDice_loss', type=float, default=-0.1)
     parser.add_argument('--BD_loss', type=float, default=-0.1)
     parser.add_argument('--BD_loss_increase_alpha', type=float, default=-0.1)
     parser.add_argument('--BD_Contrast_rebalance_loss', type=bool, default=False)
@@ -98,6 +99,8 @@ if __name__ == '__main__':
         config.MODEL.lr_warmup_steps_ratio = args.warmup
     if args.DC_loss >= 0:
         config.MODEL.DC_loss = args.DC_loss
+    if args.SoftDice_loss >= 0:
+        config.MODEL.SoftDice_loss = args.SoftDice_loss
     if args.BD_loss >= 0:
         config.MODEL.BD_loss = args.BD_loss
     if args.BD_loss_increase_alpha >= 0:

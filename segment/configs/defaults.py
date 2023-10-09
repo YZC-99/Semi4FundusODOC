@@ -15,6 +15,7 @@ _C.MODEL = CN()
 _C.MODEL.Dual = False
 _C.MODEL.weightCE_loss = None
 _C.MODEL.DC_loss = 0.0
+_C.MODEL.SoftDice_loss = 0.0
 _C.MODEL.BD_loss = 0.0
 _C.MODEL.BD_loss_reblance_alpha = -1.0
 _C.MODEL.BD_loss_increase_alpha = -1.0
