@@ -100,7 +100,7 @@ def init_loss(pl_module: pl.LightningModule):
 
     if pl_module.cfg.MODEL.ABL_loss > 0.0:
         pl_module.ABL_loss = ABL()
-    if pl_module.cfg.MODEL.SoftDC_loss > 0.0:
+    if pl_module.cfg.MODEL.SoftDice_loss > 0.0:
         pl_module.SoftDice_loss = SoftDiceLoss()
     if pl_module.cfg.MODEL.DC_loss > 0.0:
         pl_module.Dice_loss = DiceLoss(n_classes=pl_module.num_classes)
