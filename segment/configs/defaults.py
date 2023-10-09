@@ -14,6 +14,7 @@ _C.info.description=''
 _C.MODEL = CN()
 _C.MODEL.Dual = False
 _C.MODEL.weightCE_loss = None
+_C.MODEL.CE_loss = 1.0
 _C.MODEL.DC_loss = 0.0
 _C.MODEL.SoftDice_loss = 0.0
 _C.MODEL.BD_loss = 0.0

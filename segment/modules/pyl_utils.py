@@ -175,7 +175,8 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
     ce_loss = pl_module.loss(logits, y)
 
     _CE = ce_loss
-    loss = _CE
+
+    loss = pl_module.cfg.MODEL.CE_loss  * _CE
     if pl_module.cfg.MODEL.FC_loss > 0.0:
         if pl_module.current_epoch > pl_module.cfg.MODEL.FC_stop_epoch:
             loss = loss

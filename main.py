@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=-0.1)
     parser.add_argument('--warmup', type=float, default=-0.1)
     parser.add_argument('--scheduler', type=str, default='cosine')
+    parser.add_argument('--CE_loss', type=float, default=1.0)
     parser.add_argument('--DC_loss', type=float, default=-0.1)
     parser.add_argument('--SoftDice_loss', type=float, default=-0.1)
     parser.add_argument('--BD_loss', type=float, default=-0.1)
@@ -122,7 +123,7 @@ if __name__ == '__main__':
         config.dataset.params.validation.params.name = os.path.join(config.dataset.params.validation.params.name,'sample{}'.format(args.sample))
         config.dataset.params.test.params.name = os.path.join(config.dataset.params.test.params.name,'sample{}'.format(args.sample))
     config.dataset.polar = args.polar
-
+    config.MODEL.CE_loss = args.CE_loss
     config.MODEL.backbone = args.backbone
     config.MODEL.optimizer_decoupling = args.optimizer_decoupling
     config.MODEL.scheduler = args.scheduler
