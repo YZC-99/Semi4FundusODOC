@@ -39,7 +39,7 @@ dataset:
                     flip: True
                     rotate: True
                     translate: True
-                    noise: True
+                    noise: False
                     scale: True
                     cutout: False
 
