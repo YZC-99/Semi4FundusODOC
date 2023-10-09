@@ -240,7 +240,25 @@ class SegFormerHead(nn.Module):
             self.ffn = nn.Sequential(
                 ConvModule(c3_in_channels + c2_in_channels + c1_in_channels, 64, k=3, p=1)
             )
+        elif attention == 'o1-fam-inj-v1-cbam':
+            self.dam = DAM(c4_in_channels)
+            self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
+                                      trans_channels=[c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels])
 
+            self.inj3 = InjectionMultiSum_Auto_pool(c3_in_channels, c3_in_channels, activations=nn.ReLU6)
+            self.inj2 = InjectionMultiSum_Auto_pool(c2_in_channels, c2_in_channels, activations=nn.ReLU6)
+            self.inj1 = InjectionMultiSum_Auto_pool(c1_in_channels, c1_in_channels, activations=nn.ReLU6)
+
+            self.f1_cbam = CBAMBlock(c1_in_channels)
+            self.f2_cbam = CBAMBlock(c2_in_channels)
+            self.f3_cbam = CBAMBlock(c3_in_channels)
+            self.fuse_3_4 = nn.Sequential(
+                ConvModule(c3_in_channels + c4_in_channels, c3_in_channels, k=3, p=1)
+            )
+
+            self.ffn = nn.Sequential(
+                ConvModule(c3_in_channels + c2_in_channels + c1_in_channels, 64, k=3, p=1)
+            )
         elif attention == 'o1-fam-inj-skip':
             self.dam = DAM(c4_in_channels)
             self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
@@ -452,6 +470,27 @@ class SegFormerHead(nn.Module):
             _c1 = _inj1
             _c2 = _inj2
             _c3 = _inj3
+        elif self.attention == 'o1-fam-inj-v1-cbam':
+            global_info = self.low_FAM_IFM((c1,c2,c3,c4))
+            global_c1 = global_info[0]
+            global_c2 = global_info[1]
+            global_c3 = global_info[2]
+            c4 = self.dam(c4)
+            _c4 = F.interpolate(c4, size=c3.size()[2:], mode='bilinear', align_corners=False)
+            _c4 = self.fuse_3_4(torch.cat([_c4,c3],dim=1))
+            _inj3 = self.inj3(_c4,global_c3)
+            _inj3 = self.f3_cbam(_inj3)
+            _inj2 = self.inj2(c2,global_c2)
+            _inj2 = self.f2_cbam(_inj2)
+            _inj1 = self.inj1(c1,global_c1)
+            _inj1 = self.f1_cbam(_inj1)
+            _inj2 = F.interpolate(_inj2, size=_inj1.size()[2:], mode='bilinear', align_corners=False)
+            _inj3 = F.interpolate(_inj3, size=_inj1.size()[2:], mode='bilinear', align_corners=False)
+
+            out_feat = self.ffn(torch.cat([_inj1,_inj2,_inj3],dim=1))
+            _c1 = _inj1
+            _c2 = _inj2
+            _c3 = _inj3
         else:
             # if self.attention == 'org':
             _c4 = self.linear_c4(c4).permute(0, 2, 1).reshape(n, -1, c4.shape[2], c4.shape[3])
@@ -545,7 +584,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-cbam')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='o1-fam-inj-v1-cbam')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
