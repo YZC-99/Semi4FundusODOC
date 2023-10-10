@@ -76,16 +76,16 @@ class Base(pl.LightningModule):
         if model == 'ResSegFormer':
             self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,version=cfg.MODEL.version)
         if model == 'swin_unet':
-            parser = argparse.ArgumentParser()
-            parser.add_argument('--cfg', type=str, default='./segment/modules/semseg/swin_unet/swin_tiny_patch4_window7_224_lite.yaml', metavar="FILE",
+            parser1 = argparse.ArgumentParser()
+            parser1.add_argument('--cfg', type=str, default='/root/autodl-tmp/Semi4FundusODOC/segment/modules/semseg/swin_unet/swin_tiny_patch4_window7_224_lite.yaml', metavar="FILE",
                                 help='path to config file', )
-            parser.add_argument(
+            parser1.add_argument(
                 "--opts",
                 help="Modify config options by adding 'KEY VALUE' pairs. ",
                 default=None,
                 nargs='+',
             )
-            args = parser.parse_args()
+            args = parser1.parse_args()
             config = get_config(args)
             self.model = SwinUnet(config,img_size=224,num_classes=self.num_classes)
             self.model.load_from(config)
