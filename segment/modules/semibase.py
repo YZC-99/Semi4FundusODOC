@@ -21,6 +21,7 @@ from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
+from segment.modules.semseg.swin_unet.swin_unet import SwinUnet
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus,My_DeepLabV3PlusPlus
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 
@@ -69,6 +70,11 @@ class Base(pl.LightningModule):
             self.model = SegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention)
         if model == 'ResSegFormer':
             self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,version=cfg.MODEL.version)
+        if model == 'swin_unet':
+            self.model = SwinUnet(embed_dim=96,
+                         patch_height=4,
+                         patch_width=4,
+                         class_num=self.num_classes)
         self.init_from_ckpt = init_from_ckpt
 
         if cfg.MODEL.weightCE_loss is not None:
