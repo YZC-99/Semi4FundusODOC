@@ -16,7 +16,7 @@ import numpy as np
 from torch.nn import CrossEntropyLoss, Dropout, Softmax, Linear, Conv2d, LayerNorm
 from torch.nn.modules.utils import _pair
 from scipy import ndimage
-from .swin_transformer_unet_skip_expand_decoder_sys import SwinTransformerSys
+from segment.modules.semseg.swin_unet.swin_transformer_unet_skip_expand_decoder_sys import SwinTransformerSys
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,13 @@ class SwinUnet(nn.Module):
         if x.size()[1] == 1:
             x = x.repeat(1,3,1,1)
         logits = self.swin_unet(x)
-        return logits
+        return {'out':logits,
+                'out_features':'out_feat',
+                'out_classifier':'out_classifier',
+                'decodehead_out':'decodehead_out',
+                'backbone_features':'backbone_feats',
+                'c3': 'backbone_feats[2]',
+                }
 
     def load_from(self, config):
         pretrained_path = config.MODEL.PRETRAIN_CKPT

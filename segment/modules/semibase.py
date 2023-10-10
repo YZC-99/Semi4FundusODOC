@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 from torch.distributions import normal
+import argparse
 from torch.optim import SGD
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import LambdaLR
@@ -21,8 +22,12 @@ from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import JaccardIndex,Dice
-from segment.modules.semseg.swin_unet.swin_unet import SwinUnet
+# from segment.modules.semseg.swin_unet.swin_unet import SwinUnet
+from segment.modules.semseg.swin_unet.vision_transformer import SwinUnet
+from segment.modules.semseg.swin_unet.config import get_config
 from segment.modules.semseg.deeplabv3plus import DeepLabV3Plus,My_DeepLabV3PlusPlus
+from segment.modules.semseg.trans_unet.vit_seg_modeling import VisionTransformer as ViT_seg
+from segment.modules.semseg.trans_unet.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
 from segment.modules.semseg.deeplabv2 import DeepLabV2
 
 # from segment.modules.semseg.unet import UNet,ResUNet
@@ -71,10 +76,25 @@ class Base(pl.LightningModule):
         if model == 'ResSegFormer':
             self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,version=cfg.MODEL.version)
         if model == 'swin_unet':
-            self.model = SwinUnet(embed_dim=96,
-                         patch_height=4,
-                         patch_width=4,
-                         class_num=self.num_classes)
+            parser = argparse.ArgumentParser()
+            parser.add_argument('--cfg', type=str, default='./segment/modules/semseg/swin_unet/swin_tiny_patch4_window7_224_lite.yaml', metavar="FILE",
+                                help='path to config file', )
+            parser.add_argument(
+                "--opts",
+                help="Modify config options by adding 'KEY VALUE' pairs. ",
+                default=None,
+                nargs='+',
+            )
+            args = parser.parse_args()
+            config = get_config(args)
+            self.model = SwinUnet(config,img_size=224,num_classes=self.num_classes)
+            self.model.load_from(config)
+        if model == 'trans_unet':
+            config_vit = CONFIGS_ViT_seg[backbone]
+            config_vit.n_classes = self.num_classes
+            self.model = ViT_seg(config_vit, img_size=256, num_classes=config_vit.n_classes)
+            self.model.load_from(weights=np.load('./pretrained/'))
+
         self.init_from_ckpt = init_from_ckpt
 
         if cfg.MODEL.weightCE_loss is not None:
