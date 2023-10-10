@@ -54,7 +54,7 @@ _C.MODEL.NUM_CLASSES = 1000
 # Dropout rate
 _C.MODEL.DROP_RATE = 0.0
 # Drop path rate
-_C.MODEL.DROP_PATH_RATE = 0.1
+_C.MODEL.DROP_PATH_RATE = 0.2
 # Label Smoothing
 _C.MODEL.LABEL_SMOOTHING = 0.1
 
@@ -63,8 +63,8 @@ _C.MODEL.SWIN = CN()
 _C.MODEL.SWIN.PATCH_SIZE = 4
 _C.MODEL.SWIN.IN_CHANS = 3
 _C.MODEL.SWIN.EMBED_DIM = 96
-_C.MODEL.SWIN.DEPTHS = [2, 2, 6, 2]
-_C.MODEL.SWIN.DECODER_DEPTHS = [2, 2, 6, 2]
+_C.MODEL.SWIN.DEPTHS = [ 2, 2, 2, 2 ]
+_C.MODEL.SWIN.DECODER_DEPTHS = [ 2, 2, 2, 1]
 _C.MODEL.SWIN.NUM_HEADS = [3, 6, 12, 24]
 _C.MODEL.SWIN.WINDOW_SIZE = 7
 _C.MODEL.SWIN.MLP_RATIO = 4.
@@ -219,11 +219,11 @@ def update_config(config, args):
     config.freeze()
 
 
-def get_config(args):
+def get_config():
     """Get a yacs CfgNode object with default values."""
     # Return a clone so that the defaults will not be altered
     # This is for the "local variable" use pattern
     config = _C.clone()
-    update_config(config, args)
+    # update_config(config, args)
 
     return config
