@@ -83,7 +83,7 @@ class Base(pl.LightningModule):
             config_vit = CONFIGS_ViT_seg[backbone]
             config_vit.n_classes = self.num_classes
             self.model = ViT_seg(config_vit, img_size=256, num_classes=config_vit.n_classes)
-            self.model.load_from(weights=np.load('./pretrained/'))
+            self.model.load_from(weights=np.load('./pretrained/imagenet21k_R50+ViT-B_16.npz'))
 
         self.init_from_ckpt = init_from_ckpt
 

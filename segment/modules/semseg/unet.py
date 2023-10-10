@@ -2,7 +2,6 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
-import segmentation_models_pytorch as smp
 
 
 
@@ -127,7 +126,7 @@ class ResUNet(nn.Module):
 
 if __name__ == '__main__':
     resunet = ResUNet(num_classes=3,bb_pretrained=False,inplace_seven=False)
-    model = smp.Unet(encoder_name='')
+    # model = smp.Unet(encoder_name='')
     input = torch.randn(2,3,256,256)
     out = resunet(input)
     logits = out['out']
