@@ -261,16 +261,16 @@ class SegFormerHead(nn.Module):
             )
         elif attention == 'o1-fam-inj-skip-all-no':
             self.ffn0 = nn.Sequential(
-                ConvModule(c4_in_channels, c3_in_channels,k=3,p=1)
+                ConvModule(c4_in_channels, c3_in_channels)
             )
             self.ffn1 = nn.Sequential(
-                ConvModule(c3_in_channels, c2_in_channels,k=3,p=1)
+                ConvModule(c3_in_channels, c2_in_channels)
             )
             self.ffn2 = nn.Sequential(
-                ConvModule(c2_in_channels, c1_in_channels,k=3,p=1)
+                ConvModule(c2_in_channels, c1_in_channels)
             )
             self.ffn3 = nn.Sequential(
-                ConvModule(c1_in_channels, 64,k=3,p=1)
+                ConvModule(c1_in_channels, 64)
             )
         elif attention == 'o1-fam-inj-skip':
             self.dam = DAM(c4_in_channels)
