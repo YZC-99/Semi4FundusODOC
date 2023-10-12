@@ -17,7 +17,9 @@ from segment.modules.semseg.segformer import SegFormer
 from segment.modules.semseg.pspnet import PSPNet
 from segment.dataloader.od_oc_dataset import SupTrain
 from torch.utils.data import DataLoader
-from utils.training_tricks import TTA
+# from utils.training_tricks import TTA
+import utils.ttach as TTA
+from utils.ttach.wrappers import SegmentationTTAWrapper
 
 
 tta = False
@@ -73,7 +75,16 @@ with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as f
             img = img.to('cuda:0')
             logits = model(img)['out']
             if tta :
-                preds = TTA(model,img)
+                transforms = TTA.Compose(
+                    [
+                        TTA.HorizontalFlip(),
+                        TTA.Rotate90(angles=[0,180]),
+                        TTA.Scale(scales=[1,2,4]),
+                        TTA.Multiply(factors=[0.9,1,1.1])
+                    ]
+                )
+                tta_model = SegmentationTTAWrapper(model,transforms)
+                preds = tta_model(img)
             else:
                 # preds = nn.functional.softmax(logits, dim=1).argmax(1)
                 #-------------
