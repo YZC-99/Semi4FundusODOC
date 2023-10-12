@@ -8,7 +8,7 @@ def logs2csv(ex_path=''):
     with open(csv_path, 'w', newline='') as csvfile:
         w = csv.writer(csvfile)
         # 写入列头
-        w.writerow(['experiment','bb','OD_epoch','OD_dice', 'OD_IoU','OC_epoch','OC_dice', 'OC_IoU','info','epochs','lr','warmup_ratio','scheduler', 'CE_loss','DC_loss','Exp_log_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed',])
+        w.writerow(['experiment','bb','attention','OD_epoch','OD_dice', 'OD_IoU','OC_epoch','OC_dice', 'OC_IoU','info','epochs','lr','warmup_ratio','scheduler', 'CE_loss','DC_loss','Exp_log_loss','BD_loss','BD_incre','FC_loss','IoU_loss','CEpair_loss','ContrastCrossPixelCorrect_loss','seed',])
         for root, dirs, file in os.walk(path):
             if 'ckpt' in root:
                 file = [ i for i in file if 'valloss' not in i]
@@ -65,6 +65,7 @@ def logs2csv(ex_path=''):
                     setting = config.info.setting
                 w.writerow([root.replace(path,"").replace("/lightning_logs/","").replace("/ckpt",""),
                             config.MODEL.backbone,
+                            config.MODEL.Attention,
                             result['OD_best_epoch'],
                             round(float(result['OD_dice']) * 100,2),
                             round(float(result['OD_IoU']) * 100,2),
