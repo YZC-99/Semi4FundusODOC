@@ -47,6 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('--scheduler', type=str, default='cosine')
     parser.add_argument('--CE_loss', type=float, default=1.0)
     parser.add_argument('--DC_loss', type=float, default=-0.1)
+    parser.add_argument('--Exp_log_loss', type=float, default=-0.1)
     parser.add_argument('--SoftDice_loss', type=float, default=-0.1)
     parser.add_argument('--BD_loss', type=float, default=-0.1)
     parser.add_argument('--BD_loss_increase_alpha', type=float, default=-0.1)
@@ -99,6 +100,8 @@ if __name__ == '__main__':
         config.MODEL.lr = args.lr
     if args.warmup >= 0:
         config.MODEL.lr_warmup_steps_ratio = args.warmup
+    if args.Exp_log_loss >= 0:
+        config.MODEL.Exp_log_loss = args.Exp_log_loss
     if args.DC_loss >= 0:
         config.MODEL.DC_loss = args.DC_loss
     if args.SoftDice_loss >= 0:

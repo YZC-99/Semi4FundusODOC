@@ -11,7 +11,7 @@ from segment.modules.scheduler import CosineAnnealingWarmupRestarts,PolyLRwithWa
 from segment.losses.loss import PrototypeContrastiveLoss
 from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCrossEntropyLoss
 from segment.losses.seg.boundary_loss import SurfaceLoss
-from segment.losses.seg.dice_loss import DiceLoss
+from segment.losses.seg.dice_loss import DiceLoss,softmax_helper
 from segment.losses.seg.focal_loss import FocalLoss
 from segment.losses.abl import ABL
 from segment.losses.cbl import CBL,ContrastCenterCBL,CEpair_CBL
@@ -19,7 +19,7 @@ from segment.losses.cbl import ContrastPixelCBL,ContrastPixelCorrectCBL,Contrast
 from segment.losses.pixel_contrast import ContrastCrossPixelCorrect,loss_A2C_pair,loss_A2C_SCE,CEpair_Loss,MSEpair_Loss
 # from segment.losses.cbl import ContrastPixelCBLV2 as ContrastPixelCBL
 from segment.losses.lovasz_loss import lovasz_softmax,lovasz_softmaxPlus
-from segment.losses.seg.dice_loss import SoftDiceLoss
+from segment.losses.seg.dice_loss import SoftDiceLoss,ExpLog_loss
 from segment.modules.prototype_dist_estimator import prototype_dist_estimator
 from typing import List,Tuple, Dict, Any, Optional
 import pytorch_lightning as pl
@@ -102,6 +102,8 @@ def init_loss(pl_module: pl.LightningModule):
         pl_module.ABL_loss = ABL()
     if pl_module.cfg.MODEL.SoftDice_loss > 0.0:
         pl_module.SoftDice_loss = SoftDiceLoss()
+    if pl_module.cfg.MODEL.Exp_log_loss > 0.0:
+        pl_module.Exp_log_loss = ExpLog_loss(softmax_helper())
     if pl_module.cfg.MODEL.DC_loss > 0.0:
         pl_module.Dice_loss = DiceLoss(n_classes=pl_module.num_classes)
     if pl_module.cfg.MODEL.BD_loss > 0.0:
@@ -188,6 +190,8 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         _DC =  pl_module.cfg.MODEL.DC_loss * pl_module.Dice_loss(out_soft, y)
         # if pl_module.cfg.MODEL.BD_loss == 0.0:
         loss = loss + _DC
+    if pl_module.cfg.MODEL.Exp_log_loss > 0.0:
+        loss = pl_module.cfg.MODEL.SoftDice_loss * pl_module.Exp_log_loss(out_soft, y)
     if pl_module.cfg.MODEL.SoftDice_loss > 0.0:
         _DC =  pl_module.cfg.MODEL.SoftDice_loss * pl_module.SoftDice_loss(out_soft, y)
         loss = loss + _DC
