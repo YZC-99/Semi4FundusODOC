@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 # TTA(测试时增强)
 def TTA(model,image):
 
-        if isinstance(model,pl):
+        if isinstance(model,pl.LightningModule):
             out_put = model(image)
             # 水平翻转预测，再翻转回来
             out_2 = model(torch.flip(image, [-1]))
