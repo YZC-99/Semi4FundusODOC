@@ -25,7 +25,7 @@ from utils.ttach.wrappers import SegmentationTTAWrapper
 tta = False
 #
 num_classes = 3
-ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/REFUGE/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise/lightning_logs/version_8/ckpt/epoch=49-val_OC_dice=0.913130-val_OC_IoU=0.845713.ckpt'
+ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/REFUGE/cropped_sup256x256/1200/noise/lightning_logs/version_17/ckpt/epoch=22-val_OC_dice=0.890492-val_OC_IoU=0.817475.ckpt'
 log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus,'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
 # model = model_zoo['deeplabv3plus']('resnet50', num_classes,attention='Criss_Attention_R2_V1',seghead_last=True)
