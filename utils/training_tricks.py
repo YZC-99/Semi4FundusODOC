@@ -18,7 +18,7 @@ def TTA(model,image):
             out_4['out'] = torch.flip(out_4['out'], [-1, -2])
             out_put['out'] = out_2['out'] + out_3['out'] + out_4['out']
         else:
-            predict_1 = model(image)
+            predict_1 = model(image)['out']
 
             # 水平翻转预测，再翻转回来
             predict_2 = model(torch.flip(image, [-1]))['out']
