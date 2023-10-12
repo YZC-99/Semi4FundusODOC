@@ -38,6 +38,7 @@ def get_obj_from_str(string, reload=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--TTA',default=False, action='store_true')
     parser.add_argument('--d', type=str, default='')
     parser.add_argument('--retrain_batch', type=int, default=-1)
     parser.add_argument('--epochs', type=int, default=100)
@@ -127,6 +128,7 @@ if __name__ == '__main__':
         config.dataset.params.validation.params.name = os.path.join(config.dataset.params.validation.params.name,'sample{}'.format(args.sample))
         config.dataset.params.test.params.name = os.path.join(config.dataset.params.test.params.name,'sample{}'.format(args.sample))
     config.dataset.polar = args.polar
+    config.MODEL.TTA = args.TTA
     config.MODEL.retrain_batch = args.retrain_batch
     config.MODEL.CE_loss = args.CE_loss
     config.MODEL.backbone = args.backbone
