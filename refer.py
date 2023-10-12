@@ -17,7 +17,10 @@ from segment.modules.semseg.segformer import SegFormer
 from segment.modules.semseg.pspnet import PSPNet
 from segment.dataloader.od_oc_dataset import SupTrain
 from torch.utils.data import DataLoader
+from utils.training_tricks import TTA
 
+
+tta = False
 #
 num_classes = 3
 ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/REFUGE/cropped_sup256x256/my_segformer/v7-ii-1-6-v1/noise/lightning_logs/version_8/ckpt/epoch=49-val_OC_dice=0.913130-val_OC_IoU=0.845713.ckpt'
@@ -69,13 +72,16 @@ with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as f
             mask = mask.to('cuda:0')
             img = img.to('cuda:0')
             logits = model(img)['out']
-            # preds = nn.functional.softmax(logits, dim=1).argmax(1)
-            #-------------
-            probs = nn.functional.softmax(logits, dim=1)
-            threshold = 0.5
-            thresholded_preds = (probs >= threshold).float()
-            preds = torch.argmax(thresholded_preds, dim=1)
-            # -------------
+            if tta :
+                preds = TTA(model,img)
+            else:
+                # preds = nn.functional.softmax(logits, dim=1).argmax(1)
+                #-------------
+                probs = nn.functional.softmax(logits, dim=1)
+                threshold = 0.5
+                thresholded_preds = (probs >= threshold).float()
+                preds = torch.argmax(thresholded_preds, dim=1)
+                # -------------
 
             od_preds = deepcopy(preds)
             od_mask = deepcopy(mask)

@@ -40,7 +40,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils.general import initialize_from_config
 from utils.my_torchmetrics import BoundaryIoU
-
+from utils.training_tricks import TTA
 from segment.modules.pyl_utils import *
 
 
@@ -179,7 +179,10 @@ class Base(pl.LightningModule):
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
         x = batch['img']
         y = batch['mask']
-        output = self(x)
+        if self.cfg.MODEL.TTA:
+            output = TTA(self,x)
+        else:
+            output = self(x)
         backbone_feat,logits = output['backbone_features'],output['out']
         preds = nn.functional.softmax(logits, dim=1).argmax(1)
         loss = self.compute_loss(self,output,batch)
