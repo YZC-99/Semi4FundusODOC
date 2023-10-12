@@ -191,7 +191,7 @@ def compute_loss(pl_module: pl.LightningModule,output,batch):
         # if pl_module.cfg.MODEL.BD_loss == 0.0:
         loss = loss + _DC
     if pl_module.cfg.MODEL.Exp_log_loss > 0.0:
-        loss = pl_module.cfg.MODEL.SoftDice_loss * pl_module.Exp_log_loss(out_soft, y)
+        loss = pl_module.cfg.MODEL.Exp_log_loss * pl_module.Exp_log_loss(out_soft, y)
     if pl_module.cfg.MODEL.SoftDice_loss > 0.0:
         _DC =  pl_module.cfg.MODEL.SoftDice_loss * pl_module.SoftDice_loss(out_soft, y)
         loss = loss + _DC
