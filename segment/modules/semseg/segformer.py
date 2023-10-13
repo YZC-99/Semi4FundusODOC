@@ -307,15 +307,15 @@ class SegFormerHead(nn.Module):
                 ConvModule(c4_in_channels, c3_in_channels, k=3, p=1)
             )
             self.ffn1 = nn.Sequential(
-                CrissCrossAttention(c3_in_channels),
+                # CrissCrossAttention(c3_in_channels),
                 ConvModule(c3_in_channels, c2_in_channels, k=3, p=1)
             )
             self.ffn2 = nn.Sequential(
-                CrissCrossAttention(c2_in_channels),
+                # CrissCrossAttention(c2_in_channels),
                 ConvModule(c2_in_channels, c1_in_channels, k=3, p=1)
             )
             self.ffn3 = nn.Sequential(
-                CrissCrossAttention(c1_in_channels),
+                # CrissCrossAttention(c1_in_channels),
                 ConvModule(c1_in_channels, 64, k=3, p=1)
             )
         elif attention == 'o1-fam-inj-skip-no-FAM-IFM':
@@ -405,19 +405,19 @@ class SegFormerHead(nn.Module):
                                       trans_channels=[c1_in_channels,c2_in_channels,c3_in_channels,c4_in_channels])
 
             self.ffn0 = nn.Sequential(
-                CrissCrossAttention(c4_in_channels),
+                # CrissCrossAttention(c4_in_channels),
                 ConvModule(c4_in_channels, c3_in_channels,k=3,p=1)
             )
             self.ffn1 = nn.Sequential(
-                CrissCrossAttention(c3_in_channels),
+                # CrissCrossAttention(c3_in_channels),
                 ConvModule(c3_in_channels, c2_in_channels,k=3,p=1)
             )
             self.ffn2 = nn.Sequential(
-                CrissCrossAttention(c2_in_channels),
+                # CrissCrossAttention(c2_in_channels),
                 ConvModule(c2_in_channels, c1_in_channels,k=3,p=1)
             )
             self.ffn3 = nn.Sequential(
-                CrissCrossAttention(c1_in_channels),
+                # CrissCrossAttention(c1_in_channels),
                 ConvModule(c1_in_channels, 64,k=3,p=1)
             )
         elif attention == 'o1-fam-inj-cbam-skip':

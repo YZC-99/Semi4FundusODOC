@@ -236,8 +236,8 @@ if __name__ == '__main__':
         SWA_callback = StochasticWeightAveraging(swa_lrs=cfg.MODEL.lr * 0.1, swa_epoch_start=50, annealing_epochs=50)
         callbacks.append(SWA_callback)
     if args.early_stop > 0:
-        early_stop_callback = EarlyStopping(monitor="val_loss", min_delta=0.00, patience=args.early_stop, verbose=False,
-                                            mode="min")
+        early_stop_callback = EarlyStopping(monitor="val_OC_dice", min_delta=0.00, patience=args.early_stop, verbose=False,
+                                            mode="max")
         callbacks.append(early_stop_callback)
     # Build trainer
     trainer = pl.Trainer(max_epochs=exp_config.epochs,
