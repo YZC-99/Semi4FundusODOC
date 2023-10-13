@@ -311,7 +311,16 @@ class SegFormerHead(nn.Module):
             self.dec3 = _DecoderBlock(256 + c3_in_channels,384,c2_in_channels)
             self.dec2 = _DecoderBlock(c2_in_channels + c2_in_channels,c2_in_channels,c1_in_channels)
             self.dec1 = _DecoderBlock(c1_in_channels * 2,c1_in_channels * 2,64)
+        elif attention == 'dec_transpose_FAMIFM_DAM':
+            # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
+            self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
+                                      trans_channels=[c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels])
+            self.center = DAM(c4_in_channels)
 
+            self.dec4 = _DecoderBlock(c4_in_channels + c4_in_channels, c4_in_channels, 256)
+            self.dec3 = _DecoderBlock(256 + c3_in_channels + c3_in_channels, 384, c2_in_channels)
+            self.dec2 = _DecoderBlock(c2_in_channels + c2_in_channels + c2_in_channels, c2_in_channels, c1_in_channels)
+            self.dec1 = _DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64)
         elif attention == 'o1-fam-inj-skip':
             self.dam = DAM(c4_in_channels)
             self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
@@ -631,7 +640,7 @@ class SegFormerHead(nn.Module):
             _c1 = self.dec1(torch.cat([_c2,c1],dim=1))
             out_feat = _c1
 
-        elif self.attention == 'dec_transpose_FAMIFM':
+        elif self.attention == 'dec_transpose_FAMIFM' or self.attention == 'dec_transpose_FAMIFM_DAM':
             _c4 = self.center(c4)
             _c4 = F.interpolate(_c4, size=c4.size()[2:], mode='bilinear', align_corners=False)
 
@@ -910,7 +919,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_DAM')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_FAMIFM_DAM')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
