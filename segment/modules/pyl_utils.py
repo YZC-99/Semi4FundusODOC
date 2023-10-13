@@ -9,6 +9,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from segment.util import meanIOU
 from segment.modules.scheduler import CosineAnnealingWarmupRestarts,PolyLRwithWarmup
 from segment.losses.loss import PrototypeContrastiveLoss
+from segment.losses.ce_loss import OhemCrossEntropy
 from segment.losses.grw_cross_entropy_loss import GRWCrossEntropyLoss,Dice_GRWCrossEntropyLoss
 from segment.losses.seg.boundary_loss import SurfaceLoss
 from segment.losses.seg.dice_loss import DiceLoss,softmax_helper
@@ -97,7 +98,6 @@ def init_loss(pl_module: pl.LightningModule):
     extractor_channel = 256
     if pl_module.cfg.MODEL.model == 'SegFormer':
         extractor_channel = 768
-
     if pl_module.cfg.MODEL.ABL_loss > 0.0:
         pl_module.ABL_loss = ABL()
     if pl_module.cfg.MODEL.SoftDice_loss > 0.0:
