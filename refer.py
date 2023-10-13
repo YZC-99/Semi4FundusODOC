@@ -22,14 +22,14 @@ import utils.ttach as TTA
 from utils.ttach.wrappers import SegmentationTTAWrapper
 
 
-tta = False
+tta = True
 #
 num_classes = 3
 ckpt_path = '/root/autodl-tmp/Semi4FundusODOC/experiments/REFUGE/cropped_sup256x256/1200/noise/lightning_logs/version_17/ckpt/epoch=22-val_OC_dice=0.890492-val_OC_IoU=0.817475.ckpt'
 log_path = 'experiments/preds'
 model_zoo = {'deeplabv3plus': DeepLabV3Plus,'mydeeplabv3plusplus': My_DeepLabV3PlusPlus, 'pspnet': PSPNet, 'deeplabv2': DeepLabV2}
 # model = model_zoo['deeplabv3plus']('resnet50', num_classes,attention='Criss_Attention_R2_V1',seghead_last=True)
-model = SegFormer(num_classes=num_classes, phi='b2',attention='backbone_multi-levelv7-ii-1-6-v1')
+model = SegFormer(num_classes=num_classes, phi='b4',attention='o1-fam-inj-skip')
 sd = torch.load(ckpt_path,map_location='cpu')
 
 if 'state_dict' in sd:
@@ -73,7 +73,7 @@ with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as f
             img,mask,id = batch['img'],batch['mask'],batch['id']
             mask = mask.to('cuda:0')
             img = img.to('cuda:0')
-            logits = model(img)['out']
+#             logits = model(img)['out']
             if tta :
                 transforms = TTA.Compose(
                     [
@@ -83,8 +83,12 @@ with open(os.path.join('experiments','preds_metrics.csv'), 'w', newline='') as f
                         TTA.Multiply(factors=[0.9,1,1.1])
                     ]
                 )
-                tta_model = SegmentationTTAWrapper(model,transforms)
-                preds = tta_model(img)
+                tta_model = SegmentationTTAWrapper(model,transforms,output_mask_key='out')
+                logits = tta_model(img)['out']
+                probs = nn.functional.softmax(logits, dim=1)
+                threshold = 0.5
+                thresholded_preds = (probs >= threshold).float()
+                preds = torch.argmax(thresholded_preds, dim=1)
             else:
                 # preds = nn.functional.softmax(logits, dim=1).argmax(1)
                 #-------------
