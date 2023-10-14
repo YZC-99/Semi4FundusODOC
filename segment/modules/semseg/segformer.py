@@ -332,6 +332,16 @@ class SegFormerHead(nn.Module):
             self.dec3 = _DecoderBlock(256 + c3_in_channels,384,c2_in_channels)
             self.dec2 = _DecoderBlock(c2_in_channels + c2_in_channels,c2_in_channels,c1_in_channels)
             self.dec1 = _DecoderBlock(c1_in_channels * 2,c1_in_channels * 2,64)
+        elif attention == 'dec_transpose_CCA':
+            # self.center = DAM(c4_in_channels)
+            self.center = nn.Sequential(
+                CrissCrossAttention(c4_in_channels),
+                CrissCrossAttention(c4_in_channels)
+            )
+            self.dec4 = _DecoderBlock(c4_in_channels + c4_in_channels,c4_in_channels,256)
+            self.dec3 = _DecoderBlock(256 + c3_in_channels,384,c2_in_channels)
+            self.dec2 = _DecoderBlock(c2_in_channels + c2_in_channels,c2_in_channels,c1_in_channels)
+            self.dec1 = _DecoderBlock(c1_in_channels * 2,c1_in_channels * 2,64)
         elif attention == 'dec_transpose_FAMIFM_DAM':
             # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
             self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
@@ -707,7 +717,9 @@ class SegFormerHead(nn.Module):
             _c2 = _c2 + c1
             _c1 = self.ffn3(_c2)
             out_feat = _c1
-        elif self.attention == 'dec_transpose' or self.attention == 'dec_transpose_DAM':
+        elif self.attention == 'dec_transpose' or \
+                self.attention == 'dec_transpose_DAM' or \
+                self.attention == 'dec_transpose_CCA':
             _c4 = self.center(c4)
             _c4 = F.interpolate(_c4, size=c4.size()[2:], mode='bilinear', align_corners=False)
             _c4 = self.dec4(torch.cat([_c4,c4],dim=1))
@@ -1017,7 +1029,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_FAMIFM_CBAM_Inj')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_CCA')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
