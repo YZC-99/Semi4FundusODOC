@@ -342,6 +342,22 @@ class SegFormerHead(nn.Module):
             self.dec3 = _DecoderBlock(256 + c3_in_channels + c3_in_channels, 384, c2_in_channels)
             self.dec2 = _DecoderBlock(c2_in_channels + c2_in_channels + c2_in_channels, c2_in_channels, c1_in_channels)
             self.dec1 = _DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64)
+        elif attention == 'dec_transpose_FAMIFM_DAM_Inj':
+            # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
+            self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
+                                      trans_channels=[c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels])
+            self.center = DAM(c4_in_channels)
+            self.dec4 = _DecoderBlock(c4_in_channels + c4_in_channels, c4_in_channels, c3_in_channels)
+
+            self.inj3 = Skip_InjectionMultiSum_Auto_pool(c3_in_channels, c3_in_channels, activations=nn.ReLU6)
+            self.inj2 = Skip_InjectionMultiSum_Auto_pool(c2_in_channels, c2_in_channels, activations=nn.ReLU6)
+            self.inj1 = Skip_InjectionMultiSum_Auto_pool(c1_in_channels, c1_in_channels, activations=nn.ReLU6)
+
+            self.dec3 = _DecoderBlock(c3_in_channels, c3_in_channels, c2_in_channels)
+            self.dec2 = _DecoderBlock(c2_in_channels, c2_in_channels, c1_in_channels)
+            self.dec1 = _DecoderBlock(c1_in_channels, c1_in_channels, 64)
+
+
         elif attention == 'o1-fam-inj-skip':
             self.dam = DAM(c4_in_channels)
             self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
@@ -678,7 +694,26 @@ class SegFormerHead(nn.Module):
             _c2 = self.dec2(torch.cat([_c3,c2,global_c2],dim=1))
             _c1 = self.dec1(torch.cat([_c2,c1,global_c1],dim=1))
             out_feat = _c1
+        elif self.attention == 'dec_transpose_FAMIFM_DAM_Inj':
+            _c4 = self.center(c4)
+            _c4 = F.interpolate(_c4, size=c4.size()[2:], mode='bilinear', align_corners=False)
 
+            global_info = self.low_FAM_IFM((c1, c2, c3, c4))
+            global_c1 = F.interpolate(global_info[0], size=c1.size()[2:], mode='bilinear', align_corners=False)
+            global_c2 = F.interpolate(global_info[1], size=c2.size()[2:], mode='bilinear', align_corners=False)
+            global_c3 = global_info[2]
+            _c4 = self.dec4(torch.cat([_c4, c4], dim=1))
+            # 开始inj
+            _c4 = F.interpolate(_c4, size=c3.size()[2:], mode='bilinear', align_corners=False)
+            _c3 = self.inj3(_c4, global_c3, c3)
+            _c3 = self.dec3(_c3)
+            _c3 = F.interpolate(_c3, size=c2.size()[2:], mode='bilinear', align_corners=False)
+            _c2 = self.inj2(_c3, global_c2, c2)
+            _c2 = self.dec2(_c2)
+            _c1 = F.interpolate(_c2, size=c1.size()[2:], mode='bilinear', align_corners=False)
+            _c1 = self.inj1(_c1,global_c1,c1)
+            _c1 = self.dec1(_c1)
+            out_feat = _c1
         elif self.attention == 'o1-fam-inj-skip' or self.attention == 'o1-fam-inj-cbam-skip':
             global_info = self.low_FAM_IFM((c1,c2,c3,c4))
             global_c1 = F.interpolate(global_info[0], size=c1.size()[2:], mode='bilinear', align_corners=False)
@@ -942,7 +977,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_FAMIFM_CBAM')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_FAMIFM_DAM_Inj')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
