@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from segment.modules.semseg.nn import Attention,CrissCrossAttention,CoordAtt,CBAMBlock
 from segment.modules.backbone.resnet import resnet18,resnet34, resnet50, resnet101
 from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
-from segment.demo.DAM.dam import DAM,DAM_criss
+from segment.demo.DAM.dam import DAM,DAM_criss,AxialDAM
 from segment.demo.gold_yolo.Low_FAMIFM import FAMIFM
 from segment.demo.gold_yolo.transformer import InjectionMultiSum_Auto_pool,Skip_InjectionMultiSum_Auto_pool
 
@@ -354,6 +354,13 @@ class SegFormerHead(nn.Module):
         elif attention == 'dec_transpose_DAM':
             # self.center = _DecoderBlock(c4_in_channels,1024,c4_in_channels)
             self.center = DAM(c4_in_channels)
+            self.dec4 = _DecoderBlock(c4_in_channels + c4_in_channels,c4_in_channels,256)
+            self.dec3 = _DecoderBlock(256 + c3_in_channels,384,c2_in_channels)
+            self.dec2 = _DecoderBlock(c2_in_channels + c2_in_channels,c2_in_channels,c1_in_channels)
+            self.dec1 = _DecoderBlock(c1_in_channels * 2,c1_in_channels * 2,64)
+        elif attention == 'dec_transpose_AxialDAM':
+            # self.center = _DecoderBlock(c4_in_channels,1024,c4_in_channels)
+            self.center = AxialDAM(c4_in_channels)
             self.dec4 = _DecoderBlock(c4_in_channels + c4_in_channels,c4_in_channels,256)
             self.dec3 = _DecoderBlock(256 + c3_in_channels,384,c2_in_channels)
             self.dec2 = _DecoderBlock(c2_in_channels + c2_in_channels,c2_in_channels,c1_in_channels)
@@ -791,6 +798,7 @@ class SegFormerHead(nn.Module):
             out_feat = _c1
         elif self.attention == 'dec_transpose' or \
                 self.attention == 'dec_transpose_DAM' or \
+                self.attention == 'dec_transpose_AxialDAM' or \
                 self.attention == 'dec_transpose_CCA':
             _c4 = self.center(c4)
             _c4 = F.interpolate(_c4, size=c4.size()[2:], mode='bilinear', align_corners=False)
@@ -1105,7 +1113,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_FAMIFM_CBAM_DAM_Inj')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_AxialDAM')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
