@@ -325,6 +325,32 @@ class SegFormerHead(nn.Module):
                 _DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels,c1_in_channels * 2,64),
                 CBAMBlock(64)
             )
+        elif attention == 'dec_transpose_FAMIFM_decCCA':
+            self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
+                                      trans_channels=[c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels])
+            self.center = _DecoderBlock(c4_in_channels, 1024, c4_in_channels)
+
+            self.dec4 = nn.Sequential(
+                _DecoderBlock(c4_in_channels + c4_in_channels, c4_in_channels, 256),
+                CrissCrossAttention(256),
+                CrissCrossAttention(256),
+            )
+            self.dec3 = nn.Sequential(
+                _DecoderBlock(256 + c3_in_channels + c3_in_channels, 384, c2_in_channels),
+                CrissCrossAttention(c2_in_channels),
+                CrissCrossAttention(c2_in_channels),
+
+            )
+            self.dec2 = nn.Sequential(
+                _DecoderBlock(c2_in_channels + c2_in_channels + c2_in_channels, c2_in_channels, c1_in_channels),
+                CrissCrossAttention(c1_in_channels),
+                CrissCrossAttention(c1_in_channels),
+            )
+            self.dec1 = nn.Sequential(
+                _DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64),
+                CrissCrossAttention(64),
+                CrissCrossAttention(64),
+            )
         elif attention == 'dec_transpose_DAM':
             # self.center = _DecoderBlock(c4_in_channels,1024,c4_in_channels)
             self.center = DAM(c4_in_channels)
@@ -752,6 +778,7 @@ class SegFormerHead(nn.Module):
         elif self.attention == 'dec_transpose_FAMIFM' or \
                 self.attention == 'dec_transpose_FAMIFM_DAM' or \
                 self.attention == 'dec_transpose_FAMIFM_CBAM' or \
+                self.attention == 'dec_transpose_FAMIFM_decCCA' or \
                 self.attention == 'dec_transpose_FAMIFM_CBAM_DAM' or \
                 self.attention == 'dec_transpose_FAMIFM_CBAM_CCA':
             _c4 = self.center(c4)
