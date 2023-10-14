@@ -370,6 +370,27 @@ class SegFormerHead(nn.Module):
             self.dec1 = nn.Sequential(_DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64),
                                       CBAMBlock(64)
                                       )
+        elif attention == 'dec_transpose_FAMIFM_CBAM_CCA':
+            # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
+            self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
+                                      trans_channels=[c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels])
+            self.center = nn.Sequential(
+                CrissCrossAttention(c4_in_channels),
+                CrissCrossAttention(c4_in_channels)
+            )
+
+            self.dec4 = nn.Sequential(_DecoderBlock(c4_in_channels + c4_in_channels, c4_in_channels, 256),
+                                      CBAMBlock(256)
+                                      )
+            self.dec3 = nn.Sequential(_DecoderBlock(256 + c3_in_channels + c3_in_channels, 384, c2_in_channels),
+                                      CBAMBlock(c2_in_channels)
+                                      )
+            self.dec2 = nn.Sequential(_DecoderBlock(c2_in_channels + c2_in_channels + c2_in_channels, c2_in_channels, c1_in_channels),
+                                      CBAMBlock(c1_in_channels)
+                                      )
+            self.dec1 = nn.Sequential(_DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64),
+                                      CBAMBlock(64)
+                                      )
         elif attention == 'dec_transpose_FAMIFM_DAM_Inj':
             # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
             self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
@@ -731,7 +752,8 @@ class SegFormerHead(nn.Module):
         elif self.attention == 'dec_transpose_FAMIFM' or \
                 self.attention == 'dec_transpose_FAMIFM_DAM' or \
                 self.attention == 'dec_transpose_FAMIFM_CBAM' or \
-                self.attention == 'dec_transpose_FAMIFM_CBAM_DAM':
+                self.attention == 'dec_transpose_FAMIFM_CBAM_DAM' or \
+                self.attention == 'dec_transpose_FAMIFM_CBAM_CCA':
             _c4 = self.center(c4)
             _c4 = F.interpolate(_c4, size=c4.size()[2:], mode='bilinear', align_corners=False)
 
@@ -1029,7 +1051,7 @@ if __name__ == '__main__':
     # sd = torch.load(ckpt_path,map_location='cpu')
 
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_CCA')
+    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_FAMIFM_CBAM_CCA')
     img = torch.randn(2,3,256,256)
     out = model(img)
     logits = out['out']
