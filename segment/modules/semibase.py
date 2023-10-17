@@ -77,7 +77,7 @@ class Base(pl.LightningModule):
             self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,version=cfg.MODEL.version)
         if model == 'swin_unet':
             config = get_config()
-            self.model = SwinUnet(config,img_size=224,num_classes=self.num_classes)
+            self.model = SwinUnet(config,img_size=256,num_classes=self.num_classes)
             self.model.load_from(config)
         if model == 'trans_unet':
             config_vit = CONFIGS_ViT_seg[backbone]
