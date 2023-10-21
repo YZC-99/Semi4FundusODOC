@@ -12,7 +12,7 @@ def color_map():
     return cmap
 cmap = color_map()
 
-img_path = './drishtiGS_052.png'
+img_path = './S-16-R.png'
 img = Image.open(img_path)
 img.putpalette(cmap)
 img.save(img_path.replace('.bmp','.png'))

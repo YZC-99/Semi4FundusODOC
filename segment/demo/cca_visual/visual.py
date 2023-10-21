@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 def shows_attention1(att_maps, pos = [28, 122]):
     att_map1 = att_maps[0]
     _, _, h, w = att_map1.shape
@@ -40,6 +41,7 @@ def make_image(vis_map, outputname):
     plt.savefig(outputname)
 
 # att_maps is the attention map of RCCA
+att_maps = [torch.randn(1,2*128-1,128,128),torch.randn(1,2*128-1,128,128)]
 att_maps = [att.data.cpu().numpy() for att in att_maps]
-vis_map = shows_attention2(att_maps, [19, 70])
+vis_map = shows_attention2(att_maps, [19, 50])
 make_image(vis_map, 'attention_vis.png')
