@@ -3,6 +3,7 @@
 #
 # This work is licensed under the NVIDIA Source Code License
 # ---------------------------------------------------------------
+from functools import partial
 import random
 import numpy as np
 import torch
@@ -10,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from segment.modules.semseg.nn import Attention, CrissCrossAttention, CoordAtt, CBAMBlock
 from segment.modules.backbone.resnet import resnet18, resnet34, resnet50, resnet101
-from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
+from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5,Block
 from segment.demo.DAM.dam import DAM, DAM_criss, AxialDAM
 from segment.demo.gold_yolo.Low_FAMIFM import FAMIFM
 from segment.demo.gold_yolo.transformer import InjectionMultiSum_Auto_pool, Skip_InjectionMultiSum_Auto_pool
@@ -1253,8 +1254,9 @@ class SegFormerHead(nn.Module):
 
 
 class SegFormer(nn.Module):
-    def __init__(self, num_classes=21, phi='b0', pretrained=False, seghead_last=False, attention=None):
+    def __init__(self, num_classes=21, phi='b0', pretrained=False, seghead_last=False, attention=None,dual=None):
         super(SegFormer, self).__init__()
+        self.dual = dual
         self.seghead_last = seghead_last
         self.in_channels = {
             'b0': [32, 64, 160, 256], 'b1': [64, 128, 320, 512], 'b2': [64, 128, 320, 512],
@@ -1275,10 +1277,9 @@ class SegFormer(nn.Module):
         #     c2=256,
         #     k=1,
         # )
-        self.attention = attention
         if 'org' in attention:
             self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
-        elif 'SAM' in attention:
+        if 'SAM' in self.dual:
             sam_checkpoint = "pretrained/sam_vit_h_4b8939.pth"
             model_type = "vit_h"
             self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
@@ -1288,7 +1289,28 @@ class SegFormer(nn.Module):
                 param.requires_grad = False
             # for param in self.predictor.parameters():
             #     param.requires_grad = False
-            self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=256, out_channels=64)
+            if self.dual == 'CNN_Block':
+                self.SAM_Conv = nn.Sequential(
+                        nn.Conv2d(256, 128, kernel_size=3, padding=1),
+                        nn.BatchNorm2d(128),
+                        nn.ReLU(inplace=True),
+                        nn.Conv2d(128, 128, kernel_size=3, padding=1),
+                        nn.BatchNorm2d(128),
+                        nn.ReLU(inplace=True),
+                        nn.ConvTranspose2d(128, 64, kernel_size=1),
+                )
+            elif self.dual == 'Mix_FFN':
+                self.SAM_Conv = nn.Sequential(
+                    Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
+                    Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
+                    Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
+                )
+            else:
+                self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=256, out_channels=64)
+
             self.classifier = nn.Conv2d(64, num_classes, kernel_size=3, padding=1)
         else:
             self.classifier = nn.Conv2d(64, num_classes, kernel_size=3, padding=1)
@@ -1300,7 +1322,7 @@ class SegFormer(nn.Module):
 
         # input_point = np.array([[256, 256]])
         # input_label = np.array([1])
-        if 'SAM' in self.attention:
+        if 'SAM' in self.dual:
             from segment.segment_anything_main.segment_anything.utils.transforms import ResizeLongestSide
             resize_transform = ResizeLongestSide(self.sam.image_encoder.img_size)
 

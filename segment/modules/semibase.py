@@ -72,7 +72,7 @@ class Base(pl.LightningModule):
             else:
                 self.model = UNet(self.num_classes)
         if model == 'SegFormer':
-            self.model = SegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention)
+            self.model = SegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,attention=cfg.MODEL.Attention,dual=cfg.MODEL.Dual)
         if model == 'ResSegFormer':
             self.model = ResSegFormer(num_classes=self.num_classes, phi=backbone, pretrained=cfg.MODEL.backbone_pretrained,seghead_last=cfg.MODEL.seghead_last,version=cfg.MODEL.version)
         if model == 'swin_unet':

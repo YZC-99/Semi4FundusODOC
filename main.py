@@ -60,6 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--ohem_thres', type=float, default=0.5)
     parser.add_argument('--ohem_weight', type=float,nargs="+", default=[1.0,2.8,3.0])
     parser.add_argument('--Attention', type=str, default=None)
+    parser.add_argument('--Dual', type=str, default=None)
     parser.add_argument('--optimizer_decoupling', type=int, default=10)
 
     parser.add_argument('--model', type=str, default=None)
@@ -119,6 +120,8 @@ if __name__ == '__main__':
         config.MODEL.CEpair_loss = args.CEpair_loss
     if args.ContrastCrossPixelCorrect_loss >= 0:
         config.MODEL.ContrastCrossPixelCorrect_loss = args.ContrastCrossPixelCorrect_loss
+    if args.Dual is not None:
+        config.MODEL.Dual = args.Dual
     if args.Attention is not None:
         config.MODEL.Attention = args.Attention
     if args.model is not None:
