@@ -1282,13 +1282,13 @@ class SegFormer(nn.Module):
             sam_checkpoint = "pretrained/sam_vit_h_4b8939.pth"
             model_type = "vit_h"
             self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-            self.predictor = SamPredictor(self.sam)
+            # self.predictor = SamPredictor(self.sam)
             # Freeze the parameters of sam and predictor
             for param in self.sam.parameters():
                 param.requires_grad = False
             # for param in self.predictor.parameters():
             #     param.requires_grad = False
-            self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=512, out_channels=64)
+            self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=256, out_channels=64)
             self.classifier = nn.Conv2d(64, num_classes, kernel_size=3, padding=1)
         else:
             self.classifier = nn.Conv2d(64, num_classes, kernel_size=3, padding=1)
@@ -1335,7 +1335,7 @@ class SegFormer(nn.Module):
         decodehead_out = self.decode_head.forward(backbone_feats)
         out_feat = decodehead_out['out_feat']
         if 'SAM' in self.attention:
-            batch_src = torch.cat([i['src'] for i in sam_outputs], dim=1)
+            batch_src = torch.cat([i['src'] for i in sam_outputs], dim=0)
             src = self.SAM_Conv(batch_src)
             src = F.interpolate(src, size=out_feat.size()[2:], mode='bilinear', align_corners=False)
             out_feat = out_feat + src
