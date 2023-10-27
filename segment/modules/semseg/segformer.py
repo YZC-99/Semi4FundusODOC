@@ -1305,7 +1305,7 @@ class SegFormer(nn.Module):
             resize_transform = ResizeLongestSide(self.sam.image_encoder.img_size)
 
             batched_input = [{
-                    'image': inputs[i,...],
+                    'image': inputs[i,...].detach().cpu().numpy(),
                     'point_coords': resize_transform.apply_coords(torch.tensor([H//2,H//2]), (H, W)),
                     'point_labels': torch.tensor(1),
                     'original_size': (H, W)
