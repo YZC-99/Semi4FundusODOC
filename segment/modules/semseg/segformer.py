@@ -1296,10 +1296,10 @@ class SegFormer(nn.Module):
 
     def forward(self, inputs):
         H, W = inputs.size(2), inputs.size(3)
-        self.predictor.set_torch_image(inputs,inputs.shape)
+        # self.predictor.set_torch_image(inputs,inputs.shape)
 
-        input_point = np.array([[256, 256]])
-        input_label = np.array([1])
+        # input_point = np.array([[256, 256]])
+        # input_label = np.array([1])
         if 'SAM' in self.attention:
             from segment.segment_anything_main.segment_anything.utils.transforms import ResizeLongestSide
             resize_transform = ResizeLongestSide(self.sam.image_encoder.img_size)
