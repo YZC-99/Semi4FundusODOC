@@ -1358,10 +1358,16 @@ class SegFormer(nn.Module):
         out_feat = decodehead_out['out_feat']
         if 'SAM' in self.attention:
             batch_src = torch.cat([i['src'] for i in sam_outputs], dim=0)
+            b,c,h,w = batch_src.shape
             if self.dual == 'Mix_FFN':
+                batch_src = torch.reshape(batch_src,(b,c,-1))
+                batch_src = torch.permute(batch_src,0,2,1)
+                batch_src = torch.permute()
                 batch_src = self.FFN1(batch_src,64,64)
                 batch_src = self.FFN2(batch_src,64,64)
                 batch_src = self.FFN3(batch_src,64,64)
+                batch_src = torch.permute(batch_src, 0, 2, 1)
+                batch_src = torch.reshape(batch_src, (b,c,h,w))
             src = self.SAM_Conv(batch_src)
             src = F.interpolate(src, size=out_feat.size()[2:], mode='bilinear', align_corners=False)
             out_feat = out_feat + src
