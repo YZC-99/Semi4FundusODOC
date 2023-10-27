@@ -1279,7 +1279,7 @@ class SegFormer(nn.Module):
         # )
         if 'org' in attention:
             self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
-        if 'SAM' in self.dual:
+        elif 'SAM' in attention:
             sam_checkpoint = "pretrained/sam_vit_h_4b8939.pth"
             model_type = "vit_h"
             self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
