@@ -1254,7 +1254,7 @@ class SegFormerHead(nn.Module):
 
 
 class SegFormer(nn.Module):
-    def __init__(self, num_classes=21, phi='b0', pretrained=False, seghead_last=False, attention=None,dual=None):
+    def __init__(self, num_classes=21, phi='b0', pretrained=False, seghead_last=False, attention=None,dual='org'):
         super(SegFormer, self).__init__()
         self.dual = dual
         self.seghead_last = seghead_last
@@ -1300,14 +1300,13 @@ class SegFormer(nn.Module):
                         nn.ConvTranspose2d(128, 64, kernel_size=1),
                 )
             elif self.dual == 'Mix_FFN':
-                self.SAM_Conv = nn.Sequential(
-                    Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
-                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
-                    Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
-                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
-                    Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
-                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
-                )
+                self.FFN1 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8)
+                self.FFN1 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8)
+                self.FFN1 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8)
+                self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=256, out_channels=64)
             else:
                 self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=256, out_channels=64)
 
@@ -1356,8 +1355,12 @@ class SegFormer(nn.Module):
         # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
         decodehead_out = self.decode_head.forward(backbone_feats)
         out_feat = decodehead_out['out_feat']
-        if 'SAM' in self.attention:
+        if 'SAM' in self.dual:
             batch_src = torch.cat([i['src'] for i in sam_outputs], dim=0)
+            if self.dual == 'Mix_FFN':
+                batch_src = self.FFN1(batch_src)
+                batch_src = self.FFN2(batch_src)
+                batch_src = self.FFN3(batch_src)
             src = self.SAM_Conv(batch_src)
             src = F.interpolate(src, size=out_feat.size()[2:], mode='bilinear', align_corners=False)
             out_feat = out_feat + src
@@ -1380,20 +1383,38 @@ class SegFormer(nn.Module):
 
 
 if __name__ == '__main__':
+    FFN = Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
+          norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8)
+    # FFN = nn.ModuleList(
+    #     Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
+    #           norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
+    #     Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
+    #           norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
+    #     Block(dim=64, num_heads=1, mlp_ratio=4, qkv_bias=True,
+    #           norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8),
+    # )
+    img = torch.randn(2,64*64,64)
+
+    out = FFN(img,64,64)
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
-    from torchsummary import summary
-    from thop import profile
-
-    # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b4', pretrained=False, attention='dec_transpose_FAMIFM_CBAM_CCA')
-    input = torch.randn(1, 3, 256, 256)
-    model = model.to('cuda')
-    input = input.to('cuda')
-    summary(model, input_size=(3, 256, 256))
-    macs, params = profile(model, inputs=input)
-    print(f"MACs (FLOPs): {macs}, Params: {params}")
+    # from torchsummary import summary
+    # from thop import profile
+    #
+    # # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
+    # model = SegFormer(num_classes=3, phi='b4', pretrained=False, attention='dec_transpose_FAMIFM_CBAM_CCA')
+    # input = torch.randn(1, 3, 256, 256)
+    # model = model.to('cuda')
+    # input = input.to('cuda')
+    # summary(model, input_size=(3, 256, 256))
+    # macs, params = profile(model, inputs=input)
+    # print(f"MACs (FLOPs): {macs}, Params: {params}")
     # out = model(img)
     # logits = out['out']
     # print(logits.shape)
     # print(logits.shape)
+
+    #
+    img = torch.randn(2,3,256,256)
+    model = SegFormer(num_classes=3, phi='b4', pretrained=False, attention='dec_transpose_FAMIFM_CBAM_CCA',dual='CNN_Block')
+    out = model(img)
