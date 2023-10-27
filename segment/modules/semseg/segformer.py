@@ -568,15 +568,15 @@ class SegFormerHead(nn.Module):
                 _DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64),
                 )
         elif attention == 'dec_transpose_FAMIFM_CBAM_CCA_SAM':
-            sam_checkpoint = "pretrained/sam_vit_h_4b8939.pth"
-            model_type = "vit_h"
-            self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-            self.predictor = SamPredictor(self.sam)
-            # Freeze the parameters of sam and predictor
-            for param in self.sam.parameters():
-                param.requires_grad = False
-            for param in self.predictor.parameters():
-                param.requires_grad = False
+            # sam_checkpoint = "pretrained/sam_vit_h_4b8939.pth"
+            # model_type = "vit_h"
+            # self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+            # self.predictor = SamPredictor(self.sam)
+            # # Freeze the parameters of sam and predictor
+            # for param in self.sam.parameters():
+            #     param.requires_grad = False
+            # for param in self.predictor.parameters():
+            #     param.requires_grad = False
 
 
             # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
