@@ -1301,11 +1301,33 @@ class SegFormer(nn.Module):
         input_point = np.array([[256, 256]])
         input_label = np.array([1])
         if 'SAM' in self.attention:
-            masks, scores, logits, hs, src, iou_token_out = self.predictor.predict(
-                point_coords=input_point,
-                point_labels=input_label,
-                multimask_output=True,
-            )
+            from segment.segment_anything_main.segment_anything.utils.transforms import ResizeLongestSide
+            resize_transform = ResizeLongestSide(self.sam.image_encoder.img_size)
+
+            batched_input = [{
+                    'image': inputs[i,...],
+                    'point_coords': resize_transform.apply_coords(torch.tensor([H//2,H//2]), (H, W)),
+                    'point_labels': torch.tensor(1),
+                    'original_size': (H, W)
+                } for i in range(len(inputs.size(0)))]
+            # batched_input = [
+            #     {
+            #         'image': image1,
+            #         'boxes': resize_transform.apply_coords(torch.tensor([H//2,H//2]), (H, W)),
+            #         'original_size': image1.shape[:2]
+            #     },
+            #     {
+            #         'image': prepare_image(image2, resize_transform, sam),
+            #         'boxes': resize_transform.apply_boxes_torch(image2_boxes, image2.shape[:2]),
+            #         'original_size': image2.shape[:2]
+            #     }
+            # ]
+            sam_outputs = self.sam(batched_input, multimask_output=False)
+            # masks, scores, logits, hs, src, iou_token_out = self.predictor.predict(
+            #     point_coords=input_point,
+            #     point_labels=input_label,
+            #     multimask_output=True,
+            # )
 
 
         backbone_feats = self.backbone.forward(inputs)
@@ -1313,7 +1335,7 @@ class SegFormer(nn.Module):
         decodehead_out = self.decode_head.forward(backbone_feats)
         out_feat = decodehead_out['out_feat']
         if 'SAM' in self.attention:
-            src = self.SAM_Conv(src)
+            src = self.SAM_Conv(sam_outputs['src'])
             out_feat = out_feat + src
         # out_feat = self.reduct4loss(out_feat)
         if self.seghead_last:
