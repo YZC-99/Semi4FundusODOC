@@ -1288,7 +1288,7 @@ class SegFormer(nn.Module):
                 param.requires_grad = False
             # for param in self.predictor.parameters():
             #     param.requires_grad = False
-            self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=256, out_channels=64)
+            self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=512, out_channels=64)
         else:
             self.classifier = nn.Conv2d(64, num_classes, kernel_size=3, padding=1)
         # self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
