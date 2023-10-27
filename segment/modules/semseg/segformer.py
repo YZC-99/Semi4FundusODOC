@@ -1362,7 +1362,6 @@ class SegFormer(nn.Module):
             if self.dual == 'Mix_FFN':
                 batch_src = torch.reshape(batch_src,(b,c,-1))
                 batch_src = torch.permute(batch_src,(0,2,1))
-                batch_src = torch.permute()
                 batch_src = self.FFN1(batch_src,64,64)
                 batch_src = self.FFN2(batch_src,64,64)
                 batch_src = self.FFN3(batch_src,64,64)
