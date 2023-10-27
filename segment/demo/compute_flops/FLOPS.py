@@ -20,10 +20,10 @@ from torch.utils.data import DataLoader
 from thop import profile
 
 num_classes = 3
-attention = 'org'
+attention = 'dec_transpose_FAMIFM_CCA'
 input_tensor = torch.randn(1, 3, 256, 256)
-# model = SegFormer(num_classes=num_classes, phi='b4',attention=attention)
-model = DeepLabV3Plus(nclass=num_classes,backbone='resnet50')
+model = SegFormer(num_classes=num_classes, phi='b4',attention=attention)
+# model = DeepLabV3Plus(nclass=num_classes,backbone='resnet50')
 # 计算 FLOPs
 flops, params = profile(model, inputs=(input_tensor,))
 print(f"FLOPs: {flops / 1e9} G FLOPs")  # 以十亿次FLOPs为单位打印结果

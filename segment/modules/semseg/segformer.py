@@ -4,6 +4,7 @@
 # This work is licensed under the NVIDIA Source Code License
 # ---------------------------------------------------------------
 import random
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,6 +14,12 @@ from segment.modules.backbone.mit import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4,
 from segment.demo.DAM.dam import DAM,DAM_criss,AxialDAM
 from segment.demo.gold_yolo.Low_FAMIFM import FAMIFM
 from segment.demo.gold_yolo.transformer import InjectionMultiSum_Auto_pool,Skip_InjectionMultiSum_Auto_pool
+
+from segment.segment_anything_main.segment_anything import sam_model_registry,SamPredictor
+
+
+
+
 
 class _DecoderBlock(nn.Module):
     def __init__(self, in_channels, middle_channels, out_channels):
@@ -404,7 +411,23 @@ class SegFormerHead(nn.Module):
                 CrissCrossAttention(64),
                 )
         elif attention == 'dec_transpose_CCA':
-            # self.center = DAM(c4_in_channels)
+            # self.center = DAM_criss(c4_in_channels)
+            # self.dec4 = nn.Sequential(
+            #     _DecoderBlock(c4_in_channels + c4_in_channels,c4_in_channels,256),
+            #     CBAMBlock(256)
+            # )
+            # self.dec3 = nn.Sequential(
+            #     _DecoderBlock(256 + c3_in_channels,384,c2_in_channels),
+            #     CBAMBlock(c2_in_channels)
+            # )
+            # self.dec2 = nn.Sequential(
+            #     _DecoderBlock(c2_in_channels + c2_in_channels,c2_in_channels,c1_in_channels),
+            #     CBAMBlock(c1_in_channels)
+            # )
+            # self.dec1 = nn.Sequential(
+            #     _DecoderBlock(c1_in_channels * 2,c1_in_channels * 2,64),
+            #     CBAMBlock(64)
+            # )
             self.center = nn.Sequential(
                 CrissCrossAttention(c4_in_channels),
                 CrissCrossAttention(c4_in_channels)
@@ -544,6 +567,42 @@ class SegFormerHead(nn.Module):
             self.dec1 = nn.Sequential(
                 _DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64),
                 )
+        elif attention == 'dec_transpose_FAMIFM_CBAM_CCA_SAM':
+            sam_checkpoint = "pretrained/sam_vit_h_4b8939.pth"
+            model_type = "vit_h"
+            self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+            self.predictor = SamPredictor(self.sam)
+            # Freeze the parameters of sam and predictor
+            for param in self.sam.parameters():
+                param.requires_grad = False
+            for param in self.predictor.parameters():
+                param.requires_grad = False
+
+
+            # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
+            self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
+                                      trans_channels=[c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels])
+            self.center = nn.Sequential(
+                CrissCrossAttention(c4_in_channels),
+                CrissCrossAttention(c4_in_channels)
+            )
+            # self.center = DAM_criss(c4_in_channels)
+
+            self.dec4 = nn.Sequential(_DecoderBlock(c4_in_channels + c4_in_channels, c4_in_channels, 256),
+                                      CBAMBlock(256)
+                                      )
+
+            self.dec3 = nn.Sequential(_DecoderBlock(256 + c3_in_channels + c3_in_channels, 384, c2_in_channels),
+                                      CBAMBlock(c2_in_channels)
+                                      )
+            self.dec2 = nn.Sequential(
+                _DecoderBlock(c2_in_channels + c2_in_channels + c2_in_channels, c2_in_channels, c1_in_channels),
+                CBAMBlock(c1_in_channels)
+                )
+            self.dec1 = nn.Sequential(
+                _DecoderBlock(c1_in_channels + c1_in_channels + c1_in_channels, c1_in_channels * 2, 64),
+                CBAMBlock(64)
+                )
         elif attention == 'dec_transpose_FAMIFM_CBAM_CCA':
             # 在此条件下，FAMIFM推出来的特征，直接和_DecoderBlock之前的特征concatenate
             self.low_FAM_IFM = FAMIFM(fusion_in=c2_in_channels + c1_in_channels + c3_in_channels + c4_in_channels,
@@ -552,6 +611,7 @@ class SegFormerHead(nn.Module):
                 CrissCrossAttention(c4_in_channels),
                 CrissCrossAttention(c4_in_channels)
             )
+            # self.center = DAM_criss(c4_in_channels)
 
             self.dec4 = nn.Sequential(_DecoderBlock(c4_in_channels + c4_in_channels, c4_in_channels, 256),
                                       CBAMBlock(256)
@@ -927,6 +987,20 @@ class SegFormerHead(nn.Module):
             _c1 = self.dec1(torch.cat([_c2,c1],dim=1))
             out_feat = _c1
 
+        elif self.attention == 'dec_transpose_FAMIFM_CBAM_CCA_SAM':
+            _c4 = self.center(c4)
+            global_info = self.low_FAM_IFM((c1, c2, c3, c4))
+            _c4 = F.interpolate(_c4, size=c4.size()[2:], mode='bilinear', align_corners=False)
+            global_c1 = F.interpolate(global_info[0], size=c1.size()[2:], mode='bilinear', align_corners=False)
+            global_c2 = F.interpolate(global_info[1], size=c2.size()[2:], mode='bilinear', align_corners=False)
+            global_c3 = global_info[2]
+
+            _c4 = self.dec4(torch.cat([_c4,c4],dim=1))
+
+            _c3 = self.dec3(torch.cat([_c4,c3,global_c3],dim=1))
+            _c2 = self.dec2(torch.cat([_c3,c2,global_c2],dim=1))
+            _c1 = self.dec1(torch.cat([_c2,c1,global_c1],dim=1))
+            out_feat = _c1
         elif self.attention == 'dec_transpose_FAMIFM' or \
                 self.attention == 'dec_transpose_FAMIFM_DAM' or \
                 self.attention == 'dec_transpose_FAMIFM_AxialDAM' or \
@@ -1200,8 +1274,19 @@ class SegFormer(nn.Module):
         #     c2=256,
         #     k=1,
         # )
+        self.attention = attention
         if 'org' in attention:
             self.classifier = nn.Conv2d(self.embedding_dim, num_classes, kernel_size=1)
+        elif 'SAM' in attention:
+            sam_checkpoint = "pretrained/sam_vit_h_4b8939.pth"
+            model_type = "vit_h"
+            self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+            self.predictor = SamPredictor(self.sam)
+            # Freeze the parameters of sam and predictor
+            for param in self.sam.parameters():
+                param.requires_grad = False
+            for param in self.predictor.parameters():
+                param.requires_grad = False
         else:
             self.classifier = nn.Conv2d(64, num_classes, kernel_size=3,padding=1)
         # self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
@@ -1210,11 +1295,24 @@ class SegFormer(nn.Module):
 
     def forward(self, inputs):
         H, W = inputs.size(2), inputs.size(3)
+        self.predictor.set_torch_image(inputs,(H, W))
+
+        input_point = np.array([[256, 256]])
+        input_label = np.array([1])
+        if 'SAM' in self.attention:
+            masks, scores, logits, hs, src, iou_token_out = self.predictor.predict(
+                point_coords=input_point,
+                point_labels=input_label,
+                multimask_output=True,
+            )
+
 
         backbone_feats = self.backbone.forward(inputs)
         # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
         decodehead_out = self.decode_head.forward(backbone_feats)
         out_feat = decodehead_out['out_feat']
+        if 'SAM' in self.attention:
+            out_feat = out_feat + src
         # out_feat = self.reduct4loss(out_feat)
         if self.seghead_last:
             out_feat = F.interpolate(out_feat, size=(H, W), mode='bilinear', align_corners=True)
@@ -1241,11 +1339,17 @@ class SegFormer(nn.Module):
 if __name__ == '__main__':
     # ckpt_path = '../../../pretrained/segformer_b2_weights_voc.pth'
     # sd = torch.load(ckpt_path,map_location='cpu')
-
+    from torchsummary import summary
+    from thop import profile
     # model = ResSegFormer(num_classes=3, phi='b2',res='resnet34', pretrained=False,version='v2')
-    model = SegFormer(num_classes=3, phi='b2', pretrained=False,attention='dec_transpose_FAMIFM_CCA')
-    img = torch.randn(2,3,256,256)
-    out = model(img)
-    logits = out['out']
-    print(logits.shape)
+    model = SegFormer(num_classes=3, phi='b4', pretrained=False,attention='dec_transpose_FAMIFM_CBAM_CCA')
+    input = torch.randn(1,3,256,256)
+    model = model.to('cuda')
+    input = input.to('cuda')
+    summary(model, input_size=(3, 256, 256))
+    macs, params = profile(model, inputs=input)
+    print(f"MACs (FLOPs): {macs}, Params: {params}")
+    # out = model(img)
+    # logits = out['out']
+    # print(logits.shape)
     # print(logits.shape)

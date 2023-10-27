@@ -98,12 +98,13 @@ class DAM_criss(nn.Module):
         self.dam8 = nn.Conv2d(in_channels, in_channels, 3, padding=8,
                   dilation=8, bias=False)
 
-        self.cca = CrissCrossAttention(512*5)
+        self.cca1 = CrissCrossAttention(512*5)
+        self.cca2 = CrissCrossAttention(512*5)
 
         self.block = nn.Sequential(nn.Conv2d(in_channels*5, in_channels, 3, padding=1,
                                     bias=False),
                           nn.BatchNorm2d(in_channels),
-                          nn.GELU(True))
+                          nn.ReLU(True))
 
     def forward(self,x):
         d1 = self.dam1(x)
@@ -114,7 +115,8 @@ class DAM_criss(nn.Module):
         _d = torch.cat([x,d1,d2,d4,d8],dim=1)
 
         # _d = F.interpolate(_d, (65, 65), mode="bilinear", align_corners=True)
-        _c = self.cca(_d)
+        _c = self.cca1(_d)
+        _c = self.cca2(_c)
         _c = self.block(_c)
         # _c = F.interpolate(_c, (64, 64), mode="bilinear", align_corners=True)
         return _c
