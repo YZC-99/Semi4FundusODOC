@@ -171,12 +171,12 @@ if __name__ == '__main__':
                                    "max_images": args.max_images})
 
     # Build model
-    if cfg.MODEL.Dual:
-        model = DualBase('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
-    elif cfg.MODEL.Teacher_Student:
-        model = TSBase(cfg.MODEL.model, cfg.MODEL.backbone, cfg.MODEL.NUM_CLASSES, cfg, loss_config)
-    else:
-        model = Base(cfg.MODEL.model, cfg.MODEL.backbone, cfg.MODEL.NUM_CLASSES, cfg, loss_config)
+    # if cfg.MODEL.Dual:
+    #     model = DualBase('resnet50', cfg.MODEL.NUM_CLASSES, cfg)
+    # elif cfg.MODEL.Teacher_Student:
+    #     model = TSBase(cfg.MODEL.model, cfg.MODEL.backbone, cfg.MODEL.NUM_CLASSES, cfg, loss_config)
+    # else:
+    model = Base(cfg.MODEL.model, cfg.MODEL.backbone, cfg.MODEL.NUM_CLASSES, cfg, loss_config)
     model.learning_rate = cfg.MODEL.lr * args.num_gpus
     # Setup callbacks
     callbacks, logger, simple_Profiler = setup_callbacks(exp_config, config)
