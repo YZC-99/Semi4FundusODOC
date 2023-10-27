@@ -1335,7 +1335,7 @@ class SegFormer(nn.Module):
         decodehead_out = self.decode_head.forward(backbone_feats)
         out_feat = decodehead_out['out_feat']
         if 'SAM' in self.attention:
-            src = self.SAM_Conv(sam_outputs['src'])
+            src = self.SAM_Conv(sam_outputs[-2])
             out_feat = out_feat + src
         # out_feat = self.reduct4loss(out_feat)
         if self.seghead_last:
