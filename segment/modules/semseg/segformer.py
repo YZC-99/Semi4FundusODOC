@@ -1287,6 +1287,7 @@ class SegFormer(nn.Module):
                 param.requires_grad = False
             # for param in self.predictor.parameters():
             #     param.requires_grad = False
+            self.SAM_Conv = nn.Conv2d(kernel_size=1,in_channels=256,out_channels=64)
         else:
             self.classifier = nn.Conv2d(64, num_classes, kernel_size=3,padding=1)
         # self.classifier = nn.Conv2d(256, num_classes, kernel_size=1)
@@ -1295,7 +1296,7 @@ class SegFormer(nn.Module):
 
     def forward(self, inputs):
         H, W = inputs.size(2), inputs.size(3)
-        self.predictor.set_torch_image(inputs,(H, W))
+        self.predictor.set_torch_image(inputs,inputs.shape)
 
         input_point = np.array([[256, 256]])
         input_label = np.array([1])
@@ -1312,6 +1313,7 @@ class SegFormer(nn.Module):
         decodehead_out = self.decode_head.forward(backbone_feats)
         out_feat = decodehead_out['out_feat']
         if 'SAM' in self.attention:
+            src = self.SAM_Conv(src)
             out_feat = out_feat + src
         # out_feat = self.reduct4loss(out_feat)
         if self.seghead_last:
