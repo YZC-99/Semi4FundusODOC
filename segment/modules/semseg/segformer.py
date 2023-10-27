@@ -1257,6 +1257,7 @@ class SegFormer(nn.Module):
     def __init__(self, num_classes=21, phi='b0', pretrained=False, seghead_last=False, attention=None,dual='org'):
         super(SegFormer, self).__init__()
         self.dual = dual
+        self.attention = attention
         self.seghead_last = seghead_last
         self.in_channels = {
             'b0': [32, 64, 160, 256], 'b1': [64, 128, 320, 512], 'b2': [64, 128, 320, 512],
@@ -1321,7 +1322,7 @@ class SegFormer(nn.Module):
 
         # input_point = np.array([[256, 256]])
         # input_label = np.array([1])
-        if 'SAM' in self.dual:
+        if 'SAM' in self.attention:
             from segment.segment_anything_main.segment_anything.utils.transforms import ResizeLongestSide
             resize_transform = ResizeLongestSide(self.sam.image_encoder.img_size)
 
@@ -1355,7 +1356,7 @@ class SegFormer(nn.Module):
         # out_feat,out_classifier = self.decode_head.forward(backbone_feats)
         decodehead_out = self.decode_head.forward(backbone_feats)
         out_feat = decodehead_out['out_feat']
-        if 'SAM' in self.dual:
+        if 'SAM' in self.attention:
             batch_src = torch.cat([i['src'] for i in sam_outputs], dim=0)
             if self.dual == 'Mix_FFN':
                 batch_src = self.FFN1(batch_src)
