@@ -1303,9 +1303,9 @@ class SegFormer(nn.Module):
             elif self.dual == 'Mix_FFN':
                 self.FFN1 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
                           norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8)
-                self.FFN1 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                self.FFN2 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
                           norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8)
-                self.FFN1 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
+                self.FFN3 = Block(dim=256, num_heads=1, mlp_ratio=4, qkv_bias=True,
                           norm_layer=partial(nn.LayerNorm, eps=1e-6), sr_ratio=8)
                 self.SAM_Conv = nn.Conv2d(kernel_size=1, in_channels=256, out_channels=64)
             else:
